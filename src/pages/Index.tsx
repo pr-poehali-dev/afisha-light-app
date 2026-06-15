@@ -87,7 +87,7 @@ const Index = () => {
         vk_group_id: VK_PARAMS.vk_group_id,
         is_past: false,
         private: 0,
-        image: 'https://cdn.poehali.dev/projects/f4e93125-1477-4e01-91c4-6b099dbf6ab3/files/456293d6-a925-4567-8a00-de6b5e925233.jpg',
+        image: data.image || 'https://cdn.poehali.dev/projects/f4e93125-1477-4e01-91c4-6b099dbf6ab3/files/456293d6-a925-4567-8a00-de6b5e925233.jpg',
         ...data,
       } as EventItem;
       setEvents((prev) => [newEv, ...prev]);

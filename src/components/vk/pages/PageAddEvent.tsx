@@ -1,5 +1,8 @@
-import { useState } from 'react';
+import { useState, useRef } from 'react';
+import Icon from '@/components/ui/icon';
 import type { EventItem, EventCategory } from '@/types';
+
+const UPLOAD_URL = 'https://functions.poehali.dev/dec20997-ea70-4e62-9edf-60f5cf25a981';
 
 interface Props {
   initial?: Partial<EventItem>;
@@ -15,16 +18,6 @@ const Label = ({ children, required }: { children: React.ReactNode; required?: b
     {children}{required && <span style={{ color: '#E64646', marginLeft: 2 }}>*</span>}
   </div>
 );
-
-const inpStyle: React.CSSProperties = {
-  width: '100%',
-  border: '1px solid #DCDFE6',
-  background: '#F0F1F3',
-  padding: '8px 10px',
-  fontSize: 14,
-  color: '#1A1A1A',
-  outline: 'none',
-};
 
 const PageAddEvent = ({ initial = {}, onSave, onCancel }: Props) => {
   const [form, setForm] = useState({
@@ -43,10 +36,56 @@ const PageAddEvent = ({ initial = {}, onSave, onCancel }: Props) => {
     online: initial.online ?? false,
   });
 
+  const [image, setImage] = useState<string>(initial.image ?? '');
+  const [uploading, setUploading] = useState(false);
+  const [uploadError, setUploadError] = useState('');
+  const fileRef = useRef<HTMLInputElement>(null);
+
   const set = (k: keyof typeof form, v: unknown) =>
     setForm((p) => ({ ...p, [k]: v }));
 
   const valid = !!form.title && !!form.date && !!form.start_time;
+
+  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    // Проверка размера (макс 5 МБ)
+    if (file.size > 5 * 1024 * 1024) {
+      setUploadError('Файл слишком большой. Максимум 5 МБ');
+      return;
+    }
+
+    setUploading(true);
+    setUploadError('');
+
+    const reader = new FileReader();
+    reader.onload = async (ev) => {
+      const base64 = ev.target?.result as string;
+
+      // Показываем превью сразу
+      setImage(base64);
+
+      try {
+        const res = await fetch(UPLOAD_URL, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ image: base64 }),
+        });
+        const data = await res.json();
+        if (data.url) {
+          setImage(data.url);
+        } else {
+          setUploadError('Ошибка загрузки');
+        }
+      } catch {
+        setUploadError('Ошибка сети');
+      } finally {
+        setUploading(false);
+      }
+    };
+    reader.readAsDataURL(file);
+  };
 
   const handleSave = () => {
     if (!valid) return;
@@ -62,6 +101,7 @@ const PageAddEvent = ({ initial = {}, onSave, onCancel }: Props) => {
       is_free: form.is_free,
       price: form.is_free ? 0 : form.price,
       online: form.online,
+      image: image || undefined,
       dates: [{ date: form.date, start_time: form.start_time, finish_time: form.finish_time || undefined }],
     });
   };
@@ -71,6 +111,88 @@ const PageAddEvent = ({ initial = {}, onSave, onCancel }: Props) => {
   return (
     <div style={{ background: '#fff', padding: '12px 14px 80px' }}>
 
+      {/* Обложка */}
+      <div style={block}>
+        <Label>Обложка мероприятия</Label>
+        <input
+          ref={fileRef}
+          type="file"
+          accept="image/jpeg,image/png,image/webp"
+          style={{ display: 'none' }}
+          onChange={handleFileChange}
+        />
+
+        {image ? (
+          <div style={{ position: 'relative' }}>
+            <img
+              src={image}
+              alt="Обложка"
+              style={{ width: '100%', aspectRatio: '2/1', objectFit: 'cover', display: 'block' }}
+            />
+            {/* Затемнение при загрузке */}
+            {uploading && (
+              <div style={{
+                position: 'absolute', inset: 0,
+                background: 'rgba(0,0,0,0.4)',
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+              }}>
+                <div style={{ color: '#fff', fontSize: 13 }}>Загрузка...</div>
+              </div>
+            )}
+            {/* Кнопки поверх фото */}
+            {!uploading && (
+              <div style={{
+                position: 'absolute', bottom: 8, right: 8,
+                display: 'flex', gap: 6,
+              }}>
+                <button
+                  onClick={() => fileRef.current?.click()}
+                  style={{
+                    display: 'flex', alignItems: 'center', gap: 4,
+                    padding: '5px 10px', fontSize: 12, fontWeight: 600,
+                    color: '#fff', background: 'rgba(0,0,0,0.55)',
+                    border: 'none', cursor: 'pointer',
+                  }}
+                >
+                  <Icon name="Pencil" size={12} />
+                  Заменить
+                </button>
+                <button
+                  onClick={() => { setImage(''); if (fileRef.current) fileRef.current.value = ''; }}
+                  style={{
+                    display: 'flex', alignItems: 'center', gap: 4,
+                    padding: '5px 10px', fontSize: 12, fontWeight: 600,
+                    color: '#fff', background: 'rgba(220,0,0,0.6)',
+                    border: 'none', cursor: 'pointer',
+                  }}
+                >
+                  <Icon name="Trash2" size={12} />
+                  Удалить
+                </button>
+              </div>
+            )}
+          </div>
+        ) : (
+          <button
+            onClick={() => fileRef.current?.click()}
+            style={{
+              display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
+              gap: 8, width: '100%', aspectRatio: '2/1',
+              border: '2px dashed #DCDFE6', background: '#F7F8FA',
+              cursor: 'pointer', color: '#8A8A8A',
+            }}
+          >
+            <Icon name="ImagePlus" size={32} style={{ color: '#DCDFE6' }} />
+            <span style={{ fontSize: 13 }}>Нажмите чтобы загрузить фото</span>
+            <span style={{ fontSize: 11, color: '#B0B0B0' }}>JPG, PNG, WEBP · до 5 МБ</span>
+          </button>
+        )}
+
+        {uploadError && (
+          <div style={{ fontSize: 12, color: '#E64646', marginTop: 4 }}>{uploadError}</div>
+        )}
+      </div>
+
       <div style={block}>
         <Label required>Название</Label>
         <input className="vk-input" placeholder="Название мероприятия" value={form.title}
@@ -79,7 +201,7 @@ const PageAddEvent = ({ initial = {}, onSave, onCancel }: Props) => {
 
       <div style={block}>
         <Label required>Тип события</Label>
-        <select className="vk-input" value={form.type} onChange={(e) => set('type', e.target.value as EventCategory)} style={inpStyle}>
+        <select className="vk-input" value={form.type} onChange={(e) => set('type', e.target.value as EventCategory)}>
           {CATEGORIES.map((c) => <option key={c} value={c}>{c}</option>)}
         </select>
       </div>
@@ -109,13 +231,11 @@ const PageAddEvent = ({ initial = {}, onSave, onCancel }: Props) => {
           background: form.online ? '#EEF0FB' : '#fff',
         }}
       >
-        <div
-          style={{
-            width: 18, height: 18, border: `2px solid ${form.online ? '#3F51B5' : '#DCDFE6'}`,
-            background: form.online ? '#3F51B5' : '#fff',
-            display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0,
-          }}
-        >
+        <div style={{
+          width: 18, height: 18, border: `2px solid ${form.online ? '#3F51B5' : '#DCDFE6'}`,
+          background: form.online ? '#3F51B5' : '#fff',
+          display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0,
+        }}>
           {form.online && <span style={{ color: '#fff', fontSize: 12, fontWeight: 700 }}>✓</span>}
         </div>
         <span style={{ fontSize: 14 }}>Онлайн событие</span>
@@ -162,13 +282,11 @@ const PageAddEvent = ({ initial = {}, onSave, onCancel }: Props) => {
           onClick={() => set('is_free', !form.is_free)}
           style={{ display: 'flex', alignItems: 'center', gap: 10, cursor: 'pointer', marginBottom: form.is_free ? 0 : 10 }}
         >
-          <div
-            style={{
-              width: 18, height: 18, border: `2px solid ${form.is_free ? '#3F51B5' : '#DCDFE6'}`,
-              background: form.is_free ? '#3F51B5' : '#fff',
-              display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0,
-            }}
-          >
+          <div style={{
+            width: 18, height: 18, border: `2px solid ${form.is_free ? '#3F51B5' : '#DCDFE6'}`,
+            background: form.is_free ? '#3F51B5' : '#fff',
+            display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0,
+          }}>
             {form.is_free && <span style={{ color: '#fff', fontSize: 12, fontWeight: 700 }}>✓</span>}
           </div>
           <span style={{ fontSize: 14 }}>Бесплатное событие</span>
@@ -204,14 +322,14 @@ const PageAddEvent = ({ initial = {}, onSave, onCancel }: Props) => {
         </button>
         <button
           onClick={handleSave}
-          disabled={!valid}
+          disabled={!valid || uploading}
           style={{
             flex: 1, padding: '10px 0', fontSize: 14, fontWeight: 600,
-            color: '#fff', background: valid ? '#3F51B5' : '#DCDFE6',
-            border: 'none', cursor: valid ? 'pointer' : 'default',
+            color: '#fff', background: (valid && !uploading) ? '#3F51B5' : '#DCDFE6',
+            border: 'none', cursor: (valid && !uploading) ? 'pointer' : 'default',
           }}
         >
-          {initial.id ? 'Сохранить' : 'Добавить'}
+          {uploading ? 'Загрузка...' : (initial.id ? 'Сохранить' : 'Добавить')}
         </button>
       </div>
     </div>
