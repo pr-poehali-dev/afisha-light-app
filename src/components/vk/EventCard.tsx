@@ -54,7 +54,7 @@ const EventCard = ({ event, isAdmin, onClick, onEdit, onDelete }: Props) => {
 
         {!event.online && (
           <div className="event-list-location flex items-center gap-1">
-            <Icon name="MapPin" size={11} style={{ color: '#8A8A8A', flexShrink: 0 }} />
+            <Icon name="MapPin" size={13} style={{ color: '#8A8A8A', flexShrink: 0 }} />
             <span className="truncate">
               {event.place ? `${event.place} · ` : ''}
               {event.city}
@@ -62,18 +62,18 @@ const EventCard = ({ event, isAdmin, onClick, onEdit, onDelete }: Props) => {
           </div>
         )}
 
-        <div className="flex items-center gap-2 mt-1">
+        <div className="flex items-center gap-2 mt-2">
           {event.is_free ? (
-            <span style={{ fontSize: 12, fontWeight: 600, color: '#17A050' }}>
+            <span style={{ fontSize: 15, fontWeight: 700, color: '#17A050' }}>
               Бесплатно
             </span>
           ) : (
-            <span style={{ fontSize: 12, fontWeight: 600, color: '#1A1A1A' }}>
+            <span style={{ fontSize: 15, fontWeight: 700, color: '#1A1A1A' }}>
               от {event.price.toLocaleString('ru-RU')} ₽
             </span>
           )}
           {event.age && (
-            <span style={{ fontSize: 11, color: '#8A8A8A' }}>{event.age}</span>
+            <span style={{ fontSize: 12, color: '#8A8A8A' }}>{event.age}</span>
           )}
         </div>
       </button>

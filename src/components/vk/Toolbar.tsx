@@ -27,18 +27,18 @@ const Toolbar = ({ page, widgetName, isAdmin, onBack, onHome }: Props) => {
 
   return (
     <div
-      style={{ height: 44 }}
-      className="vk-toolbar sticky top-0 z-50 flex items-center px-2"
+      style={{ height: 52 }}
+      className="vk-toolbar sticky top-0 z-50 flex items-center px-3"
     >
       {/* Кнопка назад */}
-      <div style={{ minWidth: 44 }}>
+      <div style={{ minWidth: 48 }}>
         {!isRoot && (
           <button
             onClick={onBack}
-            className="flex items-center gap-0.5 text-sm font-medium"
-            style={{ color: '#3F51B5' }}
+            className="flex items-center gap-0.5 font-medium"
+            style={{ color: '#3F51B5', fontSize: 16 }}
           >
-            <Icon name="ChevronLeft" size={22} />
+            <Icon name="ChevronLeft" size={26} />
           </button>
         )}
       </div>
@@ -46,19 +46,16 @@ const Toolbar = ({ page, widgetName, isAdmin, onBack, onHome }: Props) => {
       {/* Заголовок */}
       <button
         onClick={onHome}
-        className="flex-1 text-center text-base font-semibold"
-        style={{ color: '#1A1A1A' }}
+        className="flex-1 text-center font-semibold"
+        style={{ color: '#1A1A1A', fontSize: 18 }}
       >
         {title}
       </button>
 
       {/* Правая часть */}
-      <div style={{ minWidth: 44 }} className="flex justify-end">
+      <div style={{ minWidth: 48 }} className="flex justify-end">
         {isAdmin && isRoot && (
-          <span
-            className="text-xs px-1.5 py-0.5"
-            style={{ color: '#8A8A8A', fontSize: 10 }}
-          >
+          <span style={{ color: '#8A8A8A', fontSize: 11 }}>
             admin
           </span>
         )}

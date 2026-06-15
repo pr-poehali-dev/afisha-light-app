@@ -42,7 +42,7 @@ const PageMain = ({
         alignItems: 'center',
         gap: 4,
         borderBottom: '1px solid #DCDFE6',
-        padding: '0 8px',
+        padding: '0 10px',
         overflowX: 'auto',
         scrollbarWidth: 'none',
       }}>
@@ -52,8 +52,8 @@ const PageMain = ({
             onClick={() => setTab(t)}
             style={{
               flexShrink: 0,
-              padding: '10px 12px',
-              fontSize: 13,
+              padding: '13px 14px',
+              fontSize: 15,
               fontWeight: 500,
               color: tab === t ? '#3F51B5' : '#8A8A8A',
               background: 'none',
@@ -74,19 +74,19 @@ const PageMain = ({
               flexShrink: 0,
               display: 'flex',
               alignItems: 'center',
-              gap: 5,
-              padding: '6px 12px',
-              fontSize: 12,
+              gap: 6,
+              padding: '8px 14px',
+              fontSize: 14,
               fontWeight: 600,
               color: '#fff',
               background: '#2196F3',
               border: 'none',
               cursor: 'pointer',
               whiteSpace: 'nowrap',
-              marginLeft: 4,
+              marginLeft: 6,
             }}
           >
-            <Icon name="Plus" size={13} />
+            <Icon name="Plus" size={15} />
             Добавить
           </button>
         )}
@@ -99,8 +99,8 @@ const PageMain = ({
           overflowX: 'auto',
           scrollbarWidth: 'none',
           borderBottom: '1px solid #DCDFE6',
-          padding: '6px 8px',
-          gap: 6,
+          padding: '8px 10px',
+          gap: 8,
           background: '#fff',
         }}
       >
@@ -120,23 +120,23 @@ const PageMain = ({
       </div>
 
       {/* Поиск */}
-      <div style={{ position: 'relative', padding: '6px 10px', borderBottom: '1px solid #DCDFE6', background: '#fff' }}>
+      <div style={{ position: 'relative', padding: '8px 12px', borderBottom: '1px solid #DCDFE6', background: '#fff' }}>
         <Icon
           name="Search"
-          size={14}
-          style={{ position: 'absolute', left: 22, top: '50%', transform: 'translateY(-50%)', color: '#8A8A8A' }}
+          size={16}
+          style={{ position: 'absolute', left: 24, top: '50%', transform: 'translateY(-50%)', color: '#8A8A8A' }}
         />
         <input
           value={query}
           onChange={(e) => setQuery(e.target.value)}
           placeholder="Поиск события..."
           className="vk-input"
-          style={{ paddingLeft: 32 }}
+          style={{ paddingLeft: 36, fontSize: 15 }}
         />
       </div>
 
       {/* Список */}
-      <div style={{ padding: '0 10px' }}>
+      <div style={{ padding: '0 12px' }}>
         {filtered.length === 0 ? (
           <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '48px 0', color: '#8A8A8A' }}>
             <Icon name="CalendarX" size={36} style={{ opacity: 0.3, marginBottom: 8 }} />

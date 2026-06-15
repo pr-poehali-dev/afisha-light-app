@@ -105,7 +105,7 @@ body,
 @layer components {
   /* Тулбар как в VK app */
   .vk-toolbar {
-    height: 44px;
+    height: 52px;
     background: #fff;
     border-bottom: 1px solid #dcdfe6;
     display: flex;
@@ -116,8 +116,8 @@ body,
   .vk-tag {
     display: inline-flex;
     align-items: center;
-    padding: 4px 10px;
-    font-size: 12px;
+    padding: 6px 14px;
+    font-size: 13px;
     font-weight: 500;
     background: #f0f1f3;
     color: #555;
@@ -163,8 +163,8 @@ body,
     width: 100%;
     background: #f0f1f3;
     border: 1px solid #dcdfe6;
-    padding: 8px 12px;
-    font-size: 14px;
+    padding: 10px 14px;
+    font-size: 15px;
     color: #1a1a1a;
     outline: none;
     transition:
@@ -180,33 +180,33 @@ body,
   .event-list-row {
     display: flex;
     align-items: flex-start;
-    gap: 10px;
-    padding: 10px 0;
+    gap: 14px;
+    padding: 14px 0;
     border-bottom: 1px solid #dcdfe6;
     background: #fff;
   }
   .event-list-logo {
-    width: 72px;
-    height: 72px;
+    width: 96px;
+    height: 96px;
     object-fit: cover;
     border-radius: 50%;
     flex-shrink: 0;
   }
   .event-list-name {
-    font-size: 14px;
+    font-size: 16px;
     font-weight: 600;
     color: #1a1a1a;
-    line-height: 1.3;
+    line-height: 1.35;
   }
   .event-list-date {
-    font-size: 12px;
+    font-size: 14px;
     color: #3f51b5;
-    margin-top: 2px;
+    margin-top: 4px;
   }
   .event-list-location {
-    font-size: 12px;
+    font-size: 13px;
     color: #8a8a8a;
-    margin-top: 2px;
+    margin-top: 3px;
   }
 
   /* Nav pills как в оригинале */
@@ -222,8 +222,8 @@ body,
   }
   .nav-pills-vk .nav-link {
     white-space: nowrap;
-    padding: 10px 14px;
-    font-size: 13px;
+    padding: 12px 18px;
+    font-size: 15px;
     font-weight: 500;
     color: #555;
     border-bottom: 2px solid transparent;
