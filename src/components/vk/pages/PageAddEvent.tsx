@@ -27,8 +27,8 @@ const MONTHS_FULL = [
 ];
 
 const Label = ({ children, required }: { children: React.ReactNode; required?: boolean }) => (
-  <div style={{ fontSize: 11, fontWeight: 700, color: 'rgba(255,255,255,0.6)', textTransform: 'uppercase', letterSpacing: 0.6, marginBottom: 5 }}>
-    {children}{required && <span style={{ color: '#FCA5A5', marginLeft: 2 }}>*</span>}
+  <div style={{ fontSize: 11, fontWeight: 700, color: '#888', textTransform: 'uppercase', letterSpacing: 0.6, marginBottom: 5 }}>
+    {children}{required && <span style={{ color: '#EF4444', marginLeft: 2 }}>*</span>}
   </div>
 );
 
@@ -36,21 +36,20 @@ const Toggle = ({ checked, onChange, label }: { checked: boolean; onChange: () =
   <div onClick={onChange} style={{ display: 'flex', alignItems: 'center', gap: 10, cursor: 'pointer', marginBottom: 14 }}>
     <div style={{
       width: 38, height: 22, borderRadius: 11, position: 'relative',
-      background: checked ? 'rgba(255,255,255,0.9)' : 'rgba(255,255,255,0.2)',
-      transition: 'all 0.2s', flexShrink: 0,
+      background: checked ? '#7C3AED' : '#DDD', transition: 'all 0.2s', flexShrink: 0,
+      boxShadow: checked ? '0 2px 8px rgba(124,58,237,0.3)' : 'none',
     }}>
       <div style={{
         position: 'absolute', top: 3, left: checked ? 19 : 3,
-        width: 16, height: 16, borderRadius: '50%',
-        background: checked ? '#7C3AED' : '#fff',
-        transition: 'left 0.2s', boxShadow: '0 1px 4px rgba(0,0,0,0.2)',
+        width: 16, height: 16, borderRadius: '50%', background: '#fff',
+        transition: 'left 0.2s', boxShadow: '0 1px 4px rgba(0,0,0,0.15)',
       }} />
     </div>
-    <span style={{ fontSize: 14, color: '#fff', fontWeight: 500 }}>{label}</span>
+    <span style={{ fontSize: 14, color: '#222', fontWeight: 500 }}>{label}</span>
   </div>
 );
 
-const Divider = () => <div style={{ borderTop: '1px solid rgba(255,255,255,0.15)', margin: '4px 0' }} />;
+const Divider = () => <div style={{ borderTop: '1px solid #EBEBEB', margin: '16px 0' }} />;
 
 function getDaysInMonth(year: number, month: number) {
   return new Date(year, month + 1, 0).getDate();
@@ -305,17 +304,16 @@ const PageAddEvent = ({ initial = {}, places = [], onSave, onCancel }: Props) =>
   const block: React.CSSProperties = { marginBottom: 14 };
 
   const section: React.CSSProperties = {
-    background: 'rgba(255,255,255,0.12)',
-    backdropFilter: 'blur(16px)',
-    WebkitBackdropFilter: 'blur(16px)',
-    border: '1px solid rgba(255,255,255,0.22)',
+    background: '#fff',
+    border: '1px solid #F0F0F0',
     borderRadius: 16,
     padding: '14px',
     marginBottom: 12,
+    boxShadow: '0 2px 8px rgba(0,0,0,0.05)',
   };
 
   return (
-    <div style={{ minHeight: '100vh', padding: '12px 14px 80px', background: 'linear-gradient(145deg, #4C1D95 0%, #7C3AED 40%, #9333EA 70%, #6D28D9 100%)', backgroundAttachment: 'fixed' }}>
+    <div style={{ minHeight: '100vh', padding: '12px 14px 80px', background: '#F5F5F7' }}>
 
       {/* Обложка */}
       <div style={section}>
@@ -341,14 +339,14 @@ const PageAddEvent = ({ initial = {}, places = [], onSave, onCancel }: Props) =>
             )}
           </div>
         ) : (
-          <button onClick={() => fileRef.current?.click()} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 4, width: '50%', aspectRatio: '2/1', border: '2px dashed rgba(255,255,255,0.3)', background: 'rgba(255,255,255,0.08)', cursor: 'pointer', borderRadius: 10 }}>
-            <Icon name="ImagePlus" size={18} style={{ color: 'rgba(255,255,255,0.5)' }} />
-            <span style={{ fontSize: 10, fontWeight: 600, color: '#fff' }}>Загрузить фото</span>
-            <span style={{ fontSize: 9, color: 'rgba(255,255,255,0.5)' }}>JPG, PNG, WEBP · до 5 МБ</span>
-            <span style={{ fontSize: 9, color: 'rgba(255,255,255,0.5)' }}>Рекомендуем: 1200 × 600 px</span>
+          <button onClick={() => fileRef.current?.click()} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 4, width: '50%', aspectRatio: '2/1', border: '2px dashed #DDD6FE', background: '#F5F3FF', cursor: 'pointer', borderRadius: 10 }}>
+            <Icon name="ImagePlus" size={18} style={{ color: '#A78BFA' }} />
+            <span style={{ fontSize: 10, fontWeight: 600, color: '#7C3AED' }}>Загрузить фото</span>
+            <span style={{ fontSize: 9, color: '#AAA' }}>JPG, PNG, WEBP · до 5 МБ</span>
+            <span style={{ fontSize: 9, color: '#AAA' }}>Рекомендуем: 1200 × 600 px</span>
           </button>
         )}
-        {uploadError && <div style={{ fontSize: 12, color: '#FCA5A5', marginTop: 4 }}>{uploadError}</div>}
+        {uploadError && <div style={{ fontSize: 12, color: '#EF4444', marginTop: 4 }}>{uploadError}</div>}
       </div>
 
       {/* Название + Тип + Теги */}
@@ -393,12 +391,12 @@ const PageAddEvent = ({ initial = {}, places = [], onSave, onCancel }: Props) =>
 
         {scheduleType === 'schedule' && (
           <div>
-            <div style={{ display: 'flex', borderBottom: '2px solid rgba(255,255,255,0.2)', marginBottom: 12 }}>
+            <div style={{ display: 'flex', borderBottom: '2px solid #EBEBEB', marginBottom: 12 }}>
               {(['calendar', 'list'] as const).map((tab) => (
                 <button key={tab} onClick={() => setSchedTab(tab)} style={{
                   flex: 1, padding: '8px 0', fontSize: 13, fontWeight: 600, background: 'none', border: 'none', cursor: 'pointer',
-                  color: schedTab === tab ? '#fff' : 'rgba(255,255,255,0.4)',
-                  borderBottom: schedTab === tab ? '2px solid #fff' : '2px solid transparent', marginBottom: -2,
+                  color: schedTab === tab ? '#7C3AED' : '#999',
+                  borderBottom: schedTab === tab ? '2px solid #7C3AED' : '2px solid transparent', marginBottom: -2,
                 }}>
                   {tab === 'calendar' ? 'Календарь' : 'Список'}
                 </button>
@@ -412,11 +410,11 @@ const PageAddEvent = ({ initial = {}, places = [], onSave, onCancel }: Props) =>
                     <div>{i === 0 && <Label required>Дата</Label>}<input type="date" className="vk-input" value={row.date} onChange={(e) => { const n = [...listDates]; n[i] = { ...n[i], date: e.target.value }; setListDates(n); }} /></div>
                     <div>{i === 0 && <Label required>Начало</Label>}<input type="time" className="vk-input" value={row.start} onChange={(e) => { const n = [...listDates]; n[i] = { ...n[i], start: e.target.value }; setListDates(n); }} /></div>
                     <div>{i === 0 && <Label>Конец</Label>}<input type="time" className="vk-input" value={row.finish} onChange={(e) => { const n = [...listDates]; n[i] = { ...n[i], finish: e.target.value }; setListDates(n); }} /></div>
-                    <button onClick={() => setListDates((prev) => prev.filter((_, j) => j !== i))} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#FCA5A5', padding: '8px 0' }}><Icon name="X" size={16} /></button>
+                    <button onClick={() => setListDates((prev) => prev.filter((_, j) => j !== i))} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#EF4444', padding: '8px 0' }}><Icon name="X" size={16} /></button>
                   </div>
                 ))}
                 <button onClick={() => setListDates((prev) => [...prev, { date: '', start: '', finish: '' }])}
-                  style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 13, color: '#fff', background: 'rgba(255,255,255,0.1)', border: '1px dashed rgba(255,255,255,0.3)', padding: '6px 12px', cursor: 'pointer', width: '100%', justifyContent: 'center', borderRadius: 8 }}>
+                  style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 13, color: '#7C3AED', background: '#F5F3FF', border: '1px dashed #DDD6FE', padding: '6px 12px', cursor: 'pointer', width: '100%', justifyContent: 'center', borderRadius: 8 }}>
                   <Icon name="Plus" size={14} /> Добавить дату
                 </button>
               </div>
@@ -515,7 +513,7 @@ const PageAddEvent = ({ initial = {}, places = [], onSave, onCancel }: Props) =>
 
       {/* Служебные заметки */}
       <div style={section}>
-        <Label>Служебные заметки <span style={{ fontSize: 10, color: 'rgba(255,255,255,0.4)', textTransform: 'none', fontWeight: 400 }}>(видит только администратор)</span></Label>
+        <Label>Служебные заметки <span style={{ fontSize: 10, color: '#BBB', textTransform: 'none', fontWeight: 400 }}>(видит только администратор)</span></Label>
         <textarea className="vk-input" placeholder="Внутренние пометки..." value={adminNotes} rows={3} style={{ resize: 'none' }} onChange={(e) => setAdminNotes(e.target.value)} />
       </div>
 
@@ -525,11 +523,11 @@ const PageAddEvent = ({ initial = {}, places = [], onSave, onCancel }: Props) =>
       </div>
 
       {/* Нижняя панель */}
-      <div style={{ position: 'fixed', bottom: 0, left: 0, right: 0, display: 'flex', gap: 10, padding: 10, borderTop: '1px solid rgba(255,255,255,0.15)', background: 'rgba(76,29,149,0.85)', backdropFilter: 'blur(20px)', WebkitBackdropFilter: 'blur(20px)' }}>
-        <button onClick={onCancel} style={{ flex: 1, padding: '11px 0', fontSize: 14, fontWeight: 600, color: '#fff', background: 'rgba(255,255,255,0.15)', border: '1px solid rgba(255,255,255,0.25)', borderRadius: 12, cursor: 'pointer' }}>
+      <div style={{ position: 'fixed', bottom: 0, left: 0, right: 0, display: 'flex', gap: 10, padding: 10, borderTop: '1px solid #EBEBEB', background: '#fff', boxShadow: '0 -4px 16px rgba(0,0,0,0.06)' }}>
+        <button onClick={onCancel} style={{ flex: 1, padding: '11px 0', fontSize: 14, fontWeight: 600, color: '#7C3AED', background: '#EDE9FE', border: 'none', borderRadius: 12, cursor: 'pointer' }}>
           Отмена
         </button>
-        <button onClick={handleSave} disabled={!valid || uploading} style={{ flex: 1, padding: '11px 0', fontSize: 14, fontWeight: 700, color: valid && !uploading ? '#7C3AED' : 'rgba(255,255,255,0.4)', background: valid && !uploading ? '#fff' : 'rgba(255,255,255,0.1)', border: 'none', borderRadius: 12, cursor: valid && !uploading ? 'pointer' : 'default', boxShadow: valid && !uploading ? '0 4px 16px rgba(0,0,0,0.2)' : 'none' }}>
+        <button onClick={handleSave} disabled={!valid || uploading} style={{ flex: 1, padding: '11px 0', fontSize: 14, fontWeight: 700, color: '#fff', background: (valid && !uploading) ? '#7C3AED' : '#DDD', border: 'none', borderRadius: 12, cursor: (valid && !uploading) ? 'pointer' : 'default', boxShadow: (valid && !uploading) ? '0 4px 12px rgba(124,58,237,0.3)' : 'none' }}>
           {uploading ? 'Загрузка...' : (initial.id ? 'Сохранить' : 'Добавить')}
         </button>
       </div>
