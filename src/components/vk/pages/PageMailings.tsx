@@ -86,13 +86,26 @@ const PageMailings = ({ groupId }: MailingsProps) => {
   };
 
   const handleScan = async () => {
-    const token = await ensureToken();
+    let token = await ensureToken();
     if (!token) { alert('Не удалось получить токен сообщества. Попробуйте ещё раз.'); return; }
     setScanning(true); setScanResult(null);
     try {
       const res = await scanSubscribers(VK_GROUP_ID, token);
-      if ((res as { error?: string }).error) {
-        alert((res as { error: string }).error);
+      const err = (res as { error?: string }).error;
+      if (err && (err.includes('revoke') || err.includes('revoked') || err.includes('authorization failed'))) {
+        // Токен устарел — запрашиваем новый и повторяем
+        setGroupToken(null);
+        token = await requestToken();
+        if (!token) { alert('Токен сообщества недействителен. Переоткройте приложение или выдайте права заново в настройках группы ВК → Работа с API.'); return; }
+        const res2 = await scanSubscribers(VK_GROUP_ID, token);
+        if ((res2 as { error?: string }).error) {
+          alert((res2 as { error: string }).error);
+        } else {
+          setScanResult(res2);
+          load();
+        }
+      } else if (err) {
+        alert(err);
       } else {
         setScanResult(res);
         load();
@@ -120,11 +133,20 @@ const PageMailings = ({ groupId }: MailingsProps) => {
 
   const handleSend = async () => {
     if (!message.trim()) return;
-    const token = await ensureToken();
+    let token = await ensureToken();
     if (!token) { alert('Не удалось получить токен сообщества. Попробуйте ещё раз.'); return; }
     setSending(true); setSendResult(null);
     const res = await sendMailing(VK_GROUP_ID, title || 'Рассылка', message, token);
-    setSendResult(res);
+    const sendErr = (res as { error?: string }).error;
+    if (sendErr && (sendErr.includes('revoke') || sendErr.includes('revoked') || sendErr.includes('authorization failed'))) {
+      setGroupToken(null);
+      token = await requestToken();
+      if (!token) { setSending(false); alert('Токен сообщества недействителен. Переоткройте приложение или выдайте права заново в настройках группы ВК → Работа с API.'); return; }
+      const res2 = await sendMailing(VK_GROUP_ID, title || 'Рассылка', message, token);
+      setSendResult(res2);
+    } else {
+      setSendResult(res);
+    }
     setMessage(''); setTitle('');
     load();
     setSending(false);
