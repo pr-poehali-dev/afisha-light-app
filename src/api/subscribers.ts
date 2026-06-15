@@ -1,5 +1,4 @@
 const API = 'https://functions.poehali.dev/484c6b24-3e1d-42ec-a03a-57a527b1cbd1';
-const VK_GROUP_ID = 234136199;
 
 export interface Subscriber {
   id: number;
@@ -29,23 +28,27 @@ export interface Stats {
   can_write: number;
 }
 
-export async function fetchStats(): Promise<{ stats: Stats; mailings: Mailing[] }> {
-  const res = await fetch(`${API}?action=stats&vk_group_id=${VK_GROUP_ID}`);
+export async function fetchStats(groupId: number): Promise<{ stats: Stats; mailings: Mailing[] }> {
+  const res = await fetch(`${API}?action=stats&vk_group_id=${groupId}`);
   return res.json();
 }
 
-export async function fetchSubscribers(): Promise<Subscriber[]> {
-  const res = await fetch(`${API}?action=list&vk_group_id=${VK_GROUP_ID}`);
+export async function fetchSubscribers(groupId: number): Promise<Subscriber[]> {
+  const res = await fetch(`${API}?action=list&vk_group_id=${groupId}`);
   return res.json();
 }
 
-export async function scanSubscribers(): Promise<{ added: number }> {
-  const res = await fetch(`${API}?action=scan&vk_group_id=${VK_GROUP_ID}`, { method: 'POST' });
+export async function scanSubscribers(groupId: number, token: string): Promise<{ added: number }> {
+  const res = await fetch(`${API}?action=scan&vk_group_id=${groupId}`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ group_token: token }),
+  });
   return res.json();
 }
 
-export async function importSubscribers(ids: string): Promise<{ added: number; total: number }> {
-  const res = await fetch(`${API}?action=import&vk_group_id=${VK_GROUP_ID}`, {
+export async function importSubscribers(groupId: number, ids: string): Promise<{ added: number; total: number }> {
+  const res = await fetch(`${API}?action=import&vk_group_id=${groupId}`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ ids }),
@@ -53,20 +56,20 @@ export async function importSubscribers(ids: string): Promise<{ added: number; t
   return res.json();
 }
 
-export async function sendMailing(title: string, message: string): Promise<{ sent: number; errors: number }> {
-  const res = await fetch(`${API}?action=send&vk_group_id=${VK_GROUP_ID}`, {
+export async function sendMailing(groupId: number, title: string, message: string, token: string): Promise<{ sent: number; errors: number }> {
+  const res = await fetch(`${API}?action=send&vk_group_id=${groupId}`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ title, message }),
+    body: JSON.stringify({ title, message, group_token: token }),
   });
   return res.json();
 }
 
-export function exportSubscribersUrl(): string {
-  return `${API}?action=export&vk_group_id=${VK_GROUP_ID}`;
+export function exportSubscribersUrl(groupId: number): string {
+  return `${API}?action=export&vk_group_id=${groupId}`;
 }
 
-export async function clearSubscribers(): Promise<{ deleted: number }> {
-  const res = await fetch(`${API}?action=clear&vk_group_id=${VK_GROUP_ID}`, { method: 'DELETE' });
+export async function clearSubscribers(groupId: number): Promise<{ deleted: number }> {
+  const res = await fetch(`${API}?action=clear&vk_group_id=${groupId}`, { method: 'DELETE' });
   return res.json();
 }

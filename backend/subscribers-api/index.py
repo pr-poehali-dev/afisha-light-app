@@ -8,7 +8,6 @@ import urllib.parse
 from psycopg2.extras import RealDictCursor
 
 SCHEMA = os.environ.get('MAIN_DB_SCHEMA', 't_p8923173_afisha_light_app')
-VK_TOKEN = os.environ.get('VK_GROUP_TOKEN', '')
 VK_API = 'https://api.vk.com/method'
 VK_V = '5.199'
 
@@ -27,8 +26,8 @@ def ok(data):
 def err(msg, code=400):
     return {'statusCode': code, 'headers': CORS, 'body': json.dumps({'error': msg})}
 
-def vk_call(method, params):
-    params['access_token'] = VK_TOKEN
+def vk_call(method, params, token):
+    params['access_token'] = token
     params['v'] = VK_V
     url = f"{VK_API}/{method}?" + urllib.parse.urlencode(params)
     with urllib.request.urlopen(url, timeout=10) as r:
@@ -91,8 +90,9 @@ def handler(event: dict, context) -> dict:
 
         # POST ?action=scan — сканирование участников группы через VK API
         if method == 'POST' and action == 'scan':
-            if not VK_TOKEN:
-                return err('VK_GROUP_TOKEN не настроен')
+            token = body.get('group_token', '')
+            if not token:
+                return err('Токен сообщества не передан')
             group_id = abs(vk_group_id)
             offset = 0
             count = 1000
@@ -104,7 +104,7 @@ def handler(event: dict, context) -> dict:
                     'fields': 'first_name,last_name,screen_name,photo_50,can_write_private_message',
                     'offset': offset,
                     'count': count,
-                })
+                }, token)
                 if 'error' in resp:
                     return err(f"VK API: {resp['error'].get('error_msg', 'unknown')}")
                 items = resp.get('response', {}).get('items', [])
@@ -150,8 +150,9 @@ def handler(event: dict, context) -> dict:
 
         # POST ?action=send — отправить рассылку
         if method == 'POST' and action == 'send':
-            if not VK_TOKEN:
-                return err('VK_GROUP_TOKEN не настроен')
+            token = body.get('group_token', '')
+            if not token:
+                return err('Токен сообщества не передан')
             message = body.get('message', '').strip()
             title = body.get('title', 'Рассылка')
             if not message:
@@ -179,7 +180,7 @@ def handler(event: dict, context) -> dict:
                         'user_id': uid,
                         'message': message,
                         'random_id': random.randint(1, 2**31),
-                    })
+                    }, token)
                     if 'error' in resp:
                         errors += 1
                     else:

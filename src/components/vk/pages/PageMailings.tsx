@@ -5,6 +5,9 @@ import {
   sendMailing, exportSubscribersUrl, clearSubscribers,
   type Stats, type Mailing,
 } from '@/api/subscribers';
+import { getGroupToken } from '@/lib/vk';
+
+const VK_GROUP_ID = parseInt(new URLSearchParams(window.location.search).get('vk_group_id') || '234136199');
 
 type SubTab = 'send' | 'base' | 'history';
 
@@ -36,6 +39,8 @@ const PageMailings = () => {
   const [stats, setStats] = useState<Stats | null>(null);
   const [mailings, setMailings] = useState<Mailing[]>([]);
   const [loading, setLoading] = useState(true);
+  const [groupToken, setGroupToken] = useState<string | null>(null);
+  const [tokenLoading, setTokenLoading] = useState(false);
 
   // Форма рассылки
   const [title, setTitle] = useState('');
@@ -54,17 +59,37 @@ const PageMailings = () => {
 
   const load = () => {
     setLoading(true);
-    fetchStats()
+    fetchStats(VK_GROUP_ID)
       .then((d) => { setStats(d.stats); setMailings(d.mailings); })
       .finally(() => setLoading(false));
   };
 
-  useEffect(() => { load(); }, []);
+  // Получаем токен сообщества автоматически при открытии
+  const requestToken = async () => {
+    setTokenLoading(true);
+    const token = await getGroupToken(VK_GROUP_ID);
+    setGroupToken(token);
+    setTokenLoading(false);
+    return token;
+  };
+
+  useEffect(() => {
+    load();
+    // Автоматически запрашиваем токен
+    requestToken();
+  }, []);
+
+  const ensureToken = async (): Promise<string | null> => {
+    if (groupToken) return groupToken;
+    return requestToken();
+  };
 
   const handleScan = async () => {
+    const token = await ensureToken();
+    if (!token) { alert('Не удалось получить токен сообщества. Попробуйте ещё раз.'); return; }
     setScanning(true); setScanResult(null);
     try {
-      const res = await scanSubscribers();
+      const res = await scanSubscribers(VK_GROUP_ID, token);
       if ((res as { error?: string }).error) {
         alert((res as { error: string }).error);
       } else {
@@ -77,7 +102,7 @@ const PageMailings = () => {
   const handleImport = async () => {
     if (!importText.trim()) return;
     setImporting(true); setImportResult(null);
-    const res = await importSubscribers(importText);
+    const res = await importSubscribers(VK_GROUP_ID, importText);
     setImportResult(res);
     setImportText('');
     load();
@@ -94,8 +119,10 @@ const PageMailings = () => {
 
   const handleSend = async () => {
     if (!message.trim()) return;
+    const token = await ensureToken();
+    if (!token) { alert('Не удалось получить токен сообщества. Попробуйте ещё раз.'); return; }
     setSending(true); setSendResult(null);
-    const res = await sendMailing(title || 'Рассылка', message);
+    const res = await sendMailing(VK_GROUP_ID, title || 'Рассылка', message, token);
     setSendResult(res);
     setMessage(''); setTitle('');
     load();
@@ -105,7 +132,7 @@ const PageMailings = () => {
   const handleClear = async () => {
     if (!confirm('Удалить всю базу подписчиков? Это действие нельзя отменить.')) return;
     setClearing(true);
-    await clearSubscribers();
+    await clearSubscribers(VK_GROUP_ID);
     setClearing(false);
     load();
   };
@@ -121,7 +148,23 @@ const PageMailings = () => {
 
       {/* Шапка со статистикой */}
       <div style={{ background: '#fff', borderBottom: '1px solid #EBEBEB', padding: '14px 16px' }}>
-        <div style={{ fontSize: 13, color: '#999', marginBottom: 10 }}>База подписчиков</div>
+        {/* Статус токена */}
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 10 }}>
+          <div style={{ fontSize: 13, color: '#999' }}>База подписчиков</div>
+          {tokenLoading ? (
+            <div style={{ display: 'flex', alignItems: 'center', gap: 5, fontSize: 11, color: '#999' }}>
+              <Icon name="Loader" size={12} /> Получение токена…
+            </div>
+          ) : groupToken ? (
+            <div style={{ display: 'flex', alignItems: 'center', gap: 5, fontSize: 11, fontWeight: 700, color: '#059669', background: '#D1FAE5', padding: '3px 8px', borderRadius: 6 }}>
+              <Icon name="ShieldCheck" size={12} /> Токен получен
+            </div>
+          ) : (
+            <button onClick={requestToken} style={{ display: 'flex', alignItems: 'center', gap: 5, fontSize: 11, fontWeight: 700, color: '#D97706', background: '#FEF9C3', border: 'none', borderRadius: 6, padding: '3px 8px', cursor: 'pointer' }}>
+              <Icon name="RefreshCw" size={12} /> Получить токен
+            </button>
+          )}
+        </div>
         <div style={{ display: 'flex', gap: 10 }}>
           {[
             { n: loading ? '…' : (stats?.total ?? 0), l: 'всего', icon: 'Users', color: '#7C3AED', bg: '#EDE9FE' },
@@ -283,7 +326,7 @@ const PageMailings = () => {
               <div style={{ fontSize: 13, color: '#999', marginBottom: 12 }}>
                 Скачать список ID всех подписчиков в формате .txt
               </div>
-              <a href={exportSubscribersUrl()} download="subscribers.txt" style={{
+              <a href={exportSubscribersUrl(VK_GROUP_ID)} download="subscribers.txt" style={{
                 display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
                 padding: '11px', fontSize: 14, fontWeight: 700,
                 color: '#7C3AED', background: '#EDE9FE', border: 'none', borderRadius: 12,
