@@ -70,52 +70,57 @@ def multipart_upload(upload_url: str, field: str, filename: str, data: bytes, co
         return json.loads(r.read())
 
 
+VK_IMAGE_SIZES = {
+    'cover_list': (1530, 384),
+    'tiles':      (480, 480),
+}
+
 def upload_image_to_vk(image_url: str, token: str, group_id: int, widget_type: str = 'compact_list') -> str | None:
-    """Загружает фото в сообщество через photos API и возвращает cover_id вида photo-GROUP_ID_PHOTO_ID."""
+    """Загружает изображение через appWidgets API и возвращает cover_id."""
     try:
-        # 1. Скачиваем изображение
+        # 1. Скачиваем и ресайзим
         with urllib.request.urlopen(image_url, timeout=10) as r:
             img_data = r.read()
+        target_w, target_h = VK_IMAGE_SIZES.get(widget_type, (480, 480))
+        img_data = resize_image(img_data, target_w, target_h)
 
-        # 2. Ресайзим под нужный размер
-        if widget_type == 'cover_list':
-            img_data = resize_image(img_data, 1530, 384)
-        else:
-            img_data = resize_image(img_data, 800, 800)
+        # 2. image_type для VK
+        image_type = '510x128' if widget_type == 'cover_list' else '160x160'
 
-        # 3. Получаем URL для загрузки фото на стену группы
-        upload_resp = vk_call('photos.getWallUploadServer', {
-            'group_id': abs(group_id),
+        # 3. Получаем upload URL
+        upload_resp = vk_call('appWidgets.getGroupImageUploadServer', {
+            'image_type': image_type,
         }, token)
         if 'error' in upload_resp:
-            print(f"[widget] getWallUploadServer error: {upload_resp['error']}")
+            print(f"[widget] getGroupImageUploadServer error: {upload_resp['error']}")
             return None
         upload_url = upload_resp.get('response', {}).get('upload_url')
         if not upload_url:
             return None
 
-        # 4. Загружаем фото
-        upload_result = multipart_upload(upload_url, 'photo', 'image.jpg', img_data)
-        print(f"[widget] upload_result: {upload_result}")
+        # 4. Загружаем — пробуем оба поля: file и photo
+        upload_result = multipart_upload(upload_url, 'file', 'image.jpg', img_data)
+        print(f"[widget] upload_result (file): {upload_result}")
 
-        # 5. Сохраняем фото
-        save_resp = vk_call('photos.saveWallPhoto', {
-            'group_id': abs(group_id),
-            'server': upload_result.get('server', ''),
-            'photo': upload_result.get('photo', ''),
-            'hash': upload_result.get('hash', ''),
+        if upload_result.get('error_code'):
+            upload_result = multipart_upload(upload_url, 'photo', 'image.jpg', img_data)
+            print(f"[widget] upload_result (photo): {upload_result}")
+
+        # 5. saveGroupImage — передаём все поля из ответа включая secret
+        save_resp = vk_call('appWidgets.saveGroupImage', {
+            'server': str(upload_result.get('server', '')),
+            'hash':   str(upload_result.get('hash', '')),
+            'image':  str(upload_result.get('sha', upload_result.get('image', ''))),
+            'secret': str(upload_result.get('secret', '')),
         }, token)
+        print(f"[widget] saveGroupImage resp: {save_resp}")
         if 'error' in save_resp:
-            print(f"[widget] saveWallPhoto error: {save_resp['error']}")
+            print(f"[widget] saveGroupImage error: {save_resp['error']}")
             return None
 
-        photos = save_resp.get('response', [])
-        if not photos:
-            return None
-        photo = photos[0]
-        cover_id = f"photo{photo['owner_id']}_{photo['id']}"
-        print(f"[widget] cover_id: {cover_id}")
-        return cover_id
+        img_id = save_resp.get('response', {}).get('id')
+        print(f"[widget] saved image id: {img_id}")
+        return img_id
 
     except Exception as ex:
         print(f"[widget] upload_image_to_vk exception: {ex}")
@@ -169,12 +174,15 @@ def build_widget(events: list, widget_type: str, title: str,
 
         rows.append(row)
 
+    # tiles использует поле 'tiles', остальные — 'rows'
+    rows_key = 'tiles' if widget_type == 'tiles' else 'rows'
+
     widget = {
         'title': title,
         'title_url': app_url,
         'more': btn2_text,
         'more_url': app_url,
-        'rows': rows,
+        rows_key: rows,
     }
 
     vk_type_map = {
