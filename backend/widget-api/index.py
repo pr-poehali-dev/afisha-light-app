@@ -35,14 +35,7 @@ def vk_call(method, params, token):
     with urllib.request.urlopen(req, timeout=15) as r:
         return json.loads(r.read())
 
-# Точные размеры для каждого типа изображения VK
-VK_IMAGE_SIZES = {
-    '510x128':  (1530, 384),   # cover_list (VK умножает на 3)
-    '160x160':  (480, 480),    # tiles
-    'other':    (480, 480),
-}
-
-def resize_image(img_data: bytes, target_w: int, target_h: int) -> tuple[bytes, str]:
+def resize_image(img_data: bytes, target_w: int, target_h: int) -> bytes:
     """Ресайзит изображение под точный размер (crop по центру)."""
     img = Image.open(io.BytesIO(img_data)).convert('RGB')
     src_w, src_h = img.size
@@ -60,61 +53,70 @@ def resize_image(img_data: bytes, target_w: int, target_h: int) -> tuple[bytes, 
     img = img.resize((target_w, target_h), Image.LANCZOS)
     buf = io.BytesIO()
     img.save(buf, format='JPEG', quality=92)
-    return buf.getvalue(), 'image/jpeg'
+    return buf.getvalue()
 
 
-def upload_image_to_vk(image_url: str, token: str, group_id: int, image_type: str = 'other') -> str | None:
-    """Загружает изображение в VK через appWidgets API. Возвращает id или None."""
+def multipart_upload(upload_url: str, field: str, filename: str, data: bytes, content_type: str = 'image/jpeg') -> dict:
+    """Загружает файл через multipart/form-data."""
+    boundary = '----VKWidgetBoundary'
+    body = (
+        f'--{boundary}\r\n'
+        f'Content-Disposition: form-data; name="{field}"; filename="{filename}"\r\n'
+        f'Content-Type: {content_type}\r\n\r\n'
+    ).encode() + data + f'\r\n--{boundary}--\r\n'.encode()
+    req = urllib.request.Request(upload_url, data=body, method='POST')
+    req.add_header('Content-Type', f'multipart/form-data; boundary={boundary}')
+    with urllib.request.urlopen(req, timeout=15) as r:
+        return json.loads(r.read())
+
+
+def upload_image_to_vk(image_url: str, token: str, group_id: int, widget_type: str = 'compact_list') -> str | None:
+    """Загружает фото в сообщество через photos API и возвращает cover_id вида photo-GROUP_ID_PHOTO_ID."""
     try:
-        # 1. Получаем URL для загрузки (group_id не передаём — берётся из токена)
-        upload_resp = vk_call('appWidgets.getGroupImageUploadServer', {
-            'image_type': image_type,
+        # 1. Скачиваем изображение
+        with urllib.request.urlopen(image_url, timeout=10) as r:
+            img_data = r.read()
+
+        # 2. Ресайзим под нужный размер
+        if widget_type == 'cover_list':
+            img_data = resize_image(img_data, 1530, 384)
+        else:
+            img_data = resize_image(img_data, 800, 800)
+
+        # 3. Получаем URL для загрузки фото на стену группы
+        upload_resp = vk_call('photos.getWallUploadServer', {
+            'group_id': abs(group_id),
         }, token)
         if 'error' in upload_resp:
-            print(f"[widget] getGroupImageUploadServer error: {upload_resp['error']}")
+            print(f"[widget] getWallUploadServer error: {upload_resp['error']}")
             return None
         upload_url = upload_resp.get('response', {}).get('upload_url')
         if not upload_url:
             return None
 
-        # 2. Скачиваем и ресайзим под нужный размер
-        with urllib.request.urlopen(image_url, timeout=10) as r:
-            img_data = r.read()
-        target_w, target_h = VK_IMAGE_SIZES.get(image_type, (480, 480))
-        img_data, content_type = resize_image(img_data, target_w, target_h)
-        print(f"[widget] resized to {target_w}x{target_h}, size: {len(img_data)} bytes")
-
-        # 3. Загружаем в VK через multipart/form-data (поле photo)
-        boundary = '----VKWidgetBoundary'
-        body = (
-            f'--{boundary}\r\n'
-            f'Content-Disposition: form-data; name="photo"; filename="image.jpg"\r\n'
-            f'Content-Type: {content_type}\r\n\r\n'
-        ).encode() + img_data + f'\r\n--{boundary}--\r\n'.encode()
-
-        req = urllib.request.Request(upload_url, data=body, method='POST')
-        req.add_header('Content-Type', f'multipart/form-data; boundary={boundary}')
-        with urllib.request.urlopen(req, timeout=15) as r:
-            upload_result = json.loads(r.read())
+        # 4. Загружаем фото
+        upload_result = multipart_upload(upload_url, 'photo', 'image.jpg', img_data)
         print(f"[widget] upload_result: {upload_result}")
 
-        # 4. Сохраняем — новый upload API возвращает sha вместо image
-        # Пробуем передать sha как image, и также через photo
-        save_params = {
-            'server': str(upload_result.get('server', '')),
-            'hash': str(upload_result.get('hash', '')),
-            'image': str(upload_result.get('sha', '')),
-            'photo': json.dumps(upload_result),
-        }
-        print(f"[widget] saveGroupImage params: {save_params}")
-        save_resp = vk_call('appWidgets.saveGroupImage', save_params, token)
+        # 5. Сохраняем фото
+        save_resp = vk_call('photos.saveWallPhoto', {
+            'group_id': abs(group_id),
+            'server': upload_result.get('server', ''),
+            'photo': upload_result.get('photo', ''),
+            'hash': upload_result.get('hash', ''),
+        }, token)
         if 'error' in save_resp:
-            print(f"[widget] saveGroupImage error: {save_resp['error']}")
+            print(f"[widget] saveWallPhoto error: {save_resp['error']}")
             return None
 
-        img_id = save_resp.get('response', {}).get('id')
-        print(f"[widget] saved image id: {img_id}")
-        return img_id
+        photos = save_resp.get('response', [])
+        if not photos:
+            return None
+        photo = photos[0]
+        cover_id = f"photo{photo['owner_id']}_{photo['id']}"
+        print(f"[widget] cover_id: {cover_id}")
+        return cover_id
+
     except Exception as ex:
         print(f"[widget] upload_image_to_vk exception: {ex}")
         return None
@@ -157,14 +159,11 @@ def build_widget(events: list, widget_type: str, title: str,
         img = e.get('image', '')
         if img:
             if needs_vk_image and token:
-                # Определяем тип изображения по widget_type
-                img_type = '510x128' if widget_type == 'cover_list' else '160x160'
-                vk_img_id = upload_image_to_vk(img, token, group_id, img_type)
+                vk_img_id = upload_image_to_vk(img, token, group_id, widget_type)
                 if vk_img_id:
                     row['cover_id'] = vk_img_id
                 else:
-                    # Fallback — передаём images (VK может принять для некоторых типов)
-                    row['images'] = [{'url': img, 'width': 510, 'height': 128}]
+                    row['images'] = [{'url': img, 'width': 400, 'height': 400}]
             else:
                 row['images'] = [{'url': img, 'width': 400, 'height': 400}]
 
