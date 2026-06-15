@@ -45,6 +45,7 @@ def upload_image_to_vk(image_url: str, token: str, group_id: int, image_type: st
             print(f"[widget] getGroupImageUploadServer error: {upload_resp['error']}")
             return None
         upload_url = upload_resp.get('response', {}).get('upload_url')
+        print(f"[widget] upload_url: {upload_url}")
         if not upload_url:
             return None
 
@@ -52,6 +53,7 @@ def upload_image_to_vk(image_url: str, token: str, group_id: int, image_type: st
         with urllib.request.urlopen(image_url, timeout=10) as r:
             img_data = r.read()
             content_type = r.headers.get('Content-Type', 'image/jpeg')
+        print(f"[widget] downloaded image: {len(img_data)} bytes, content_type: {content_type}")
 
         # 3. Загружаем в VK через multipart/form-data
         boundary = '----VKWidgetBoundary'
@@ -65,6 +67,7 @@ def upload_image_to_vk(image_url: str, token: str, group_id: int, image_type: st
         req.add_header('Content-Type', f'multipart/form-data; boundary={boundary}')
         with urllib.request.urlopen(req, timeout=15) as r:
             upload_result = json.loads(r.read())
+        print(f"[widget] upload_result: {upload_result}")
 
         # 4. Сохраняем изображение
         save_resp = vk_call('appWidgets.saveGroupImage', {
