@@ -101,11 +101,12 @@ def handler(event: dict, context) -> dict:
             while True:
                 resp = vk_call('groups.getMembers', {
                     'group_id': group_id,
-                    'fields': 'first_name,last_name,screen_name,photo_50,can_write_private_message',
+                    'fields': 'first_name,last_name,screen_name,photo_50',
                     'offset': offset,
                     'count': count,
                 }, token)
                 if 'error' in resp:
+                    print(f"[scan] VK error: {resp['error']}")
                     return err(f"VK API: {resp['error'].get('error_msg', 'unknown')}")
                 items = resp.get('response', {}).get('items', [])
                 if not items:
@@ -114,7 +115,7 @@ def handler(event: dict, context) -> dict:
                     uid = u.get('id') or u.get('user_id')
                     if not uid:
                         continue
-                    can = bool(u.get('can_write_private_message', 0))
+                    can = True  # can_write_private_message недоступен с токеном сообщества
                     cur.execute(
                         f"""INSERT INTO {SCHEMA}.subscribers (vk_group_id, vk_user_id, first_name, last_name, screen_name, photo_url, can_write, source)
                             VALUES (%s,%s,%s,%s,%s,%s,%s,'scan')
