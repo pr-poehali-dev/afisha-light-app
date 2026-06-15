@@ -99,11 +99,11 @@ def upload_image_to_vk(image_url: str, token: str, group_id: int, image_type: st
             upload_result = json.loads(r.read())
         print(f"[widget] upload_result: {upload_result}")
 
-        # 4. Сохраняем изображение
+        # 4. Сохраняем изображение (новый формат: sha вместо image)
         save_resp = vk_call('appWidgets.saveGroupImage', {
             'server': upload_result.get('server', ''),
             'hash': upload_result.get('hash', ''),
-            'image': upload_result.get('image', ''),
+            'image': upload_result.get('sha', upload_result.get('image', '')),
         }, token)
         if 'error' in save_resp:
             print(f"[widget] saveGroupImage error: {save_resp['error']}")
