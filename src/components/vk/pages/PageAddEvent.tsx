@@ -115,6 +115,8 @@ const PageAddEvent = ({ initial = {}, places = [], onSave, onCancel }: Props) =>
   const [link2Label, setLink2Label] = useState(initial.link2_label ?? 'Подробнее');
   const [adminNotes, setAdminNotes] = useState(initial.admin_notes ?? '');
   const [isFree, setIsFree] = useState(initial.is_free ?? false);
+  const [priceFrom, setPriceFrom] = useState(initial.price_from ?? 0);
+  const [priceTo, setPriceTo] = useState(initial.price_to ?? 0);
 
   const [image, setImage] = useState<string>(initial.image ?? '');
   const [uploading, setUploading] = useState(false);
@@ -188,7 +190,9 @@ const PageAddEvent = ({ initial = {}, places = [], onSave, onCancel }: Props) =>
       address: online ? '' : address,
       place: online ? '' : placeName,
       place_id: online ? undefined : (placeId || undefined),
-      age, is_free: isFree, price: isFree ? 0 : 0,
+      age, is_free: isFree, price: isFree ? 0 : priceFrom,
+      price_from: isFree ? 0 : priceFrom,
+      price_to: isFree ? 0 : priceTo,
       online,
       image: image || undefined,
       dates: buildDates(),
@@ -517,9 +521,35 @@ const PageAddEvent = ({ initial = {}, places = [], onSave, onCancel }: Props) =>
         <textarea className="vk-input" placeholder="Внутренние пометки..." value={adminNotes} rows={3} style={{ resize: 'none' }} onChange={(e) => setAdminNotes(e.target.value)} />
       </div>
 
-      {/* Бесплатное */}
+      {/* Стоимость и бесплатное */}
       <div style={{ ...section, marginBottom: 0 }}>
         <Toggle checked={isFree} onChange={() => setIsFree((v) => !v)} label="Бесплатное мероприятие" />
+        {!isFree && (
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10, marginTop: 4 }}>
+            <div>
+              <Label>Цена от, ₽</Label>
+              <input
+                type="number"
+                className="vk-input"
+                placeholder="500"
+                min={0}
+                value={priceFrom || ''}
+                onChange={(e) => setPriceFrom(Number(e.target.value))}
+              />
+            </div>
+            <div>
+              <Label>Цена до, ₽</Label>
+              <input
+                type="number"
+                className="vk-input"
+                placeholder="2000"
+                min={0}
+                value={priceTo || ''}
+                onChange={(e) => setPriceTo(Number(e.target.value))}
+              />
+            </div>
+          </div>
+        )}
       </div>
 
       {/* Нижняя панель */}

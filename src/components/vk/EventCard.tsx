@@ -90,9 +90,11 @@ const EventCard = ({ event, isAdmin, onClick, onEdit, onDelete }: Props) => {
         <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginTop: 6, flexWrap: 'wrap' }}>
           {event.is_free ? (
             <span style={{ fontSize: 14, fontWeight: 800, color: '#059669', background: '#D1FAE5', padding: '3px 10px', borderRadius: 8 }}>Бесплатно</span>
-          ) : event.price > 0 ? (
+          ) : (event.price_from ?? 0) > 0 ? (
             <span style={{ fontSize: 16, fontWeight: 800, color: '#111' }}>
-              от {event.price.toLocaleString('ru-RU')} ₽
+              {(event.price_to ?? 0) > 0 && event.price_to !== event.price_from
+                ? `${event.price_from!.toLocaleString('ru-RU')} — ${event.price_to!.toLocaleString('ru-RU')} ₽`
+                : `от ${event.price_from!.toLocaleString('ru-RU')} ₽`}
             </span>
           ) : null}
           {event.online && (

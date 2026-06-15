@@ -62,6 +62,8 @@ export interface EventItem {
   place_id?: number;
   is_free: boolean;
   price: number;
+  price_from?: number;
+  price_to?: number;
   age: string;
   image: string;
   dates: EventDate[];

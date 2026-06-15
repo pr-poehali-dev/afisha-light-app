@@ -170,9 +170,19 @@ const PageShowEvent = ({ event, isAdmin, currency, onEdit }: Props) => {
             );
           })}
         </div>
-        {!event.is_free && event.price > 0 && (
+        {!event.is_free && (event.price_from ?? 0) > 0 && (
           <div style={{ marginTop: 12, paddingTop: 12, borderTop: '1px solid #EBEBEB', fontSize: 13, color: '#999' }}>
-            Стоимость: <span style={{ fontWeight: 700, color: '#111', fontSize: 15 }}>{event.price.toLocaleString('ru-RU')} {currency}</span>
+            Стоимость:&nbsp;
+            <span style={{ fontWeight: 800, color: '#111', fontSize: 18 }}>
+              {(event.price_to ?? 0) > 0 && event.price_to !== event.price_from
+                ? `${event.price_from!.toLocaleString('ru-RU')} — ${event.price_to!.toLocaleString('ru-RU')} ${currency}`
+                : `от ${event.price_from!.toLocaleString('ru-RU')} ${currency}`}
+            </span>
+          </div>
+        )}
+        {event.is_free && (
+          <div style={{ marginTop: 12, paddingTop: 12, borderTop: '1px solid #EBEBEB' }}>
+            <span style={{ fontWeight: 800, color: '#059669', fontSize: 18, background: '#D1FAE5', padding: '4px 12px', borderRadius: 8 }}>Бесплатно</span>
           </div>
         )}
       </div>

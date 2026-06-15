@@ -19,6 +19,8 @@ function toEvent(row: Record<string, unknown>): EventItem {
     age: row.age as string,
     is_free: row.is_free as boolean,
     price: row.price as number,
+    price_from: (row.price_from as number) ?? 0,
+    price_to: (row.price_to as number) ?? 0,
     online: row.online as boolean,
     is_past: row.is_past as boolean,
     private: row.private as EventItem['private'],
