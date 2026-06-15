@@ -3,6 +3,7 @@ import json
 import psycopg2
 import urllib.request
 import urllib.parse
+import urllib.error
 from psycopg2.extras import RealDictCursor
 
 SCHEMA = os.environ.get('MAIN_DB_SCHEMA', 't_p8923173_afisha_light_app')
@@ -32,6 +33,56 @@ def vk_call(method, params, token):
     with urllib.request.urlopen(req, timeout=15) as r:
         return json.loads(r.read())
 
+def upload_image_to_vk(image_url: str, token: str, group_id: int, image_type: str = 'other') -> str | None:
+    """Загружает изображение в VK через appWidgets API. Возвращает id вида 'app_type_XXX' или None."""
+    try:
+        # 1. Получаем URL для загрузки
+        upload_resp = vk_call('appWidgets.getGroupImageUploadServer', {
+            'group_id': abs(group_id),
+            'image_type': image_type,
+        }, token)
+        if 'error' in upload_resp:
+            print(f"[widget] getGroupImageUploadServer error: {upload_resp['error']}")
+            return None
+        upload_url = upload_resp.get('response', {}).get('upload_url')
+        if not upload_url:
+            return None
+
+        # 2. Скачиваем исходное изображение
+        with urllib.request.urlopen(image_url, timeout=10) as r:
+            img_data = r.read()
+            content_type = r.headers.get('Content-Type', 'image/jpeg')
+
+        # 3. Загружаем в VK через multipart/form-data
+        boundary = '----VKWidgetBoundary'
+        body = (
+            f'--{boundary}\r\n'
+            f'Content-Disposition: form-data; name="image"; filename="image.jpg"\r\n'
+            f'Content-Type: {content_type}\r\n\r\n'
+        ).encode() + img_data + f'\r\n--{boundary}--\r\n'.encode()
+
+        req = urllib.request.Request(upload_url, data=body, method='POST')
+        req.add_header('Content-Type', f'multipart/form-data; boundary={boundary}')
+        with urllib.request.urlopen(req, timeout=15) as r:
+            upload_result = json.loads(r.read())
+
+        # 4. Сохраняем изображение
+        save_resp = vk_call('appWidgets.saveGroupImage', {
+            'server': upload_result.get('server', ''),
+            'hash': upload_result.get('hash', ''),
+            'image': upload_result.get('image', ''),
+        }, token)
+        if 'error' in save_resp:
+            print(f"[widget] saveGroupImage error: {save_resp['error']}")
+            return None
+
+        img_id = save_resp.get('response', {}).get('id')
+        return img_id
+    except Exception as ex:
+        print(f"[widget] upload_image_to_vk exception: {ex}")
+        return None
+
+
 def months_ru(month: int) -> str:
     return ['янв','фев','мар','апр','май','июн','июл','авг','сен','окт','ноя','дек'][month - 1]
 
@@ -43,10 +94,13 @@ def format_date(date_str: str) -> str:
 
 
 def build_widget(events: list, widget_type: str, title: str,
-                 btn1_text: str, btn2_text: str, group_id: int) -> dict:
+                 btn1_text: str, btn2_text: str, group_id: int, token: str = '') -> dict:
     """Формирует объект виджета VK по типу: cover_list, tiles, compact_list."""
 
     app_url = f"https://vk.com/app{os.environ.get('VK_APP_ID', '0')}_-{abs(group_id)}"
+
+    # Для cover_list и tiles нужны изображения загруженные в VK
+    needs_vk_image = widget_type in ('cover_list', 'tiles')
 
     rows = []
     for e in events:
@@ -61,11 +115,21 @@ def build_widget(events: list, widget_type: str, title: str,
             'button': btn1_text,
             'button_url': app_url,
             'text': date_label,
-            'icon_id': f"photo{e.get('vk_group_id', 0)}_{e.get('id', 0)}",
         }
 
-        if e.get('image'):
-            row['images'] = [{'url': e['image'], 'width': 400, 'height': 400}]
+        img = e.get('image', '')
+        if img:
+            if needs_vk_image and token:
+                # Определяем тип изображения по widget_type
+                img_type = '510x128' if widget_type == 'cover_list' else '160x160'
+                vk_img_id = upload_image_to_vk(img, token, group_id, img_type)
+                if vk_img_id:
+                    row['cover_id'] = vk_img_id
+                else:
+                    # Fallback — передаём images (VK может принять для некоторых типов)
+                    row['images'] = [{'url': img, 'width': 510, 'height': 128}]
+            else:
+                row['images'] = [{'url': img, 'width': 400, 'height': 400}]
 
         rows.append(row)
 
@@ -145,7 +209,7 @@ def handler(event: dict, context) -> dict:
             events_data.sort(key=lambda e: id_order.get(e['id'], 99))
 
             widget_data, vk_type = build_widget(
-                events_data, widget_type, title, btn1_text, btn2_text, vk_group_id
+                events_data, widget_type, title, btn1_text, btn2_text, vk_group_id, token
             )
 
             # Публикуем через VK API
