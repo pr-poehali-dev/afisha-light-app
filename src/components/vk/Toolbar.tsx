@@ -16,6 +16,7 @@ const PAGE_TITLES: Partial<Record<Page, string>> = {
   manager: 'Заказы',
   places: 'Места',
   mailings: 'Рассылки',
+  widget: 'Виджет',
   settings: 'Настройки',
   add_order: 'Оформление',
 };
