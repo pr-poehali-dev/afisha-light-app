@@ -12,13 +12,17 @@ import PageAddOrder from '@/components/vk/pages/PageAddOrder';
 import { MOCK_ORDERS, MOCK_CONFIG } from '@/data/mock';
 import { fetchEvents, createEvent, updateEvent, deleteEvent } from '@/api/events';
 import { fetchPlaces, createPlace, updatePlace } from '@/api/places';
+import { initVKBridge, parseVKParams } from '@/lib/vk';
 import type { EventItem, Order, Place, Page, AppConfig } from '@/types';
 
-const VK_PARAMS = {
-  is_admin: true,
-  vk_group_id: 234136199,
-  vk_user_id: 1107808138,
-};
+// Инициализируем VK Bridge при загрузке
+initVKBridge();
+
+// Читаем реальные параметры из URL (при запуске из VK) или используем дефолт для разработки
+const rawParams = parseVKParams();
+const VK_PARAMS = rawParams.vk_group_id > 0
+  ? rawParams
+  : { is_admin: true, vk_group_id: 234136199, vk_user_id: 1107808138 };
 
 const ROOT_PAGES: Page[] = ['main', 'past', 'manager', 'places', 'settings'];
 
