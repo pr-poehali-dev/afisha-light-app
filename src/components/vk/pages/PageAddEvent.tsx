@@ -66,7 +66,9 @@ const PageAddEvent = ({ initial = {}, places = [], onSave, onCancel }: Props) =>
   const [type, setType] = useState<EventCategory>(initial.type ?? 'Концерт');
   const [tagsInput, setTagsInput] = useState((initial.tags ?? []).join(', '));
   const [scheduleType, setScheduleType] = useState<EventScheduleType>(initial.schedule_type ?? 'once');
-  const [schedTab, setSchedTab] = useState<'calendar' | 'list'>('calendar');
+  const [schedTab, setSchedTab] = useState<'calendar' | 'list'>(
+    initial.schedule_type === 'schedule' ? 'list' : 'calendar'
+  );
 
   // once
   const [date, setDate] = useState(firstDate?.date ?? '');
@@ -77,7 +79,14 @@ const PageAddEvent = ({ initial = {}, places = [], onSave, onCancel }: Props) =>
   const today = new Date();
   const [calYear, setCalYear] = useState(today.getFullYear());
   const [calMonth, setCalMonth] = useState(today.getMonth());
-  const [calDates, setCalDates] = useState<Record<string, { start: string; finish: string }>>({});
+  const [calDates, setCalDates] = useState<Record<string, { start: string; finish: string }>>(() => {
+    if (initial.schedule_type === 'schedule' && initial.dates) {
+      return Object.fromEntries(
+        initial.dates.map((d) => [d.date, { start: d.start_time, finish: d.finish_time ?? '' }])
+      );
+    }
+    return {};
+  });
   const [calModal, setCalModal] = useState<string | null>(null);
   const [calModalStart, setCalModalStart] = useState('09:00');
   const [calModalFinish, setCalModalFinish] = useState('');
