@@ -85,11 +85,11 @@ def upload_image_to_vk(image_url: str, token: str, group_id: int, image_type: st
         img_data, content_type = resize_image(img_data, target_w, target_h)
         print(f"[widget] resized to {target_w}x{target_h}, size: {len(img_data)} bytes")
 
-        # 3. Загружаем в VK через multipart/form-data
+        # 3. Загружаем в VK через multipart/form-data (поле photo)
         boundary = '----VKWidgetBoundary'
         body = (
             f'--{boundary}\r\n'
-            f'Content-Disposition: form-data; name="file"; filename="image.jpg"\r\n'
+            f'Content-Disposition: form-data; name="photo"; filename="image.jpg"\r\n'
             f'Content-Type: {content_type}\r\n\r\n'
         ).encode() + img_data + f'\r\n--{boundary}--\r\n'.encode()
 
@@ -99,12 +99,10 @@ def upload_image_to_vk(image_url: str, token: str, group_id: int, image_type: st
             upload_result = json.loads(r.read())
         print(f"[widget] upload_result: {upload_result}")
 
-        # 4. Сохраняем изображение (новый формат: sha вместо image)
-        save_resp = vk_call('appWidgets.saveGroupImage', {
-            'server': upload_result.get('server', ''),
-            'hash': upload_result.get('hash', ''),
-            'image': upload_result.get('sha', upload_result.get('image', '')),
-        }, token)
+        # 4. Сохраняем — передаём все поля из ответа upload-сервера кроме meta
+        save_params = {k: str(v) for k, v in upload_result.items() if k not in ('meta', 'secret')}
+        print(f"[widget] saveGroupImage params: {save_params}")
+        save_resp = vk_call('appWidgets.saveGroupImage', save_params, token)
         if 'error' in save_resp:
             print(f"[widget] saveGroupImage error: {save_resp['error']}")
             return None
