@@ -10,6 +10,7 @@ import PageSettings from '@/components/vk/pages/PageSettings';
 import PageAddOrder from '@/components/vk/pages/PageAddOrder';
 import PageMailings from '@/components/vk/pages/PageMailings';
 import PageWidget from '@/components/vk/pages/PageWidget';
+import PageSite from '@/components/vk/pages/PageSite';
 
 import { MOCK_ORDERS, MOCK_CONFIG } from '@/data/mock';
 import { fetchEvents, createEvent, updateEvent, deleteEvent } from '@/api/events';
@@ -26,7 +27,7 @@ const VK_PARAMS = rawParams.vk_group_id > 0
   ? rawParams
   : { is_admin: true, vk_group_id: 234136199, vk_user_id: 1107808138 };
 
-const ROOT_PAGES: Page[] = ['main', 'past', 'manager', 'places', 'mailings', 'widget', 'settings'];
+const ROOT_PAGES: Page[] = ['main', 'past', 'manager', 'places', 'mailings', 'widget', 'site', 'settings'];
 
 const Index = () => {
   const { is_admin } = VK_PARAMS;
@@ -188,6 +189,9 @@ const Index = () => {
 
       case 'widget':
         return <PageWidget />;
+
+      case 'site':
+        return <PageSite />;
 
       case 'settings':
         return <PageSettings config={config} onSave={setConfig} />;

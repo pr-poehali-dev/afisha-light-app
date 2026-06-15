@@ -11,6 +11,7 @@ const NAV_ITEMS: { page: Page; label: string }[] = [
   { page: 'places', label: 'Места' },
   { page: 'mailings', label: 'Рассылки' },
   { page: 'widget', label: 'Виджет' },
+  { page: 'site', label: 'Сайт' },
   { page: 'settings', label: 'Настройки' },
 ];
 

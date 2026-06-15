@@ -17,6 +17,7 @@ const PAGE_TITLES: Partial<Record<Page, string>> = {
   places: 'Места',
   mailings: 'Рассылки',
   widget: 'Виджет',
+  site: 'Сайт',
   settings: 'Настройки',
   add_order: 'Оформление',
 };
