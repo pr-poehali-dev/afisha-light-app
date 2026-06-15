@@ -32,7 +32,7 @@ const PageShowEvent = ({ event, isAdmin, currency, onEdit, onBook }: Props) => (
 
     {/* Обложка */}
     {event.image && event.image.startsWith('http') && (
-      <div style={{ position: 'relative', aspectRatio: '2/1', overflow: 'hidden', background: '#EDEEF0' }}>
+      <div style={{ position: 'relative', aspectRatio: '8/3', overflow: 'hidden', background: '#EDEEF0' }}>
         <img
           src={event.image}
           alt={event.title}
