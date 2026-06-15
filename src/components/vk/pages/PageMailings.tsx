@@ -76,8 +76,10 @@ const PageMailings = ({ groupId }: MailingsProps) => {
 
   useEffect(() => {
     load();
-    // Автоматически запрашиваем токен
     requestToken();
+    // Обновляем токен каждые 50 минут (токены VK живут ~60 минут)
+    const interval = setInterval(() => { requestToken(); }, 50 * 60 * 1000);
+    return () => clearInterval(interval);
   }, []);
 
   const ensureToken = async (): Promise<string | null> => {
