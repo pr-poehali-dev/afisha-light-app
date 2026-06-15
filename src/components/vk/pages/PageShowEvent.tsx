@@ -96,15 +96,33 @@ const PageShowEvent = ({ event, isAdmin, currency, onEdit, onBook }: Props) => {
 
           {/* Кнопки действий */}
           <div style={{ display: 'flex', flexWrap: 'wrap', gap: 19 }}>
-            <button
-              onClick={onBook}
-              style={{
-                padding: '17px 34px', fontSize: 31, fontWeight: 600,
-                color: '#fff', background: '#3F51B5', border: 'none', cursor: 'pointer',
-              }}
-            >
-              {event.is_free ? 'Подать заявку' : 'Купить билет'}
-            </button>
+            {event.link1_url ? (
+              <a
+                href={event.link1_url}
+                target="_blank"
+                rel="noopener noreferrer"
+                style={{
+                  padding: '17px 34px', fontSize: 31, fontWeight: 600,
+                  color: '#fff', background: '#3F51B5', textDecoration: 'none', cursor: 'pointer',
+                }}
+              >
+                {event.link1_label || 'Билеты'}
+              </a>
+            ) : null}
+
+            {event.link2_url ? (
+              <a
+                href={event.link2_url}
+                target="_blank"
+                rel="noopener noreferrer"
+                style={{
+                  padding: '17px 34px', fontSize: 31, fontWeight: 600,
+                  color: '#3F51B5', background: '#fff', border: '1px solid #DCDFE6', textDecoration: 'none', cursor: 'pointer',
+                }}
+              >
+                {event.link2_label || 'Подробнее'}
+              </a>
+            ) : null}
 
             {isAdmin && (
               <button
