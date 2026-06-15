@@ -7,21 +7,19 @@ export default {
 		"./components/**/*.{ts,tsx}",
 		"./app/**/*.{ts,tsx}",
 		"./src/**/*.{ts,tsx}",
-			"./1781536842623229992.html"
+		"./1781536842623229992.html"
 	],
 	prefix: "",
 	theme: {
 		container: {
 			center: true,
-			padding: '2rem',
-			screens: {
-				'2xl': '1400px'
-			}
+			padding: '1rem',
+			screens: { '2xl': '480px' }
 		},
 		extend: {
 			fontFamily: {
-				display: ['Oswald', 'sans-serif'],
-				sans: ['"IBM Plex Sans"', 'sans-serif']
+				sans: ['Inter', '-apple-system', 'BlinkMacSystemFont', 'Helvetica Neue', 'sans-serif'],
+				display: ['Inter', 'sans-serif'],
 			},
 			colors: {
 				border: 'hsl(var(--border))',
@@ -66,12 +64,33 @@ export default {
 					'accent-foreground': 'hsl(var(--sidebar-accent-foreground))',
 					border: 'hsl(var(--sidebar-border))',
 					ring: 'hsl(var(--sidebar-ring))'
+				},
+				/* VK цвета напрямую */
+				vk: {
+					blue: '#3F51B5',
+					'blue-dark': '#303F9F',
+					'bg': '#EDEEF0',
+					'bg-light': '#F0F1F3',
+					'border': '#DCDFE6',
+					'text': '#1A1A1A',
+					'muted': '#8A8A8A',
+					'green': '#17A050',
 				}
 			},
 			borderRadius: {
-				lg: 'var(--radius)',
-				md: 'calc(var(--radius) - 2px)',
-				sm: 'calc(var(--radius) - 4px)'
+				lg: '0px',
+				md: '0px',
+				sm: '0px',
+			},
+			fontSize: {
+				'2xs': ['10px', '12px'],
+				xs: ['11px', '13px'],
+				sm: ['12px', '15px'],
+				base: ['14px', '18px'],
+				lg: ['15px', '19px'],
+				xl: ['16px', '20px'],
+				'2xl': ['18px', '22px'],
+				'3xl': ['20px', '24px'],
 			},
 			keyframes: {
 				'accordion-down': {
@@ -83,14 +102,14 @@ export default {
 					to: { height: '0' }
 				},
 				'fade-in': {
-					from: { opacity: '0', transform: 'translateY(16px)' },
+					from: { opacity: '0', transform: 'translateY(8px)' },
 					to: { opacity: '1', transform: 'translateY(0)' }
 				}
 			},
 			animation: {
 				'accordion-down': 'accordion-down 0.2s ease-out',
 				'accordion-up': 'accordion-up 0.2s ease-out',
-				'fade-in': 'fade-in 0.6s ease-out forwards'
+				'fade-in': 'fade-in 0.25s ease-out forwards'
 			}
 		}
 	},

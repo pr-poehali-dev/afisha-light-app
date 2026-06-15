@@ -9,128 +9,140 @@ interface Props {
   onBook: () => void;
 }
 
-const MONTHS = ['января', 'февраля', 'марта', 'апреля', 'мая', 'июня', 'июля', 'августа', 'сентября', 'октября', 'ноября', 'декабря'];
+const MONTHS_FULL = [
+  'января','февраля','марта','апреля','мая','июня',
+  'июля','августа','сентября','октября','ноября','декабря'
+];
 
 function formatDate(dateStr: string, time: string, finish?: string) {
-  const d = new Date(dateStr);
-  const day = d.getDate();
-  const month = MONTHS[d.getMonth()];
-  const year = d.getFullYear();
-  let s = `${day} ${month} ${year} · ${time}`;
-  if (finish) s += ` – ${finish}`;
-  return s;
+  const d = new Date(dateStr + 'T00:00:00');
+  const str = `${d.getDate()} ${MONTHS_FULL[d.getMonth()]} ${d.getFullYear()}`;
+  return finish ? `${str} · ${time} — ${finish}` : `${str} · ${time}`;
 }
 
-const PRIVACY_LABELS: Record<number, { icon: string; text: string }> = {
-  0: { icon: 'Globe', text: 'Только в своей афише' },
-  1: { icon: 'Link', text: 'Только по прямой ссылке' },
-  2: { icon: 'Globe2', text: 'Во всех афишах' },
-  3: { icon: 'Lock', text: 'Скрыто (только для админов)' },
-};
+const Row = ({ icon, children }: { icon: string; children: React.ReactNode }) => (
+  <div style={{ display: 'flex', alignItems: 'flex-start', gap: 8, marginBottom: 8 }}>
+    <Icon name={icon} size={16} style={{ color: '#3F51B5', flexShrink: 0, marginTop: 1 }} />
+    <span style={{ fontSize: 13, color: '#1A1A1A', lineHeight: 1.4 }}>{children}</span>
+  </div>
+);
 
-const PageShowEvent = ({ event, isAdmin, currency, onEdit, onBook }: Props) => {
-  const privacy = PRIVACY_LABELS[event.private] ?? PRIVACY_LABELS[0];
+const PageShowEvent = ({ event, isAdmin, currency, onEdit, onBook }: Props) => (
+  <div style={{ background: '#fff', minHeight: '100vh' }}>
 
-  return (
-    <div className="flex flex-col">
-      {/* Cover image */}
-      <div className="relative aspect-[16/9] w-full overflow-hidden bg-secondary">
-        <img
-          src={event.image}
-          alt={event.title}
-          className="h-full w-full object-cover"
-        />
-        <span className="absolute right-3 top-3 bg-accent px-2 py-1 text-[11px] font-700 uppercase tracking-wide text-accent-foreground">
-          {event.type}
-        </span>
+    {/* Обложка */}
+    <div style={{ position: 'relative', aspectRatio: '16/9', overflow: 'hidden', background: '#EDEEF0' }}>
+      <img
+        src={event.image}
+        alt={event.title}
+        style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+      />
+    </div>
+
+    {/* Контент */}
+    <div style={{ padding: '12px 14px' }}>
+
+      {/* Тип */}
+      <div style={{ fontSize: 11, fontWeight: 600, color: '#3F51B5', textTransform: 'uppercase', letterSpacing: 0.5, marginBottom: 4 }}>
+        {event.type}
       </div>
 
-      {/* Content */}
-      <div className="p-4">
-        <h1 className="font-display text-2xl font-700 leading-tight">{event.title}</h1>
+      {/* Название */}
+      <h1 style={{ fontSize: 18, fontWeight: 700, color: '#1A1A1A', lineHeight: 1.3, margin: '0 0 12px' }}>
+        {event.title}
+      </h1>
 
-        {/* Meta */}
-        <div className="mt-4 space-y-2.5">
-          {event.dates.map((d, i) => (
-            <div key={i} className="flex items-start gap-2.5 text-sm">
-              <Icon name="Calendar" size={16} className="mt-0.5 shrink-0 text-accent" />
-              <span>{formatDate(d.date, d.start_time, d.finish_time)}</span>
-            </div>
-          ))}
+      {/* Мета */}
+      <div style={{ marginBottom: 12 }}>
+        {event.dates.map((d, i) => (
+          <Row key={i} icon="Clock">
+            {formatDate(d.date, d.start_time, d.finish_time)}
+          </Row>
+        ))}
 
-          {!event.online && (
-            <div className="flex items-start gap-2.5 text-sm">
-              <Icon name="MapPin" size={16} className="mt-0.5 shrink-0 text-accent" />
-              <div>
-                <div>{event.place}</div>
-                <div className="text-muted-foreground">{event.address}, {event.city}</div>
-              </div>
-            </div>
-          )}
+        {!event.online && (
+          <Row icon="MapPin">
+            <span>
+              {event.place && <span>{event.place}<br /></span>}
+              <span style={{ color: '#8A8A8A' }}>{event.address}, {event.city}</span>
+            </span>
+          </Row>
+        )}
 
-          {event.online && (
-            <div className="flex items-center gap-2.5 text-sm">
-              <Icon name="Monitor" size={16} className="shrink-0 text-accent" />
-              Онлайн (MSK)
-            </div>
-          )}
+        {event.online && <Row icon="Monitor">Онлайн (МСК)</Row>}
 
-          {event.age && (
-            <div className="flex items-center gap-2.5 text-sm text-muted-foreground">
-              <Icon name="ShieldCheck" size={16} className="shrink-0" />
-              Возраст: {event.age}
-            </div>
-          )}
-
-          {isAdmin && (
-            <div className="flex items-center gap-2.5 text-sm text-muted-foreground">
-              <Icon name={privacy.icon} size={16} className="shrink-0" />
-              {privacy.text}
-            </div>
-          )}
-        </div>
-
-        {/* Price + action */}
-        <div className="mt-5 flex items-center justify-between rounded-sm border border-border p-4">
-          <div>
-            <div className="text-xs uppercase tracking-wide text-muted-foreground mb-0.5">Стоимость</div>
-            {event.is_free ? (
-              <div className="font-display text-xl font-700 text-green-600">Бесплатно</div>
-            ) : (
-              <div className="font-display text-xl font-700">
-                {event.price.toLocaleString('ru-RU')} {currency}
-              </div>
-            )}
-          </div>
-          <button
-            onClick={onBook}
-            className="bg-primary px-5 py-3 font-display text-sm font-700 uppercase text-primary-foreground transition-opacity hover:opacity-90"
-          >
-            {event.is_free ? 'Зарегистрироваться' : 'Забронировать'}
-          </button>
-        </div>
-
-        {/* Description */}
-        <div className="mt-5">
-          <h2 className="font-display text-sm font-700 uppercase tracking-wide text-muted-foreground mb-2">
-            Описание
-          </h2>
-          <p className="text-sm leading-relaxed text-foreground">{event.description}</p>
-        </div>
-
-        {/* Admin edit */}
-        {isAdmin && (
-          <button
-            onClick={onEdit}
-            className="mt-6 flex w-full items-center justify-center gap-2 border border-border py-2.5 text-sm font-500 text-muted-foreground transition-colors hover:border-primary hover:text-primary"
-          >
-            <Icon name="Pencil" size={15} />
-            Редактировать событие
-          </button>
+        {event.age && (
+          <Row icon="ShieldCheck">
+            <span style={{ color: '#8A8A8A' }}>Возраст: {event.age}</span>
+          </Row>
         )}
       </div>
+
+      {/* Цена и кнопка */}
+      <div
+        style={{
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          border: '1px solid #DCDFE6',
+          padding: '10px 12px',
+          marginBottom: 14,
+          background: '#F7F8FA',
+        }}
+      >
+        <div>
+          <div style={{ fontSize: 10, color: '#8A8A8A', textTransform: 'uppercase', letterSpacing: 0.5, marginBottom: 2 }}>
+            Стоимость
+          </div>
+          {event.is_free ? (
+            <div style={{ fontSize: 18, fontWeight: 700, color: '#17A050' }}>Бесплатно</div>
+          ) : (
+            <div style={{ fontSize: 18, fontWeight: 700, color: '#1A1A1A' }}>
+              {event.price.toLocaleString('ru-RU')} {currency}
+            </div>
+          )}
+        </div>
+        <button onClick={onBook} className="vk-btn-primary" style={{ fontSize: 13 }}>
+          {event.is_free ? 'Зарегистрироваться' : 'Забронировать'}
+        </button>
+      </div>
+
+      {/* Описание */}
+      <div style={{ marginBottom: 16 }}>
+        <div style={{ fontSize: 11, fontWeight: 600, color: '#8A8A8A', textTransform: 'uppercase', letterSpacing: 0.5, marginBottom: 6 }}>
+          Описание
+        </div>
+        <p style={{ fontSize: 14, color: '#1A1A1A', lineHeight: 1.6, margin: 0 }}>
+          {event.description}
+        </p>
+      </div>
+
+      {/* Кнопка редактирования */}
+      {isAdmin && (
+        <button
+          onClick={onEdit}
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            gap: 6,
+            width: '100%',
+            padding: '10px',
+            fontSize: 13,
+            fontWeight: 500,
+            color: '#3F51B5',
+            background: 'none',
+            border: '1px solid #DCDFE6',
+            cursor: 'pointer',
+            marginBottom: 16,
+          }}
+        >
+          <Icon name="Pencil" size={14} />
+          Редактировать событие
+        </button>
+      )}
     </div>
-  );
-};
+  </div>
+);
 
 export default PageShowEvent;

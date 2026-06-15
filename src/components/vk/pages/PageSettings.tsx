@@ -7,49 +7,50 @@ interface Props {
   onSave: (c: AppConfig) => void;
 }
 
-const inputCls =
-  'border border-input bg-background px-3 py-2.5 text-sm outline-none focus:border-accent transition-colors w-full';
-
-const Section = ({ title, children }: { title: string; children: React.ReactNode }) => (
-  <div className="flex flex-col gap-4">
-    <div className="border-l-2 border-accent pl-3 font-display text-sm font-700 uppercase tracking-wide text-muted-foreground">
-      {title}
-    </div>
+const Label = ({ children }: { children: React.ReactNode }) => (
+  <div style={{ fontSize: 11, fontWeight: 600, color: '#8A8A8A', textTransform: 'uppercase', letterSpacing: 0.5, marginBottom: 4 }}>
     {children}
   </div>
 );
 
-const Field = ({ label, children }: { label: string; children: React.ReactNode }) => (
-  <div className="flex flex-col gap-1.5">
-    <label className="text-xs font-600 uppercase tracking-wide text-muted-foreground">{label}</label>
+const SectionTitle = ({ children }: { children: React.ReactNode }) => (
+  <div style={{
+    fontSize: 11, fontWeight: 600, color: '#8A8A8A', textTransform: 'uppercase',
+    letterSpacing: 0.5, padding: '10px 14px 6px', borderBottom: '1px solid #DCDFE6',
+    background: '#F7F8FA',
+  }}>
     {children}
   </div>
 );
 
-const Toggle = ({
-  label,
-  desc,
-  checked,
-  onChange,
-}: {
-  label: string;
-  desc?: string;
-  checked: boolean;
-  onChange: (v: boolean) => void;
+const Toggle = ({ label, desc, checked, onChange }: {
+  label: string; desc?: string; checked: boolean; onChange: (v: boolean) => void;
 }) => (
-  <div className="flex items-center justify-between gap-3 rounded-sm border border-border px-3 py-3">
-    <div className="flex-1">
-      <div className="text-sm font-500">{label}</div>
-      {desc && <div className="text-[11px] text-muted-foreground">{desc}</div>}
+  <div
+    style={{
+      display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+      gap: 12, padding: '12px 14px', borderBottom: '1px solid #DCDFE6',
+      background: '#fff', cursor: 'pointer',
+    }}
+    onClick={() => onChange(!checked)}
+  >
+    <div style={{ flex: 1 }}>
+      <div style={{ fontSize: 14, color: '#1A1A1A' }}>{label}</div>
+      {desc && <div style={{ fontSize: 12, color: '#8A8A8A', marginTop: 2 }}>{desc}</div>}
     </div>
-    <button
-      onClick={() => onChange(!checked)}
-      className={`relative h-6 w-11 rounded-full transition-colors ${checked ? 'bg-accent' : 'bg-secondary border border-border'}`}
-    >
-      <span
-        className={`absolute top-0.5 h-5 w-5 rounded-full bg-white shadow transition-transform ${checked ? 'translate-x-5' : 'translate-x-0.5'}`}
-      />
-    </button>
+    <div style={{
+      width: 44, height: 24, borderRadius: 12,
+      background: checked ? '#3F51B5' : '#DCDFE6',
+      position: 'relative', transition: 'background 0.2s', flexShrink: 0,
+    }}>
+      <div style={{
+        position: 'absolute', top: 2,
+        left: checked ? 22 : 2,
+        width: 20, height: 20, borderRadius: 10,
+        background: '#fff', transition: 'left 0.2s',
+        boxShadow: '0 1px 3px rgba(0,0,0,0.2)',
+      }} />
+    </div>
   </div>
 );
 
@@ -57,8 +58,8 @@ const PageSettings = ({ config, onSave }: Props) => {
   const [form, setForm] = useState({ ...config });
   const [saved, setSaved] = useState(false);
 
-  const setF = <K extends keyof AppConfig>(k: K, v: AppConfig[K]) =>
-    setForm((prev) => ({ ...prev, [k]: v }));
+  const set = <K extends keyof AppConfig>(k: K, v: AppConfig[K]) =>
+    setForm((p) => ({ ...p, [k]: v }));
 
   const handleSave = () => {
     onSave(form);
@@ -66,84 +67,78 @@ const PageSettings = ({ config, onSave }: Props) => {
     setTimeout(() => setSaved(false), 2000);
   };
 
+  const fieldStyle: React.CSSProperties = {
+    padding: '10px 14px',
+    borderBottom: '1px solid #DCDFE6',
+    background: '#fff',
+  };
+
   return (
-    <div className="flex flex-col gap-6 p-4 pb-24">
-      <Section title="Основное">
-        <Field label="Заголовок афиши">
-          <input
-            className={inputCls}
-            value={form.widget_name}
-            onChange={(e) => setF('widget_name', e.target.value)}
-            placeholder="Афиша"
-            maxLength={100}
-          />
-        </Field>
-        <Field label="Название организатора">
-          <input
-            className={inputCls}
-            value={form.org_name}
-            onChange={(e) => setF('org_name', e.target.value)}
-            placeholder="ИП Иванов И.И."
-          />
-        </Field>
-        <Field label="E-mail">
-          <input
-            type="email"
-            className={inputCls}
-            value={form.email}
-            onChange={(e) => setF('email', e.target.value)}
-            placeholder="info@example.com"
-          />
-        </Field>
-        <Field label="Валюта">
-          <input
-            className={inputCls}
-            value={form.currency}
-            onChange={(e) => setF('currency', e.target.value)}
-            placeholder="₽"
-            maxLength={5}
-          />
-        </Field>
-      </Section>
+    <div style={{ background: '#F7F8FA', minHeight: '100vh', paddingBottom: 72 }}>
 
-      <Section title="Настройки отображения">
-        <Toggle
-          label="Скрыть прошедшие события"
-          desc="Посетители не увидят раздел «Прошедшие»"
-          checked={form.hide_past}
-          onChange={(v) => setF('hide_past', v)}
-        />
-        <Toggle
-          label="Разрешить предлагать события"
-          desc="Пользователи могут отправить свои события на модерацию"
-          checked={form.allow_propose}
-          onChange={(v) => setF('allow_propose', v)}
-        />
-      </Section>
+      <SectionTitle>Основное</SectionTitle>
 
-      <Section title="Бронирование">
-        <Toggle
-          label="Включить бронирование и регистрацию"
-          desc="Показывать кнопки записи на события"
-          checked={form.booking_enabled}
-          onChange={(v) => setF('booking_enabled', v)}
-        />
-      </Section>
+      <div style={fieldStyle}>
+        <Label>Заголовок афиши</Label>
+        <input className="vk-input" value={form.widget_name} maxLength={100}
+          onChange={(e) => set('widget_name', e.target.value)} placeholder="Афиша" />
+      </div>
 
-      {/* Save */}
-      <div className="fixed bottom-0 left-0 right-0 border-t border-border bg-card p-3">
+      <div style={fieldStyle}>
+        <Label>Название организатора</Label>
+        <input className="vk-input" value={form.org_name}
+          onChange={(e) => set('org_name', e.target.value)} placeholder="ИП Иванов И.И." />
+      </div>
+
+      <div style={fieldStyle}>
+        <Label>E-mail</Label>
+        <input type="email" className="vk-input" value={form.email}
+          onChange={(e) => set('email', e.target.value)} placeholder="info@example.com" />
+      </div>
+
+      <div style={fieldStyle}>
+        <Label>Валюта</Label>
+        <input className="vk-input" value={form.currency} maxLength={5}
+          onChange={(e) => set('currency', e.target.value)} placeholder="₽" />
+      </div>
+
+      <SectionTitle>Настройки отображения</SectionTitle>
+
+      <Toggle
+        label="Скрыть прошедшие события"
+        desc="Посетители не увидят раздел «Прошедшие»"
+        checked={form.hide_past}
+        onChange={(v) => set('hide_past', v)}
+      />
+      <Toggle
+        label="Разрешить предлагать события"
+        desc="Пользователи могут отправить события на модерацию"
+        checked={form.allow_propose}
+        onChange={(v) => set('allow_propose', v)}
+      />
+
+      <SectionTitle>Бронирование</SectionTitle>
+
+      <Toggle
+        label="Включить бронирование и регистрацию"
+        checked={form.booking_enabled}
+        onChange={(v) => set('booking_enabled', v)}
+      />
+
+      <div style={{
+        position: 'fixed', bottom: 0, left: 0, right: 0,
+        padding: 10, borderTop: '1px solid #DCDFE6', background: '#fff',
+      }}>
         <button
           onClick={handleSave}
-          className="flex w-full items-center justify-center gap-2 bg-primary py-3 font-display text-sm font-700 uppercase text-primary-foreground transition-opacity hover:opacity-90"
+          style={{
+            display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
+            width: '100%', padding: '12px 0',
+            fontSize: 14, fontWeight: 600, color: '#fff',
+            background: '#3F51B5', border: 'none', cursor: 'pointer',
+          }}
         >
-          {saved ? (
-            <>
-              <Icon name="Check" size={16} />
-              Сохранено
-            </>
-          ) : (
-            'Сохранить настройки'
-          )}
+          {saved ? <><Icon name="Check" size={16} /> Сохранено</> : 'Сохранить настройки'}
         </button>
       </div>
     </div>

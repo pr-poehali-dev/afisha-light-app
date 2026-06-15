@@ -13,84 +13,87 @@ const MONTHS = ['янв', 'фев', 'мар', 'апр', 'май', 'июн', 'и�
 
 function formatDate(e: EventItem) {
   if (!e.dates.length) return '';
-  const d = new Date(e.dates[0].date);
+  const d = new Date(e.dates[0].date + 'T00:00:00');
   const day = d.getDate();
   const month = MONTHS[d.getMonth()];
   const time = e.dates[0].start_time;
-  if (e.dates.length > 1) return `${day} ${month} · +${e.dates.length - 1} дат · ${time}`;
-  return `${day} ${month} · ${time}`;
+  const finish = e.dates[0].finish_time ? ` — ${e.dates[0].finish_time}` : '';
+  const extra = e.dates.length > 1 ? ` · +${e.dates.length - 1} дат` : '';
+  return `${day} ${month} · ${time}${finish}${extra}`;
 }
 
 const EventCard = ({ event, isAdmin, onClick, onEdit, onDelete }: Props) => {
   const dateStr = formatDate(event);
-  const [year, month, day] = event.dates[0]?.date.split('-') ?? [];
-  const dayN = parseInt(day ?? '0');
-  const monthS = MONTHS[parseInt(month ?? '1') - 1] ?? '';
 
   return (
-    <div className="relative flex gap-3 border-b border-border py-3 pr-2 active:bg-secondary/50">
-      {/* Image */}
-      <button onClick={onClick} className="shrink-0">
-        <div className="relative h-[72px] w-[72px] overflow-hidden rounded-sm">
-          <img
-            src={event.image}
-            alt={event.title}
-            loading="lazy"
-            className="h-full w-full object-cover"
-          />
-          <div className="absolute bottom-0 left-0 right-0 flex flex-col items-center bg-primary/90 py-1">
-            <span className="font-display text-sm font-700 leading-none text-primary-foreground">
-              {dayN}
-            </span>
-            <span className="text-[9px] uppercase text-primary-foreground/70">{monthS}</span>
-          </div>
-        </div>
+    <div
+      className="event-list-row"
+      style={{ paddingLeft: 0, paddingRight: isAdmin ? 4 : 0 }}
+    >
+      {/* Круглое фото как в оригинале */}
+      <button onClick={onClick} className="shrink-0" style={{ paddingTop: 2 }}>
+        <img
+          src={event.image}
+          alt={event.title}
+          loading="lazy"
+          className="event-list-logo"
+        />
       </button>
 
-      {/* Info */}
-      <button onClick={onClick} className="flex min-w-0 flex-1 flex-col items-start text-left">
-        <span className="mb-0.5 text-[10px] font-600 uppercase tracking-wide text-accent">
-          {event.type}
-        </span>
-        <span className="font-display text-[15px] font-600 leading-snug line-clamp-2">
-          {event.title}
-        </span>
-        <div className="mt-1 flex flex-col gap-0.5">
-          <span className="flex items-center gap-1 text-[12px] text-muted-foreground">
-            <Icon name="Clock" size={11} />
-            {dateStr}
-          </span>
-          <span className="flex items-center gap-1 text-[12px] text-muted-foreground">
-            <Icon name="MapPin" size={11} />
-            <span className="truncate">{event.place || event.address}</span>
-          </span>
+      {/* Информация */}
+      <button
+        onClick={onClick}
+        className="flex flex-1 min-w-0 flex-col items-start text-left"
+        style={{ paddingRight: 4 }}
+      >
+        <div className="event-list-name line-clamp-2">{event.title}</div>
+
+        <div className="event-list-date flex items-center gap-1">
+          {dateStr}
         </div>
-        <div className="mt-1.5">
+
+        {!event.online && (
+          <div className="event-list-location flex items-center gap-1">
+            <Icon name="MapPin" size={11} style={{ color: '#8A8A8A', flexShrink: 0 }} />
+            <span className="truncate">
+              {event.place ? `${event.place} · ` : ''}
+              {event.city}
+            </span>
+          </div>
+        )}
+
+        <div className="flex items-center gap-2 mt-1">
           {event.is_free ? (
-            <span className="text-[12px] font-600 text-green-600">Бесплатно</span>
+            <span style={{ fontSize: 12, fontWeight: 600, color: '#17A050' }}>
+              Бесплатно
+            </span>
           ) : (
-            <span className="text-[12px] font-600">от {event.price.toLocaleString('ru-RU')} ₽</span>
+            <span style={{ fontSize: 12, fontWeight: 600, color: '#1A1A1A' }}>
+              от {event.price.toLocaleString('ru-RU')} ₽
+            </span>
           )}
           {event.age && (
-            <span className="ml-2 text-[11px] text-muted-foreground">{event.age}</span>
+            <span style={{ fontSize: 11, color: '#8A8A8A' }}>{event.age}</span>
           )}
         </div>
       </button>
 
-      {/* Admin actions */}
+      {/* Меню админа */}
       {isAdmin && (
-        <div className="flex flex-col gap-1 shrink-0">
+        <div className="flex flex-col shrink-0 gap-1 items-center justify-center">
           <button
             onClick={onEdit}
-            className="rounded p-1.5 text-muted-foreground hover:bg-secondary hover:text-foreground"
+            className="flex items-center justify-center"
+            style={{ padding: 6, color: '#8A8A8A' }}
           >
-            <Icon name="Pencil" size={14} />
+            <Icon name="Pencil" size={15} />
           </button>
           <button
             onClick={onDelete}
-            className="rounded p-1.5 text-muted-foreground hover:bg-secondary hover:text-destructive"
+            className="flex items-center justify-center"
+            style={{ padding: 6, color: '#8A8A8A' }}
           >
-            <Icon name="Trash2" size={14} />
+            <Icon name="Trash2" size={15} />
           </button>
         </div>
       )}

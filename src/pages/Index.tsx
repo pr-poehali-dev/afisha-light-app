@@ -172,7 +172,16 @@ const Index = () => {
   const showAdminNav = is_admin && ROOT_PAGES.includes(page);
 
   return (
-    <div className="mx-auto flex min-h-screen max-w-[480px] flex-col bg-background shadow-xl">
+    <div style={{
+      margin: '0 auto',
+      maxWidth: 480,
+      minHeight: '100vh',
+      display: 'flex',
+      flexDirection: 'column',
+      background: '#fff',
+      boxShadow: '0 0 40px rgba(0,0,0,0.15)',
+      position: 'relative',
+    }}>
       <Toolbar
         page={page}
         widgetName={config.widget_name}
@@ -183,7 +192,7 @@ const Index = () => {
 
       {showAdminNav && <AdminNav page={page} onNavigate={navRoot} />}
 
-      <div className="flex-1 overflow-y-auto">
+      <div style={{ flex: 1, overflowY: 'auto' }}>
         {renderPage()}
       </div>
     </div>

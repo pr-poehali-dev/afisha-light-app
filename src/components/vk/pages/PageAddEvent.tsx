@@ -1,5 +1,4 @@
 import { useState } from 'react';
-import Icon from '@/components/ui/icon';
 import type { EventItem, EventCategory } from '@/types';
 
 interface Props {
@@ -11,31 +10,26 @@ interface Props {
 const CATEGORIES: EventCategory[] = ['Концерт', 'Театр', 'Выставка', 'Лекция', 'Мастер-класс', 'Спорт'];
 const AGES = ['0+', '6+', '12+', '14+', '16+', '18+'];
 
-const Field = ({
-  label,
-  required,
-  children,
-}: {
-  label: string;
-  required?: boolean;
-  children: React.ReactNode;
-}) => (
-  <div className="flex flex-col gap-1.5">
-    <label className="text-xs font-600 uppercase tracking-wide text-muted-foreground">
-      {label}
-      {required && <span className="ml-0.5 text-destructive">*</span>}
-    </label>
-    {children}
+const Label = ({ children, required }: { children: React.ReactNode; required?: boolean }) => (
+  <div style={{ fontSize: 11, fontWeight: 600, color: '#8A8A8A', textTransform: 'uppercase', letterSpacing: 0.5, marginBottom: 4 }}>
+    {children}{required && <span style={{ color: '#E64646', marginLeft: 2 }}>*</span>}
   </div>
 );
 
-const inputCls =
-  'border border-input bg-background px-3 py-2.5 text-sm outline-none focus:border-accent transition-colors w-full';
+const inpStyle: React.CSSProperties = {
+  width: '100%',
+  border: '1px solid #DCDFE6',
+  background: '#F0F1F3',
+  padding: '8px 10px',
+  fontSize: 14,
+  color: '#1A1A1A',
+  outline: 'none',
+};
 
 const PageAddEvent = ({ initial = {}, onSave, onCancel }: Props) => {
   const [form, setForm] = useState({
     title: initial.title ?? '',
-    type: initial.type ?? 'Концерт' as EventCategory,
+    type: (initial.type ?? 'Концерт') as EventCategory,
     description: initial.description ?? '',
     city: initial.city ?? '',
     address: initial.address ?? '',
@@ -49,11 +43,13 @@ const PageAddEvent = ({ initial = {}, onSave, onCancel }: Props) => {
     online: initial.online ?? false,
   });
 
-  const setF = (k: keyof typeof form, v: unknown) =>
-    setForm((prev) => ({ ...prev, [k]: v }));
+  const set = (k: keyof typeof form, v: unknown) =>
+    setForm((p) => ({ ...p, [k]: v }));
+
+  const valid = !!form.title && !!form.date && !!form.start_time;
 
   const handleSave = () => {
-    if (!form.title || !form.date || !form.start_time) return;
+    if (!valid) return;
     onSave({
       ...initial,
       title: form.title,
@@ -70,152 +66,150 @@ const PageAddEvent = ({ initial = {}, onSave, onCancel }: Props) => {
     });
   };
 
+  const block: React.CSSProperties = { marginBottom: 14 };
+
   return (
-    <div className="flex flex-col gap-5 p-4 pb-24">
-      <Field label="Название" required>
-        <input
-          className={inputCls}
-          placeholder="Название мероприятия"
-          value={form.title}
-          onChange={(e) => setF('title', e.target.value)}
-        />
-      </Field>
+    <div style={{ background: '#fff', padding: '12px 14px 80px' }}>
 
-      <Field label="Тип события" required>
-        <select
-          className={inputCls}
-          value={form.type}
-          onChange={(e) => setF('type', e.target.value as EventCategory)}
-        >
-          {CATEGORIES.map((c) => (
-            <option key={c} value={c}>{c}</option>
-          ))}
-        </select>
-      </Field>
-
-      <div className="grid grid-cols-2 gap-3">
-        <Field label="Дата" required>
-          <input
-            type="date"
-            className={inputCls}
-            value={form.date}
-            onChange={(e) => setF('date', e.target.value)}
-          />
-        </Field>
-        <Field label="Начало" required>
-          <input
-            type="time"
-            className={inputCls}
-            value={form.start_time}
-            onChange={(e) => setF('start_time', e.target.value)}
-          />
-        </Field>
+      <div style={block}>
+        <Label required>Название</Label>
+        <input className="vk-input" placeholder="Название мероприятия" value={form.title}
+          onChange={(e) => set('title', e.target.value)} />
       </div>
 
-      <Field label="Окончание">
-        <input
-          type="time"
-          className={inputCls}
-          value={form.finish_time}
-          onChange={(e) => setF('finish_time', e.target.value)}
-        />
-      </Field>
+      <div style={block}>
+        <Label required>Тип события</Label>
+        <select className="vk-input" value={form.type} onChange={(e) => set('type', e.target.value as EventCategory)} style={inpStyle}>
+          {CATEGORIES.map((c) => <option key={c} value={c}>{c}</option>)}
+        </select>
+      </div>
 
-      <div className="flex items-center gap-3 rounded-sm border border-border px-3 py-2.5">
-        <input
-          type="checkbox"
-          id="chk_online"
-          checked={form.online}
-          onChange={(e) => setF('online', e.target.checked)}
-          className="accent-accent"
-        />
-        <label htmlFor="chk_online" className="text-sm cursor-pointer">Онлайн событие</label>
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10, marginBottom: 14 }}>
+        <div>
+          <Label required>Дата</Label>
+          <input type="date" className="vk-input" value={form.date} onChange={(e) => set('date', e.target.value)} />
+        </div>
+        <div>
+          <Label required>Начало</Label>
+          <input type="time" className="vk-input" value={form.start_time} onChange={(e) => set('start_time', e.target.value)} />
+        </div>
+      </div>
+
+      <div style={block}>
+        <Label>Время окончания</Label>
+        <input type="time" className="vk-input" value={form.finish_time} onChange={(e) => set('finish_time', e.target.value)} />
+      </div>
+
+      <div
+        onClick={() => set('online', !form.online)}
+        style={{
+          display: 'flex', alignItems: 'center', gap: 10,
+          border: '1px solid #DCDFE6', padding: '10px 12px',
+          marginBottom: 14, cursor: 'pointer',
+          background: form.online ? '#EEF0FB' : '#fff',
+        }}
+      >
+        <div
+          style={{
+            width: 18, height: 18, border: `2px solid ${form.online ? '#3F51B5' : '#DCDFE6'}`,
+            background: form.online ? '#3F51B5' : '#fff',
+            display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0,
+          }}
+        >
+          {form.online && <span style={{ color: '#fff', fontSize: 12, fontWeight: 700 }}>✓</span>}
+        </div>
+        <span style={{ fontSize: 14 }}>Онлайн событие</span>
       </div>
 
       {!form.online && (
         <>
-          <Field label="Город" required>
-            <input
-              className={inputCls}
-              placeholder="Москва"
-              value={form.city}
-              onChange={(e) => setF('city', e.target.value)}
-            />
-          </Field>
-          <Field label="Адрес">
-            <input
-              className={inputCls}
-              placeholder="ул. Примерная, д. 1"
-              value={form.address}
-              onChange={(e) => setF('address', e.target.value)}
-            />
-          </Field>
-          <Field label="Место">
-            <input
-              className={inputCls}
-              placeholder="Название площадки"
-              value={form.place}
-              onChange={(e) => setF('place', e.target.value)}
-            />
-          </Field>
+          <div style={block}>
+            <Label required>Город</Label>
+            <input className="vk-input" placeholder="Москва" value={form.city} onChange={(e) => set('city', e.target.value)} />
+          </div>
+          <div style={block}>
+            <Label>Адрес</Label>
+            <input className="vk-input" placeholder="ул. Примерная, д. 1" value={form.address} onChange={(e) => set('address', e.target.value)} />
+          </div>
+          <div style={block}>
+            <Label>Место проведения</Label>
+            <input className="vk-input" placeholder="Название площадки" value={form.place} onChange={(e) => set('place', e.target.value)} />
+          </div>
         </>
       )}
 
-      <Field label="Возрастная маркировка">
-        <select
-          className={inputCls}
-          value={form.age}
-          onChange={(e) => setF('age', e.target.value)}
-        >
+      <div style={block}>
+        <Label>Возрастная маркировка</Label>
+        <select className="vk-input" value={form.age} onChange={(e) => set('age', e.target.value)}>
           {AGES.map((a) => <option key={a} value={a}>{a}</option>)}
         </select>
-      </Field>
+      </div>
 
-      <Field label="Описание" required>
+      <div style={block}>
+        <Label required>Описание</Label>
         <textarea
-          className={`${inputCls} min-h-[100px] resize-none`}
+          className="vk-input"
           placeholder="Описание события..."
           value={form.description}
-          onChange={(e) => setF('description', e.target.value)}
+          rows={4}
+          style={{ resize: 'none' }}
+          onChange={(e) => set('description', e.target.value)}
         />
-      </Field>
+      </div>
 
-      <div className="flex flex-col gap-3 rounded-sm border border-border p-3">
-        <div className="flex items-center gap-3">
-          <input
-            type="checkbox"
-            id="chk_free"
-            checked={form.is_free}
-            onChange={(e) => setF('is_free', e.target.checked)}
-            className="accent-accent"
-          />
-          <label htmlFor="chk_free" className="text-sm cursor-pointer">Бесплатное событие</label>
+      <div style={{ border: '1px solid #DCDFE6', padding: 12, marginBottom: 14 }}>
+        <div
+          onClick={() => set('is_free', !form.is_free)}
+          style={{ display: 'flex', alignItems: 'center', gap: 10, cursor: 'pointer', marginBottom: form.is_free ? 0 : 10 }}
+        >
+          <div
+            style={{
+              width: 18, height: 18, border: `2px solid ${form.is_free ? '#3F51B5' : '#DCDFE6'}`,
+              background: form.is_free ? '#3F51B5' : '#fff',
+              display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0,
+            }}
+          >
+            {form.is_free && <span style={{ color: '#fff', fontSize: 12, fontWeight: 700 }}>✓</span>}
+          </div>
+          <span style={{ fontSize: 14 }}>Бесплатное событие</span>
         </div>
         {!form.is_free && (
-          <Field label="Стоимость (₽)">
+          <div style={{ marginTop: 10 }}>
+            <Label>Стоимость (₽)</Label>
             <input
               type="number"
-              className={inputCls}
+              className="vk-input"
               placeholder="1000"
               value={form.price || ''}
-              onChange={(e) => setF('price', Number(e.target.value))}
+              onChange={(e) => set('price', Number(e.target.value))}
             />
-          </Field>
+          </div>
         )}
       </div>
 
-      {/* Footer actions */}
-      <div className="fixed bottom-0 left-0 right-0 flex gap-3 border-t border-border bg-card p-3">
+      {/* Нижняя панель */}
+      <div style={{
+        position: 'fixed', bottom: 0, left: 0, right: 0,
+        display: 'flex', gap: 10, padding: 10,
+        borderTop: '1px solid #DCDFE6', background: '#fff',
+      }}>
         <button
           onClick={onCancel}
-          className="flex-1 border border-border py-3 text-sm font-600 text-muted-foreground"
+          style={{
+            flex: 1, padding: '10px 0', fontSize: 14, fontWeight: 600,
+            color: '#3F51B5', background: 'none', border: '1px solid #3F51B5', cursor: 'pointer',
+          }}
         >
           Отмена
         </button>
         <button
           onClick={handleSave}
-          disabled={!form.title || !form.date || !form.start_time}
-          className="flex-1 bg-primary py-3 text-sm font-700 font-display uppercase text-primary-foreground disabled:opacity-40"
+          disabled={!valid}
+          style={{
+            flex: 1, padding: '10px 0', fontSize: 14, fontWeight: 600,
+            color: '#fff', background: valid ? '#3F51B5' : '#DCDFE6',
+            border: 'none', cursor: valid ? 'pointer' : 'default',
+          }}
         >
           {initial.id ? 'Сохранить' : 'Добавить'}
         </button>

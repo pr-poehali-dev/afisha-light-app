@@ -7,20 +7,20 @@ interface Props {
   onChangeState: (id: number, state: Order['state']) => void;
 }
 
-const STATE_CONFIG: Record<number, { label: string; cls: string }> = {
-  0:  { label: 'Забронирован', cls: 'bg-green-100 text-green-700' },
-  '-1': { label: 'Под запрос', cls: 'bg-yellow-100 text-yellow-700' },
-  '-2': { label: 'Отклонён', cls: 'bg-gray-100 text-gray-500' },
-  '-4': { label: 'Просрочен', cls: 'bg-gray-100 text-gray-500' },
-  '-7': { label: 'Аннулирован', cls: 'bg-red-100 text-red-600' },
-  '-8': { label: 'Аннулирован', cls: 'bg-red-100 text-red-600' },
+const STATE: Record<number, { label: string; bg: string; color: string }> = {
+  0:   { label: 'Забронирован', bg: '#E8F5E9', color: '#2E7D32' },
+  '-1':{ label: 'Под запрос',   bg: '#FFF8E1', color: '#F57F17' },
+  '-2':{ label: 'Отклонён',     bg: '#F5F5F5', color: '#757575' },
+  '-4':{ label: 'Просрочен',    bg: '#F5F5F5', color: '#757575' },
+  '-7':{ label: 'Аннулирован',  bg: '#FFEBEE', color: '#C62828' },
+  '-8':{ label: 'Аннулирован',  bg: '#FFEBEE', color: '#C62828' },
 };
 
-const MONTHS_SHORT = ['янв', 'фев', 'мар', 'апр', 'май', 'июн', 'июл', 'авг', 'сен', 'окт', 'ноя', 'дек'];
-function fmtDate(s: string) {
-  const d = new Date(s);
-  return `${d.getDate()} ${MONTHS_SHORT[d.getMonth()]}`;
-}
+const MONTHS_S = ['янв','фев','мар','апр','май','июн','июл','авг','сен','окт','ноя','дек'];
+const fmtDate = (s: string) => {
+  const d = new Date(s + 'T00:00:00');
+  return `${d.getDate()} ${MONTHS_S[d.getMonth()]}`;
+};
 
 const PageManager = ({ orders, onChangeState }: Props) => {
   const [search, setSearch] = useState('');
@@ -29,149 +29,138 @@ const PageManager = ({ orders, onChangeState }: Props) => {
   const filtered = orders.filter((o) => {
     if (!search) return true;
     const q = search.toLowerCase();
-    return (
-      o.nom.includes(q) ||
-      o.first_name.toLowerCase().includes(q) ||
-      o.last_name.toLowerCase().includes(q) ||
-      o.event_title.toLowerCase().includes(q) ||
-      o.email.toLowerCase().includes(q)
-    );
+    return o.nom.includes(q) || o.first_name.toLowerCase().includes(q)
+      || o.last_name.toLowerCase().includes(q) || o.event_title.toLowerCase().includes(q);
   });
 
-  const total = orders.length;
+  const active = orders.filter((o) => o.state === 0).length;
   const totalTickets = orders.reduce((s, o) => s + o.total_count, 0);
 
   return (
-    <div className="flex flex-col">
-      {/* Stats bar */}
-      <div className="flex border-b border-border">
+    <div style={{ background: '#fff' }}>
+
+      {/* Статистика */}
+      <div style={{ display: 'flex', borderBottom: '1px solid #DCDFE6' }}>
         {[
-          { n: total, l: 'заказов' },
+          { n: orders.length, l: 'заказов' },
           { n: totalTickets, l: 'билетов' },
-          {
-            n: orders.filter((o) => o.state === 0).length,
-            l: 'активных',
-          },
+          { n: active, l: 'активных' },
         ].map((s) => (
-          <div key={s.l} className="flex-1 border-r border-border last:border-0 px-3 py-3 text-center">
-            <div className="font-display text-xl font-700">{s.n}</div>
-            <div className="text-[11px] text-muted-foreground">{s.l}</div>
+          <div key={s.l} style={{
+            flex: 1, textAlign: 'center', padding: '10px 0',
+            borderRight: '1px solid #DCDFE6',
+          }}>
+            <div style={{ fontSize: 20, fontWeight: 700, color: '#1A1A1A' }}>{s.n}</div>
+            <div style={{ fontSize: 11, color: '#8A8A8A' }}>{s.l}</div>
           </div>
         ))}
       </div>
 
-      {/* Search */}
-      <div className="relative border-b border-border px-3 py-2">
-        <Icon name="Search" size={15} className="absolute left-6 top-1/2 -translate-y-1/2 text-muted-foreground" />
+      {/* Поиск */}
+      <div style={{ position: 'relative', padding: '6px 10px', borderBottom: '1px solid #DCDFE6' }}>
+        <Icon name="Search" size={14} style={{ position: 'absolute', left: 22, top: '50%', transform: 'translateY(-50%)', color: '#8A8A8A' }} />
         <input
           value={search}
           onChange={(e) => setSearch(e.target.value)}
           placeholder="Поиск по заказам..."
-          className="w-full rounded-sm border border-input bg-secondary py-2 pl-8 pr-3 text-sm outline-none focus:border-accent"
+          className="vk-input"
+          style={{ paddingLeft: 32 }}
         />
       </div>
 
-      {/* Orders */}
-      <div>
-        {filtered.length === 0 ? (
-          <div className="flex flex-col items-center py-16 text-muted-foreground">
-            <Icon name="ClipboardList" size={36} className="mb-2 opacity-30" />
-            <p className="text-sm">Заявок нет</p>
-          </div>
-        ) : (
-          filtered.map((order) => {
-            const st = STATE_CONFIG[order.state] ?? STATE_CONFIG[0];
-            const isOpen = expanded === order.id;
-            return (
-              <div key={order.id} className="border-b border-border">
-                <button
-                  onClick={() => setExpanded(isOpen ? null : order.id)}
-                  className="flex w-full items-start gap-3 px-3 py-3 text-left"
-                >
-                  <div className="flex flex-col items-center gap-1 shrink-0 w-8">
-                    <span className="font-display text-base font-700 leading-none">
-                      {parseInt(order.nom)}
-                    </span>
-                    <span className="text-[10px] text-muted-foreground">{fmtDate(order.event_date)}</span>
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-2 flex-wrap">
-                      <span className={`rounded-full px-2 py-0.5 text-[11px] font-600 ${st.cls}`}>
-                        {st.label}
-                      </span>
-                      {order.paid && (
-                        <span className="rounded-full bg-green-100 px-2 py-0.5 text-[11px] font-600 text-green-700">
-                          Оплачено
-                        </span>
-                      )}
-                    </div>
-                    <div className="mt-1 truncate text-sm font-500">{order.event_title}</div>
-                    <div className="text-[12px] text-muted-foreground">
-                      {order.last_name} {order.first_name} · {order.total_count} билет(а) · {order.total_price.toLocaleString('ru-RU')} {order.currency}
-                    </div>
-                  </div>
-                  <Icon
-                    name={isOpen ? 'ChevronUp' : 'ChevronDown'}
-                    size={16}
-                    className="shrink-0 mt-1 text-muted-foreground"
-                  />
-                </button>
+      {/* Список заказов */}
+      {filtered.length === 0 ? (
+        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '48px 0', color: '#8A8A8A' }}>
+          <Icon name="ClipboardList" size={36} style={{ opacity: 0.3, marginBottom: 8 }} />
+          <p style={{ fontSize: 13 }}>Заявок нет</p>
+        </div>
+      ) : filtered.map((order) => {
+        const st = STATE[order.state] ?? STATE[0];
+        const isOpen = expanded === order.id;
 
-                {isOpen && (
-                  <div className="border-t border-border/50 bg-secondary/40 px-3 py-3">
-                    <div className="grid grid-cols-2 gap-x-4 gap-y-1.5 text-sm mb-3">
-                      <div>
-                        <div className="text-[11px] text-muted-foreground">Сеанс</div>
-                        <div>{fmtDate(order.event_date)} · {order.event_time}</div>
-                      </div>
-                      <div>
-                        <div className="text-[11px] text-muted-foreground">Телефон</div>
-                        <div>{order.phone || '—'}</div>
-                      </div>
-                      <div>
-                        <div className="text-[11px] text-muted-foreground">E-mail</div>
-                        <div className="truncate">{order.email || '—'}</div>
-                      </div>
-                      <div>
-                        <div className="text-[11px] text-muted-foreground">Создан</div>
-                        <div>{order.created_at}</div>
-                      </div>
-                    </div>
-
-                    {/* Actions */}
-                    <div className="flex flex-wrap gap-2">
-                      {order.state === 0 && (
-                        <button
-                          onClick={() => onChangeState(order.id, -1)}
-                          className="rounded border border-yellow-400 px-3 py-1.5 text-xs font-600 text-yellow-700"
-                        >
-                          Под запрос
-                        </button>
-                      )}
-                      {(order.state === -1 || order.state === -2) && (
-                        <button
-                          onClick={() => onChangeState(order.id, 0)}
-                          className="rounded border border-green-400 px-3 py-1.5 text-xs font-600 text-green-700"
-                        >
-                          Подтвердить
-                        </button>
-                      )}
-                      {order.state >= -2 && (
-                        <button
-                          onClick={() => onChangeState(order.id, -7)}
-                          className="rounded border border-destructive/40 px-3 py-1.5 text-xs font-600 text-destructive"
-                        >
-                          Аннулировать
-                        </button>
-                      )}
-                    </div>
-                  </div>
-                )}
+        return (
+          <div key={order.id} style={{ borderBottom: '1px solid #DCDFE6' }}>
+            {/* Строка */}
+            <button
+              onClick={() => setExpanded(isOpen ? null : order.id)}
+              style={{
+                display: 'flex', alignItems: 'flex-start', gap: 10,
+                width: '100%', padding: '10px', textAlign: 'left', background: 'none', border: 'none', cursor: 'pointer',
+              }}
+            >
+              {/* Номер */}
+              <div style={{ flexShrink: 0, textAlign: 'center', minWidth: 32 }}>
+                <div style={{ fontSize: 15, fontWeight: 700, color: '#1A1A1A' }}>
+                  {parseInt(order.nom)}
+                </div>
+                <div style={{ fontSize: 10, color: '#8A8A8A' }}>{fmtDate(order.event_date)}</div>
               </div>
-            );
-          })
-        )}
-      </div>
+
+              {/* Инфо */}
+              <div style={{ flex: 1, minWidth: 0 }}>
+                <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', marginBottom: 4 }}>
+                  <span style={{ fontSize: 11, fontWeight: 600, padding: '2px 7px', background: st.bg, color: st.color }}>
+                    {st.label}
+                  </span>
+                  {order.paid && (
+                    <span style={{ fontSize: 11, fontWeight: 600, padding: '2px 7px', background: '#E8F5E9', color: '#2E7D32' }}>
+                      Оплачено
+                    </span>
+                  )}
+                </div>
+                <div style={{ fontSize: 13, fontWeight: 600, color: '#1A1A1A', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                  {order.event_title}
+                </div>
+                <div style={{ fontSize: 12, color: '#8A8A8A' }}>
+                  {order.last_name} {order.first_name} · {order.total_count} бил. · {order.total_price.toLocaleString('ru-RU')} {order.currency}
+                </div>
+              </div>
+
+              <Icon name={isOpen ? 'ChevronUp' : 'ChevronDown'} size={16} style={{ color: '#8A8A8A', flexShrink: 0, marginTop: 2 }} />
+            </button>
+
+            {/* Детали */}
+            {isOpen && (
+              <div style={{ background: '#F7F8FA', borderTop: '1px solid #DCDFE6', padding: '10px 12px' }}>
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px 16px', marginBottom: 12 }}>
+                  {[
+                    ['Сеанс', `${fmtDate(order.event_date)} · ${order.event_time}`],
+                    ['Телефон', order.phone || '—'],
+                    ['E-mail', order.email || '—'],
+                    ['Создан', order.created_at],
+                  ].map(([l, v]) => (
+                    <div key={l}>
+                      <div style={{ fontSize: 10, color: '#8A8A8A', textTransform: 'uppercase', marginBottom: 2 }}>{l}</div>
+                      <div style={{ fontSize: 13, color: '#1A1A1A', wordBreak: 'break-word' }}>{v}</div>
+                    </div>
+                  ))}
+                </div>
+                {/* Действия */}
+                <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
+                  {order.state === 0 && (
+                    <button onClick={() => onChangeState(order.id, -1)}
+                      style={{ fontSize: 12, fontWeight: 600, padding: '5px 12px', border: '1px solid #F9A825', color: '#F57F17', background: 'none', cursor: 'pointer' }}>
+                      Под запрос
+                    </button>
+                  )}
+                  {(order.state === -1 || order.state === -2) && (
+                    <button onClick={() => onChangeState(order.id, 0)}
+                      style={{ fontSize: 12, fontWeight: 600, padding: '5px 12px', border: '1px solid #43A047', color: '#2E7D32', background: 'none', cursor: 'pointer' }}>
+                      Подтвердить
+                    </button>
+                  )}
+                  {order.state >= -2 && (
+                    <button onClick={() => onChangeState(order.id, -7)}
+                      style={{ fontSize: 12, fontWeight: 600, padding: '5px 12px', border: '1px solid #E53935', color: '#C62828', background: 'none', cursor: 'pointer' }}>
+                      Аннулировать
+                    </button>
+                  )}
+                </div>
+              </div>
+            )}
+          </div>
+        );
+      })}
     </div>
   );
 };
