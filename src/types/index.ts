@@ -6,6 +6,7 @@ export type Page =
   | 'edit_event'
   | 'manager'
   | 'places'
+  | 'mailings'
   | 'settings'
   | 'add_order';
 

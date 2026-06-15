@@ -1,0 +1,17 @@
+{
+  "tests": [
+    {
+      "name": "OPTIONS preflight",
+      "method": "OPTIONS",
+      "path": "/",
+      "expectedStatus": 200
+    },
+    {
+      "name": "GET stats",
+      "method": "GET",
+      "path": "/?action=stats&vk_group_id=0",
+      "expectedStatus": 200,
+      "bodyMatcher": "partial"
+    }
+  ]
+}

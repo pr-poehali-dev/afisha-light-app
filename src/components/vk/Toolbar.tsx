@@ -15,6 +15,7 @@ const PAGE_TITLES: Partial<Record<Page, string>> = {
   edit_event: 'Редактировать',
   manager: 'Заказы',
   places: 'Места',
+  mailings: 'Рассылки',
   settings: 'Настройки',
   add_order: 'Оформление',
 };

@@ -9,6 +9,7 @@ const NAV_ITEMS: { page: Page; label: string }[] = [
   { page: 'main', label: 'Афиша' },
   { page: 'manager', label: 'Заказы' },
   { page: 'places', label: 'Места' },
+  { page: 'mailings', label: 'Рассылки' },
   { page: 'settings', label: 'Настройки' },
 ];
 
