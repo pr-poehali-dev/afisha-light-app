@@ -26,37 +26,38 @@ const Toolbar = ({ page, widgetName, isAdmin, onBack, onHome }: Props) => {
   const title = isRoot ? (widgetName || 'Афиша') : (PAGE_TITLES[page] ?? '');
 
   return (
-    <div
-      style={{ height: 52 }}
-      className="vk-toolbar sticky top-0 z-50 flex items-center px-3"
-    >
-      {/* Кнопка назад */}
-      <div style={{ minWidth: 48 }}>
+    <div className="vk-toolbar sticky top-0 z-50 flex items-center px-3" style={{ height: 56 }}>
+      <div style={{ minWidth: 44 }}>
         {!isRoot && (
           <button
             onClick={onBack}
-            className="flex items-center gap-0.5 font-medium"
-            style={{ color: '#3F51B5', fontSize: 16 }}
+            className="flex items-center"
+            style={{ color: 'rgba(255,255,255,0.9)', fontSize: 16, background: 'none', border: 'none', cursor: 'pointer', padding: 0 }}
           >
             <Icon name="ChevronLeft" size={26} />
           </button>
         )}
       </div>
 
-      {/* Заголовок */}
       <button
         onClick={onHome}
-        className="flex-1 text-center font-semibold"
-        style={{ color: '#1A1A1A', fontSize: 18 }}
+        className="flex-1 text-center font-bold"
+        style={{ color: '#fff', fontSize: 18, background: 'none', border: 'none', cursor: 'pointer', letterSpacing: 0.3 }}
       >
         {title}
       </button>
 
-      {/* Правая часть */}
-      <div style={{ minWidth: 48 }} className="flex justify-end">
+      <div style={{ minWidth: 44 }} className="flex justify-end">
         {isAdmin && isRoot && (
-          <span style={{ color: '#8A8A8A', fontSize: 11 }}>
-            admin
+          <span style={{
+            fontSize: 10, fontWeight: 700, letterSpacing: 0.5,
+            color: 'rgba(255,255,255,0.5)',
+            background: 'rgba(255,255,255,0.1)',
+            border: '1px solid rgba(255,255,255,0.2)',
+            padding: '2px 7px',
+            borderRadius: 6,
+          }}>
+            ADMIN
           </span>
         )}
       </div>

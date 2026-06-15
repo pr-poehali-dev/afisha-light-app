@@ -16,7 +16,7 @@ interface Props {
 
 type Tab = 'actual' | 'past';
 
-const CATEGORIES = ['Все', 'Концерт', 'Театр', 'Выставка', 'Лекция', 'Мастер-класс'];
+const CATEGORIES = ['Все', 'Концерт', 'Театр', 'Выставка', 'Лекция', 'Мастер-класс', 'Фестиваль', 'Спорт'];
 
 const PageMain = ({
   events, pastEvents, isAdmin,
@@ -34,15 +34,17 @@ const PageMain = ({
   });
 
   return (
-    <div style={{ background: '#fff' }}>
+    <div style={{ minHeight: '100vh' }}>
 
-      {/* Табы + кнопка добавить в один ряд */}
+      {/* Табы */}
       <div style={{
         display: 'flex',
         alignItems: 'center',
         gap: 4,
-        borderBottom: '1px solid #DCDFE6',
-        padding: '0 10px',
+        padding: '6px 12px',
+        borderBottom: '1px solid rgba(255,255,255,0.1)',
+        background: 'rgba(255,255,255,0.05)',
+        backdropFilter: 'blur(12px)',
         overflowX: 'auto',
         scrollbarWidth: 'none',
       }}>
@@ -52,20 +54,24 @@ const PageMain = ({
             onClick={() => setTab(t)}
             style={{
               flexShrink: 0,
-              padding: '13px 14px',
-              fontSize: 15,
-              fontWeight: 500,
-              color: tab === t ? '#3F51B5' : '#8A8A8A',
-              background: 'none',
+              padding: '8px 16px',
+              fontSize: 14,
+              fontWeight: 700,
+              color: tab === t ? '#fff' : 'rgba(255,255,255,0.45)',
+              background: tab === t ? 'linear-gradient(135deg, #6366f1, #8b5cf6)' : 'transparent',
               border: 'none',
-              borderBottom: tab === t ? '2px solid #3F51B5' : '2px solid transparent',
+              borderRadius: tab === t ? 10 : 0,
               cursor: 'pointer',
               whiteSpace: 'nowrap',
+              boxShadow: tab === t ? '0 4px 12px rgba(99,102,241,0.4)' : 'none',
+              transition: 'all 0.2s ease',
             }}
           >
             {t === 'actual' ? 'Актуальные' : 'Прошедшие'}
           </button>
         ))}
+
+        <div style={{ flex: 1 }} />
 
         {isAdmin && (
           <button
@@ -76,14 +82,15 @@ const PageMain = ({
               alignItems: 'center',
               gap: 6,
               padding: '8px 14px',
-              fontSize: 14,
-              fontWeight: 600,
+              fontSize: 13,
+              fontWeight: 700,
               color: '#fff',
-              background: '#3F51B5',
+              background: 'linear-gradient(135deg, #6366f1, #8b5cf6)',
               border: 'none',
+              borderRadius: 10,
               cursor: 'pointer',
+              boxShadow: '0 4px 12px rgba(99,102,241,0.4)',
               whiteSpace: 'nowrap',
-              marginLeft: 6,
             }}
           >
             <Icon name="Plus" size={15} />
@@ -93,26 +100,26 @@ const PageMain = ({
       </div>
 
       {/* Категории */}
-      <div
-        style={{
-          display: 'flex',
-          overflowX: 'auto',
-          scrollbarWidth: 'none',
-          borderBottom: '1px solid #DCDFE6',
-          padding: '8px 10px',
-          gap: 8,
-          background: '#fff',
-        }}
-      >
+      <div style={{
+        display: 'flex',
+        overflowX: 'auto',
+        scrollbarWidth: 'none',
+        padding: '10px 12px',
+        gap: 8,
+        borderBottom: '1px solid rgba(255,255,255,0.08)',
+      }}>
         {CATEGORIES.map((c) => (
           <button
             key={c}
             onClick={() => setCat(c)}
             className="vk-tag"
-            style={cat === c
-              ? { background: '#3F51B5', color: '#fff', whiteSpace: 'nowrap' }
-              : { whiteSpace: 'nowrap' }
-            }
+            style={cat === c ? {
+              background: 'linear-gradient(135deg, #6366f1, #8b5cf6)',
+              color: '#fff',
+              borderColor: 'transparent',
+              boxShadow: '0 4px 12px rgba(99,102,241,0.35)',
+              whiteSpace: 'nowrap',
+            } : { whiteSpace: 'nowrap' }}
           >
             {c}
           </button>
@@ -120,35 +127,34 @@ const PageMain = ({
       </div>
 
       {/* Поиск */}
-      <div style={{ position: 'relative', padding: '8px 12px', borderBottom: '1px solid #DCDFE6', background: '#fff' }}>
+      <div style={{ position: 'relative', padding: '10px 12px', borderBottom: '1px solid rgba(255,255,255,0.08)' }}>
         <Icon
           name="Search"
           size={16}
-          style={{ position: 'absolute', left: 24, top: '50%', transform: 'translateY(-50%)', color: '#8A8A8A' }}
+          style={{ position: 'absolute', left: 26, top: '50%', transform: 'translateY(-50%)', color: 'rgba(255,255,255,0.4)' }}
         />
         <input
           value={query}
           onChange={(e) => setQuery(e.target.value)}
           placeholder="Поиск события..."
           className="vk-input"
-          style={{ paddingLeft: 36, fontSize: 15 }}
+          style={{ paddingLeft: 38, fontSize: 14 }}
         />
       </div>
 
       {/* Список */}
-      <div style={{ padding: '0 12px' }}>
+      <div style={{ padding: '12px 12px 24px' }}>
         {filtered.length === 0 ? (
-          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '48px 0', color: '#8A8A8A' }}>
-            <Icon name="CalendarX" size={36} style={{ opacity: 0.3, marginBottom: 8 }} />
-            <p style={{ fontSize: 13, margin: 0 }}>
+          <div style={{
+            display: 'flex', flexDirection: 'column', alignItems: 'center',
+            padding: '60px 0', color: 'rgba(255,255,255,0.4)',
+          }}>
+            <Icon name="CalendarX" size={40} style={{ opacity: 0.4, marginBottom: 12 }} />
+            <p style={{ fontSize: 14, margin: 0, fontWeight: 500 }}>
               {tab === 'actual' ? 'Событий ещё нет' : 'Прошедших событий нет'}
             </p>
             {isAdmin && tab === 'actual' && (
-              <button
-                onClick={onAddEvent}
-                className="vk-btn-primary"
-                style={{ marginTop: 12 }}
-              >
+              <button onClick={onAddEvent} className="vk-btn-primary" style={{ marginTop: 16 }}>
                 Добавить первое событие
               </button>
             )}

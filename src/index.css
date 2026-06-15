@@ -2,7 +2,8 @@
 @tailwind components;
 @tailwind utilities;
 
-/* VK mini-app: занимаем весь iframe */
+@import url("https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap");
+
 html,
 body,
 #root {
@@ -16,37 +17,42 @@ body,
 
 @layer base {
   :root {
-    /* VK mini-app стиль: белый фон, серые разделители, синий акцент */
+    --grad-from: #6366f1;
+    --grad-via: #8b5cf6;
+    --grad-to: #ec4899;
+
+    --glass-bg: rgba(255, 255, 255, 0.12);
+    --glass-bg-strong: rgba(255, 255, 255, 0.18);
+    --glass-border: rgba(255, 255, 255, 0.25);
+    --glass-shadow: 0 8px 32px rgba(99, 102, 241, 0.18);
+
+    --accent: #818cf8;
+    --accent-dark: #6366f1;
+    --accent-glow: rgba(129, 140, 248, 0.4);
+
+    --text-primary: #ffffff;
+    --text-secondary: rgba(255, 255, 255, 0.75);
+    --text-muted: rgba(255, 255, 255, 0.45);
+
     --background: 0 0% 100%;
     --foreground: 0 0% 10%;
-
     --card: 0 0% 100%;
     --card-foreground: 0 0% 10%;
-
     --popover: 0 0% 100%;
     --popover-foreground: 0 0% 10%;
-
-    /* Синий акцент VK (#3F51B5 ≈ hsl(231 47% 47%)) */
-    --primary: 231 47% 47%;
+    --primary: 239 84% 67%;
     --primary-foreground: 0 0% 100%;
-
     --secondary: 0 0% 95%;
     --secondary-foreground: 0 0% 40%;
-
     --muted: 0 0% 95%;
     --muted-foreground: 0 0% 55%;
-
-    --accent: 231 47% 47%;
+    --accent: 239 84% 67%;
     --accent-foreground: 0 0% 100%;
-
     --destructive: 0 72% 50%;
     --destructive-foreground: 0 0% 100%;
-
-    /* Светло-серые разделители */
     --border: 0 0% 88%;
     --input: 0 0% 95%;
-    --ring: 231 47% 47%;
-
+    --ring: 239 84% 67%;
     --radius: 0px;
 
     --sidebar-background: 0 0% 98%;
@@ -56,7 +62,7 @@ body,
     --sidebar-accent: 240 4.8% 95.9%;
     --sidebar-accent-foreground: 240 5.9% 10%;
     --sidebar-border: 220 13% 91%;
-    --sidebar-ring: 217.2 91.2% 59.8%;
+    --sidebar-ring: 239 84% 67%;
   }
 }
 
@@ -68,21 +74,30 @@ body,
   }
 
   body {
-    @apply bg-background text-foreground;
     font-family:
-      Inter,
+      "Inter",
       -apple-system,
       BlinkMacSystemFont,
       "Helvetica Neue",
       sans-serif;
     font-size: 14px;
     line-height: 1.4;
-    background-color: #fff;
     -webkit-font-smoothing: antialiased;
     margin: 0;
     padding: 0;
     width: 100%;
     overflow-x: hidden;
+    background: linear-gradient(
+      135deg,
+      #1e1b4b 0%,
+      #312e81 25%,
+      #4c1d95 50%,
+      #7c3aed 75%,
+      #6d28d9 100%
+    );
+    background-attachment: fixed;
+    min-height: 100vh;
+    color: var(--text-primary);
   }
 
   input,
@@ -101,140 +116,245 @@ body,
   }
 }
 
-/* VK-specific компоненты */
 @layer components {
-  /* Тулбар как в VK app */
+  /* === TOOLBAR === */
   .vk-toolbar {
-    height: 52px;
-    background: #fff;
-    border-bottom: 1px solid #dcdfe6;
+    height: 56px;
+    background: rgba(255, 255, 255, 0.1);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border-bottom: 1px solid var(--glass-border);
     display: flex;
     align-items: center;
+    box-shadow: 0 4px 24px rgba(0, 0, 0, 0.15);
   }
 
-  /* Таблетки-теги как .btn-eventslist */
+  /* === GLASS CARD === */
+  .glass-card {
+    background: var(--glass-bg);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    border: 1px solid var(--glass-border);
+    border-radius: 16px !important;
+    box-shadow: var(--glass-shadow);
+  }
+
+  .glass-card-strong {
+    background: var(--glass-bg-strong);
+    backdrop-filter: blur(24px);
+    -webkit-backdrop-filter: blur(24px);
+    border: 1px solid var(--glass-border);
+    border-radius: 16px !important;
+    box-shadow: 0 12px 40px rgba(99, 102, 241, 0.2);
+  }
+
+  /* === TAGS / PILLS === */
   .vk-tag {
     display: inline-flex;
     align-items: center;
     padding: 6px 14px;
     font-size: 13px;
-    font-weight: 500;
-    background: #f0f1f3;
-    color: #555;
-    border: none;
+    font-weight: 600;
+    background: rgba(255, 255, 255, 0.1);
+    color: var(--text-secondary);
+    border: 1px solid var(--glass-border);
+    border-radius: 20px !important;
     cursor: pointer;
     white-space: nowrap;
-    transition:
-      background 0.1s,
-      color 0.1s;
+    transition: all 0.2s ease;
+    backdrop-filter: blur(8px);
   }
   .vk-tag.active,
   .vk-tag:active {
-    background: #3f51b5;
+    background: linear-gradient(135deg, #6366f1, #8b5cf6);
     color: #fff;
+    border-color: transparent;
+    box-shadow: 0 4px 16px var(--accent-glow);
   }
 
-  /* Кнопки действий */
+  /* === BUTTONS === */
   .vk-btn-primary {
-    background: #3f51b5;
+    background: linear-gradient(135deg, #6366f1, #8b5cf6);
     color: #fff;
-    font-size: 13px;
-    font-weight: 600;
-    padding: 8px 16px;
+    font-size: 14px;
+    font-weight: 700;
+    padding: 10px 20px;
     border: none;
+    border-radius: 12px !important;
     cursor: pointer;
+    box-shadow: 0 4px 16px var(--accent-glow);
+    transition: all 0.2s ease;
+    letter-spacing: 0.2px;
   }
   .vk-btn-primary:active {
-    background: #303f9f;
+    transform: scale(0.97);
+    box-shadow: 0 2px 8px var(--accent-glow);
   }
 
   .vk-btn-outline {
-    background: transparent;
-    color: #3f51b5;
-    font-size: 13px;
+    background: rgba(255, 255, 255, 0.1);
+    color: #fff;
+    font-size: 14px;
     font-weight: 600;
-    padding: 8px 16px;
-    border: 1px solid #3f51b5;
+    padding: 10px 20px;
+    border: 1px solid var(--glass-border);
+    border-radius: 12px !important;
     cursor: pointer;
+    backdrop-filter: blur(8px);
+    transition: all 0.2s ease;
+  }
+  .vk-btn-outline:active {
+    background: rgba(255, 255, 255, 0.18);
   }
 
-  /* Input в стиле VK */
+  /* === INPUT === */
   .vk-input {
     width: 100%;
-    background: #f0f1f3;
-    border: 1px solid #dcdfe6;
+    background: rgba(255, 255, 255, 0.08);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    border-radius: 10px !important;
     padding: 10px 14px;
-    font-size: 15px;
-    color: #1a1a1a;
+    font-size: 14px;
+    color: #fff;
     outline: none;
-    transition:
-      border-color 0.15s,
-      background 0.15s;
+    transition: all 0.2s ease;
+    backdrop-filter: blur(8px);
+  }
+  .vk-input::placeholder {
+    color: rgba(255, 255, 255, 0.4);
   }
   .vk-input:focus {
-    border-color: #3f51b5;
-    background: #fff;
+    border-color: #818cf8;
+    background: rgba(255, 255, 255, 0.14);
+    box-shadow: 0 0 0 3px rgba(129, 140, 248, 0.2);
+  }
+  .vk-input option {
+    background: #312e81;
+    color: #fff;
   }
 
-  /* Строка события как в оригинале */
+  /* === EVENT CARD === */
   .event-list-row {
     display: flex;
     align-items: flex-start;
     gap: 14px;
-    padding: 14px 0;
-    border-bottom: 1px solid #dcdfe6;
-    background: #fff;
+    padding: 14px;
+    margin-bottom: 10px;
+    background: var(--glass-bg);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    border: 1px solid var(--glass-border);
+    border-radius: 16px !important;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+    transition: all 0.2s ease;
   }
-  .event-list-logo {
-    width: 128px;
-    height: 128px;
-    object-fit: cover;
-    border-radius: 50%;
-    flex-shrink: 0;
-  }
-  .event-list-name {
-    font-size: 16px;
-    font-weight: 600;
-    color: #1a1a1a;
-    line-height: 1.35;
-  }
-  .event-list-date {
-    font-size: 14px;
-    color: #3f51b5;
-    margin-top: 4px;
-  }
-  .event-list-location {
-    font-size: 13px;
-    color: #8a8a8a;
-    margin-top: 3px;
+  .event-list-row:active {
+    transform: scale(0.99);
+    background: var(--glass-bg-strong);
   }
 
-  /* Nav pills как в оригинале */
+  .event-list-logo {
+    width: 72px;
+    height: 72px;
+    object-fit: cover;
+    border-radius: 14px !important;
+    flex-shrink: 0;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25);
+  }
+
+  .event-list-name {
+    font-size: 15px;
+    font-weight: 700;
+    color: #fff;
+    line-height: 1.3;
+  }
+
+  .event-list-date {
+    font-size: 13px;
+    color: #a5b4fc;
+    margin-top: 3px;
+    font-weight: 500;
+  }
+
+  .event-list-location {
+    font-size: 12px;
+    color: var(--text-muted);
+    margin-top: 2px;
+  }
+
+  /* === NAV === */
   .nav-pills-vk {
     display: flex;
     overflow-x: auto;
     scrollbar-width: none;
-    background: #fff;
-    border-bottom: 1px solid #dcdfe6;
+    background: rgba(255, 255, 255, 0.06);
+    backdrop-filter: blur(16px);
+    border-bottom: 1px solid var(--glass-border);
+    padding: 0 4px;
   }
   .nav-pills-vk::-webkit-scrollbar {
     display: none;
   }
   .nav-pills-vk .nav-link {
     white-space: nowrap;
-    padding: 12px 18px;
-    font-size: 15px;
-    font-weight: 500;
-    color: #555;
+    padding: 14px 16px;
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--text-muted);
     border-bottom: 2px solid transparent;
     cursor: pointer;
     background: none;
     border-top: none;
     border-left: none;
     border-right: none;
+    transition: all 0.2s;
   }
   .nav-pills-vk .nav-link.active {
-    color: #3f51b5;
-    border-bottom-color: #3f51b5;
+    color: #fff;
+    border-bottom-color: #818cf8;
+  }
+
+  /* === GRADIENT TEXT === */
+  .gradient-text {
+    background: linear-gradient(135deg, #a5b4fc, #f0abfc);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  /* === BADGE === */
+  .badge-free {
+    display: inline-flex;
+    align-items: center;
+    padding: 2px 8px;
+    font-size: 11px;
+    font-weight: 700;
+    background: linear-gradient(135deg, #059669, #10b981);
+    color: #fff;
+    border-radius: 6px !important;
+    letter-spacing: 0.3px;
+  }
+
+  .badge-online {
+    display: inline-flex;
+    align-items: center;
+    padding: 2px 8px;
+    font-size: 11px;
+    font-weight: 700;
+    background: linear-gradient(135deg, #6366f1, #8b5cf6);
+    color: #fff;
+    border-radius: 6px !important;
+  }
+
+  .badge-age {
+    display: inline-flex;
+    align-items: center;
+    padding: 2px 7px;
+    font-size: 11px;
+    font-weight: 600;
+    background: rgba(255, 255, 255, 0.12);
+    color: rgba(255, 255, 255, 0.7);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    border-radius: 6px !important;
   }
 }

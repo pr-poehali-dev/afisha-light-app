@@ -51,7 +51,7 @@ const Toggle = ({ checked, onChange, label }: { checked: boolean; onChange: () =
   </div>
 );
 
-const Divider = () => <div style={{ borderTop: '1px solid #EDEEF0', margin: '14px 0' }} />;
+const Divider = () => <div style={{ borderTop: '1px solid rgba(255,255,255,0.1)', margin: '14px 0' }} />;
 
 function getDaysInMonth(year: number, month: number) {
   return new Date(year, month + 1, 0).getDate();
@@ -306,7 +306,7 @@ const PageAddEvent = ({ initial = {}, places = [], onSave, onCancel }: Props) =>
   const block: React.CSSProperties = { marginBottom: 14 };
 
   return (
-    <div style={{ background: '#fff', padding: '12px 14px 80px' }}>
+    <div style={{ minHeight: '100vh', padding: '12px 14px 80px' }}>
 
       {/* Обложка */}
       <div style={block}>
