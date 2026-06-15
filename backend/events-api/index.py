@@ -22,19 +22,17 @@ def err(msg, code=400):
 
 
 def handler(event: dict, context) -> dict:
-    """CRUD API для событий афиши. GET /events, POST /events, PUT /events/{id}, DELETE /events/{id}"""
+    """CRUD API для событий. ID передаётся через ?id=. GET ?vk_group_id&past, POST, PUT ?id=, DELETE ?id="""
 
     if event.get('httpMethod') == 'OPTIONS':
         return {'statusCode': 200, 'headers': CORS, 'body': ''}
 
     method = event.get('httpMethod', 'GET')
-    path = event.get('path', '/')
-    parts = [p for p in path.strip('/').split('/') if p]
+    params = event.get('queryStringParameters') or {}
 
-    # /events/{id}
     event_id = None
-    if len(parts) >= 2 and parts[-1].isdigit():
-        event_id = int(parts[-1])
+    if params.get('id', '').isdigit():
+        event_id = int(params['id'])
 
     body = {}
     if event.get('body'):
@@ -44,30 +42,19 @@ def handler(event: dict, context) -> dict:
     cur = conn.cursor(cursor_factory=RealDictCursor)
 
     try:
-        # GET /events — список
+        # GET — список
         if method == 'GET' and not event_id:
-            params = event.get('queryStringParameters') or {}
             is_past = params.get('past', 'false').lower() == 'true'
             vk_group_id = int(params.get('vk_group_id', 0))
-
             cur.execute(
                 f"""SELECT * FROM {SCHEMA}.events
                     WHERE vk_group_id = %s AND is_past = %s
                     ORDER BY (dates->0->>'date') ASC NULLS LAST, created_at DESC""",
                 (vk_group_id, is_past)
             )
-            rows = cur.fetchall()
-            return ok(rows)
+            return ok(cur.fetchall())
 
-        # GET /events/{id} — одно событие
-        if method == 'GET' and event_id:
-            cur.execute(f"SELECT * FROM {SCHEMA}.events WHERE id = %s", (event_id,))
-            row = cur.fetchone()
-            if not row:
-                return err('Not found', 404)
-            return ok(row)
-
-        # POST /events — создать
+        # POST — создать
         if method == 'POST':
             cur.execute(
                 f"""INSERT INTO {SCHEMA}.events
@@ -96,7 +83,7 @@ def handler(event: dict, context) -> dict:
             conn.commit()
             return ok(cur.fetchone())
 
-        # PUT /events/{id} — обновить
+        # PUT ?id= — обновить
         if method == 'PUT' and event_id:
             cur.execute(
                 f"""UPDATE {SCHEMA}.events SET
@@ -128,7 +115,7 @@ def handler(event: dict, context) -> dict:
                 return err('Not found', 404)
             return ok(row)
 
-        # DELETE /events/{id} — удалить
+        # DELETE ?id= — удалить
         if method == 'DELETE' and event_id:
             cur.execute(f"DELETE FROM {SCHEMA}.events WHERE id=%s RETURNING id", (event_id,))
             conn.commit()
@@ -137,7 +124,7 @@ def handler(event: dict, context) -> dict:
                 return err('Not found', 404)
             return ok({'deleted': event_id})
 
-        return err('Not found', 404)
+        return err('Method not allowed', 405)
 
     finally:
         cur.close()

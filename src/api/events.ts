@@ -40,7 +40,7 @@ export async function createEvent(ev: Partial<EventItem>): Promise<EventItem> {
 }
 
 export async function updateEvent(id: number, ev: Partial<EventItem>): Promise<EventItem> {
-  const res = await fetch(`${API}/${id}`, {
+  const res = await fetch(`${API}?id=${id}`, {
     method: 'PUT',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(ev),
@@ -49,5 +49,5 @@ export async function updateEvent(id: number, ev: Partial<EventItem>): Promise<E
 }
 
 export async function deleteEvent(id: number): Promise<void> {
-  await fetch(`${API}/${id}`, { method: 'DELETE' });
+  await fetch(`${API}?id=${id}`, { method: 'DELETE' });
 }
