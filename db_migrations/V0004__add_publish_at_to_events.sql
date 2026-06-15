@@ -1,0 +1,2 @@
+ALTER TABLE t_p8923173_afisha_light_app.events
+  ADD COLUMN IF NOT EXISTS publish_at TIMESTAMPTZ NULL;

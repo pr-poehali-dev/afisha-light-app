@@ -33,11 +33,12 @@ function toEvent(row: Record<string, unknown>): EventItem {
     link2_url: (row.link2_url as string) ?? '',
     link2_label: (row.link2_label as string) ?? 'Подробнее',
     admin_notes: (row.admin_notes as string) ?? '',
+    publish_at: (row.publish_at as string) ?? null,
   };
 }
 
-export async function fetchEvents(isPast = false): Promise<EventItem[]> {
-  const res = await fetch(`${API}?vk_group_id=${VK_GROUP_ID}&past=${isPast}`);
+export async function fetchEvents(isPast = false, isAdmin = false): Promise<EventItem[]> {
+  const res = await fetch(`${API}?vk_group_id=${VK_GROUP_ID}&past=${isPast}&is_admin=${isAdmin}`);
   const data = await res.json();
   return (data as Record<string, unknown>[]).map(toEvent);
 }

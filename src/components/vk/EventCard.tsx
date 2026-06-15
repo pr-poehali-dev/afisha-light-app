@@ -58,6 +58,14 @@ const EventCard = ({ event, isAdmin, onClick, onEdit, onDelete }: Props) => {
         onClick={onClick}
         style={{ background: 'none', border: 'none', padding: 0, cursor: 'pointer', flex: 1, minWidth: 0, textAlign: 'left', display: 'flex', flexDirection: 'column', alignItems: 'flex-start' }}
       >
+        {/* Метка запланировано (только для админа) */}
+        {isAdmin && event.publish_at && new Date(event.publish_at) > new Date() && (
+          <div style={{ display: 'flex', alignItems: 'center', gap: 5, fontSize: 11, fontWeight: 700, color: '#D97706', background: '#FEF9C3', border: '1px solid #FDE68A', borderRadius: 7, padding: '2px 8px', marginBottom: 6 }}>
+            <Icon name="Clock4" size={11} />
+            Публикация: {new Date(event.publish_at).toLocaleString('ru-RU', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })}
+          </div>
+        )}
+
         {/* Название — крупное */}
         <div style={{ fontSize: 18, fontWeight: 800, color: '#111', lineHeight: 1.25, marginBottom: 8 }} className="line-clamp-2">
           {event.title}

@@ -117,6 +117,10 @@ const PageAddEvent = ({ initial = {}, places = [], onSave, onCancel }: Props) =>
   const [isFree, setIsFree] = useState(initial.is_free ?? false);
   const [priceFrom, setPriceFrom] = useState(initial.price_from ?? 0);
   const [priceTo, setPriceTo] = useState(initial.price_to ?? 0);
+  const [isScheduled, setIsScheduled] = useState(!!initial.publish_at);
+  const [publishAt, setPublishAt] = useState<string>(
+    initial.publish_at ? initial.publish_at.slice(0, 16) : ''
+  );
 
   const [image, setImage] = useState<string>(initial.image ?? '');
   const [uploading, setUploading] = useState(false);
@@ -203,6 +207,7 @@ const PageAddEvent = ({ initial = {}, places = [], onSave, onCancel }: Props) =>
       link1_url: link1Url, link1_label: link1Label,
       link2_url: link2Url, link2_label: link2Label,
       admin_notes: adminNotes,
+      publish_at: isScheduled && publishAt ? new Date(publishAt).toISOString() : null,
     });
   };
 
@@ -519,6 +524,29 @@ const PageAddEvent = ({ initial = {}, places = [], onSave, onCancel }: Props) =>
       <div style={section}>
         <Label>Служебные заметки <span style={{ fontSize: 10, color: '#BBB', textTransform: 'none', fontWeight: 400 }}>(видит только администратор)</span></Label>
         <textarea className="vk-input" placeholder="Внутренние пометки..." value={adminNotes} rows={3} style={{ resize: 'none' }} onChange={(e) => setAdminNotes(e.target.value)} />
+      </div>
+
+      {/* Отложенная публикация */}
+      <div style={section}>
+        <Toggle
+          checked={isScheduled}
+          onChange={() => { setIsScheduled((v) => !v); if (!isScheduled) setPublishAt(''); }}
+          label="Отложенная публикация"
+        />
+        {isScheduled && (
+          <div style={{ marginTop: 4 }}>
+            <Label required>Дата и время публикации</Label>
+            <input
+              type="datetime-local"
+              className="vk-input"
+              value={publishAt}
+              onChange={(e) => setPublishAt(e.target.value)}
+            />
+            <div style={{ fontSize: 11, color: '#999', marginTop: 4 }}>
+              Мероприятие появится на главной только после наступления указанного времени
+            </div>
+          </div>
+        )}
       </div>
 
       {/* Стоимость и бесплатное */}

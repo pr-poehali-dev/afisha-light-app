@@ -78,6 +78,7 @@ export interface EventItem {
   link2_url?: string;
   link2_label?: string;
   admin_notes?: string;
+  publish_at?: string | null; // ISO datetime, null = опубликовано сразу
 }
 
 export interface Order {

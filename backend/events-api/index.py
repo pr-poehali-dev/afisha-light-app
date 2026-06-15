@@ -45,13 +45,25 @@ def handler(event: dict, context) -> dict:
         # GET — список с сортировкой по приоритету
         if method == 'GET' and not event_id:
             is_past = params.get('past', 'false').lower() == 'true'
+            is_admin = params.get('is_admin', 'false').lower() == 'true'
             vk_group_id = int(params.get('vk_group_id', 0))
-            cur.execute(
-                f"""SELECT * FROM {SCHEMA}.events
-                    WHERE vk_group_id = %s AND is_past = %s
-                    ORDER BY priority DESC, (dates->0->>'date') ASC NULLS LAST, created_at DESC""",
-                (vk_group_id, is_past)
-            )
+            # Обычные пользователи видят только опубликованные (publish_at IS NULL или publish_at <= NOW())
+            # Администраторы видят все (включая отложенные)
+            if is_admin:
+                cur.execute(
+                    f"""SELECT * FROM {SCHEMA}.events
+                        WHERE vk_group_id = %s AND is_past = %s
+                        ORDER BY priority DESC, (dates->0->>'date') ASC NULLS LAST, created_at DESC""",
+                    (vk_group_id, is_past)
+                )
+            else:
+                cur.execute(
+                    f"""SELECT * FROM {SCHEMA}.events
+                        WHERE vk_group_id = %s AND is_past = %s
+                          AND (publish_at IS NULL OR publish_at <= NOW())
+                        ORDER BY priority DESC, (dates->0->>'date') ASC NULLS LAST, created_at DESC""",
+                    (vk_group_id, is_past)
+                )
             return ok(cur.fetchall())
 
         # POST — создать
@@ -62,8 +74,8 @@ def handler(event: dict, context) -> dict:
                     (vk_group_id, title, type, tags, description, city, address, place, place_id,
                      image, age, is_free, price, price_from, price_to, online, is_past, private, dates,
                      schedule_type, show_dates, priority,
-                     link1_url, link1_label, link2_url, link2_label, admin_notes)
-                    VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)
+                     link1_url, link1_label, link2_url, link2_label, admin_notes, publish_at)
+                    VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)
                     RETURNING *""",
                 (
                     body.get('vk_group_id', 0),
@@ -93,6 +105,7 @@ def handler(event: dict, context) -> dict:
                     body.get('link2_url', ''),
                     body.get('link2_label', 'Подробнее'),
                     body.get('admin_notes', ''),
+                    body.get('publish_at') or None,
                 )
             )
             conn.commit()
@@ -108,7 +121,7 @@ def handler(event: dict, context) -> dict:
                     online=%s, is_past=%s, private=%s, dates=%s,
                     schedule_type=%s, show_dates=%s, priority=%s,
                     link1_url=%s, link1_label=%s, link2_url=%s, link2_label=%s,
-                    admin_notes=%s, updated_at=NOW()
+                    admin_notes=%s, publish_at=%s, updated_at=NOW()
                     WHERE id=%s RETURNING *""",
                 (
                     body.get('title', ''),
@@ -137,6 +150,7 @@ def handler(event: dict, context) -> dict:
                     body.get('link2_url', ''),
                     body.get('link2_label', 'Подробнее'),
                     body.get('admin_notes', ''),
+                    body.get('publish_at') or None,
                     event_id,
                 )
             )

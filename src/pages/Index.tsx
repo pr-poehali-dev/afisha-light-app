@@ -43,7 +43,7 @@ const Index = () => {
   const [editEvent, setEditEvent] = useState<EventItem | null>(null);
 
   useEffect(() => {
-    Promise.all([fetchEvents(false), fetchEvents(true), fetchPlaces()])
+    Promise.all([fetchEvents(false, is_admin), fetchEvents(true, is_admin), fetchPlaces()])
       .then(([actual, past, pl]) => {
         setEvents(actual);
         setPastEvents(past);
