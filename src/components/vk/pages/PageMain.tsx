@@ -34,7 +34,7 @@ const PageMain = ({
   });
 
   return (
-    <div style={{ minHeight: '100vh' }}>
+    <div style={{ minHeight: '100vh', background: '#1e1b4b' }}>
 
       {/* Табы */}
       <div style={{
@@ -43,8 +43,7 @@ const PageMain = ({
         gap: 4,
         padding: '6px 12px',
         borderBottom: '1px solid rgba(255,255,255,0.1)',
-        background: 'rgba(255,255,255,0.05)',
-        backdropFilter: 'blur(12px)',
+        background: '#252268',
         overflowX: 'auto',
         scrollbarWidth: 'none',
       }}>

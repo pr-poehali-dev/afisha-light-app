@@ -306,7 +306,7 @@ const PageAddEvent = ({ initial = {}, places = [], onSave, onCancel }: Props) =>
   const block: React.CSSProperties = { marginBottom: 14 };
 
   return (
-    <div style={{ minHeight: '100vh', padding: '12px 14px 80px' }}>
+    <div style={{ minHeight: '100vh', padding: '12px 14px 80px', background: '#1e1b4b' }}>
 
       {/* Обложка */}
       <div style={block}>

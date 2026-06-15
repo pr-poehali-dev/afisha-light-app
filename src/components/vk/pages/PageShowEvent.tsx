@@ -28,10 +28,8 @@ function formatDateFull(dateStr: string, time: string) {
 const FALLBACK = 'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="80" height="80" viewBox="0 0 80 80"><rect width="80" height="80" fill="%236366f1" fill-opacity="0.3"/><text x="50%25" y="54%25" dominant-baseline="middle" text-anchor="middle" font-size="28" fill="%23a5b4fc">🎭</text></svg>';
 
 const glass: React.CSSProperties = {
-  background: 'rgba(255,255,255,0.08)',
-  backdropFilter: 'blur(16px)',
-  WebkitBackdropFilter: 'blur(16px)',
-  border: '1px solid rgba(255,255,255,0.15)',
+  background: '#2d2a6e',
+  border: '1px solid rgba(255,255,255,0.10)',
   borderRadius: 16,
 };
 
@@ -39,7 +37,7 @@ const PageShowEvent = ({ event, isAdmin, currency, onEdit }: Props) => {
   const imgSrc = event.image && event.image.startsWith('http') ? event.image : FALLBACK;
 
   return (
-    <div style={{ minHeight: '100vh', padding: '16px 14px 40px' }}>
+    <div style={{ minHeight: '100vh', padding: '16px 14px 40px', background: '#1e1b4b' }}>
 
       {/* Шапка: фото + название + мета */}
       <div style={{ ...glass, padding: '20px', marginBottom: 12 }}>
