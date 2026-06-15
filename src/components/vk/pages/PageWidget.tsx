@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import Icon from '@/components/ui/icon';
 import { fetchWidgetEvents, publishWidget, type WidgetEvent } from '@/api/widget';
-import { getGroupToken } from '@/lib/vk';
+import { getGroupTokenForWidget } from '@/lib/vk';
 
 interface WidgetProps { groupId: number; }
 
@@ -130,7 +130,7 @@ const PageWidget = ({ groupId }: WidgetProps) => {
 
   const requestToken = async () => {
     setTokenLoading(true);
-    const token = await getGroupToken(VK_GROUP_ID);
+    const token = await getGroupTokenForWidget(VK_GROUP_ID);
     setGroupToken(token);
     setTokenLoading(false);
     return token;

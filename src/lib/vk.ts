@@ -25,13 +25,27 @@ export function getAppId(): number {
   return parseInt(new URLSearchParams(window.location.search).get('vk_app_id') || '0', 10);
 }
 
-// Токен сообщества автоматически через VK Bridge
+// Токен сообщества для рассылки
 export async function getGroupToken(groupId: number): Promise<string | null> {
   try {
     const res = await bridge.send('VKWebAppGetCommunityToken', {
       app_id: getAppId(),
       group_id: groupId,
       scope: 'messages,manage',
+    });
+    return res.access_token ?? null;
+  } catch {
+    return null;
+  }
+}
+
+// Токен сообщества для виджетов
+export async function getGroupTokenForWidget(groupId: number): Promise<string | null> {
+  try {
+    const res = await bridge.send('VKWebAppGetCommunityToken', {
+      app_id: getAppId(),
+      group_id: groupId,
+      scope: 'app_widget',
     });
     return res.access_token ?? null;
   } catch {
