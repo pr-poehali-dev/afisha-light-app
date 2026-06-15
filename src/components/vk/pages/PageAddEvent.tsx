@@ -27,8 +27,8 @@ const MONTHS_FULL = [
 ];
 
 const Label = ({ children, required }: { children: React.ReactNode; required?: boolean }) => (
-  <div style={{ fontSize: 11, fontWeight: 700, color: '#888', textTransform: 'uppercase', letterSpacing: 0.6, marginBottom: 5 }}>
-    {children}{required && <span style={{ color: '#EF4444', marginLeft: 2 }}>*</span>}
+  <div style={{ fontSize: 11, fontWeight: 700, color: 'rgba(255,255,255,0.6)', textTransform: 'uppercase', letterSpacing: 0.6, marginBottom: 5 }}>
+    {children}{required && <span style={{ color: '#FCA5A5', marginLeft: 2 }}>*</span>}
   </div>
 );
 
@@ -36,20 +36,21 @@ const Toggle = ({ checked, onChange, label }: { checked: boolean; onChange: () =
   <div onClick={onChange} style={{ display: 'flex', alignItems: 'center', gap: 10, cursor: 'pointer', marginBottom: 14 }}>
     <div style={{
       width: 38, height: 22, borderRadius: 11, position: 'relative',
-      background: checked ? '#7C3AED' : '#DDD', transition: 'background 0.2s', flexShrink: 0,
-      boxShadow: checked ? '0 2px 8px rgba(124,58,237,0.3)' : 'none',
+      background: checked ? 'rgba(255,255,255,0.9)' : 'rgba(255,255,255,0.2)',
+      transition: 'all 0.2s', flexShrink: 0,
     }}>
       <div style={{
         position: 'absolute', top: 3, left: checked ? 19 : 3,
-        width: 16, height: 16, borderRadius: '50%', background: '#fff',
-        transition: 'left 0.2s', boxShadow: '0 1px 4px rgba(0,0,0,0.15)',
+        width: 16, height: 16, borderRadius: '50%',
+        background: checked ? '#7C3AED' : '#fff',
+        transition: 'left 0.2s', boxShadow: '0 1px 4px rgba(0,0,0,0.2)',
       }} />
     </div>
-    <span style={{ fontSize: 14, color: '#222', fontWeight: 500 }}>{label}</span>
+    <span style={{ fontSize: 14, color: '#fff', fontWeight: 500 }}>{label}</span>
   </div>
 );
 
-const Divider = () => <div style={{ borderTop: '1px solid #EBEBEB', margin: '16px 0' }} />;
+const Divider = () => <div style={{ borderTop: '1px solid rgba(255,255,255,0.15)', margin: '4px 0' }} />;
 
 function getDaysInMonth(year: number, month: number) {
   return new Date(year, month + 1, 0).getDate();
@@ -303,15 +304,25 @@ const PageAddEvent = ({ initial = {}, places = [], onSave, onCancel }: Props) =>
 
   const block: React.CSSProperties = { marginBottom: 14 };
 
+  const section: React.CSSProperties = {
+    background: 'rgba(255,255,255,0.12)',
+    backdropFilter: 'blur(16px)',
+    WebkitBackdropFilter: 'blur(16px)',
+    border: '1px solid rgba(255,255,255,0.22)',
+    borderRadius: 16,
+    padding: '14px',
+    marginBottom: 12,
+  };
+
   return (
-    <div style={{ minHeight: '100vh', padding: '12px 14px 80px' }}>
+    <div style={{ minHeight: '100vh', padding: '12px 14px 80px', background: 'linear-gradient(145deg, #4C1D95 0%, #7C3AED 40%, #9333EA 70%, #6D28D9 100%)', backgroundAttachment: 'fixed' }}>
 
       {/* Обложка */}
-      <div style={block}>
+      <div style={section}>
         <Label>Обложка мероприятия</Label>
         <input ref={fileRef} type="file" accept="image/jpeg,image/png,image/webp" style={{ display: 'none' }} onChange={handleFileChange} />
         {image ? (
-          <div style={{ position: 'relative' }}>
+          <div style={{ position: 'relative', borderRadius: 10, overflow: 'hidden' }}>
             <img src={image} alt="Обложка" style={{ width: '100%', aspectRatio: '2/1', objectFit: 'cover', display: 'block' }} />
             {uploading && (
               <div style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.4)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
@@ -320,158 +331,119 @@ const PageAddEvent = ({ initial = {}, places = [], onSave, onCancel }: Props) =>
             )}
             {!uploading && (
               <div style={{ position: 'absolute', bottom: 8, right: 8, display: 'flex', gap: 6 }}>
-                <button onClick={() => fileRef.current?.click()} style={{ display: 'flex', alignItems: 'center', gap: 4, padding: '5px 10px', fontSize: 12, fontWeight: 600, color: '#fff', background: 'rgba(0,0,0,0.55)', border: 'none', cursor: 'pointer' }}>
+                <button onClick={() => fileRef.current?.click()} style={{ display: 'flex', alignItems: 'center', gap: 4, padding: '5px 10px', fontSize: 12, fontWeight: 600, color: '#fff', background: 'rgba(0,0,0,0.55)', border: 'none', cursor: 'pointer', borderRadius: 8 }}>
                   <Icon name="Pencil" size={12} /> Заменить
                 </button>
-                <button onClick={() => { setImage(''); if (fileRef.current) fileRef.current.value = ''; }} style={{ display: 'flex', alignItems: 'center', gap: 4, padding: '5px 10px', fontSize: 12, fontWeight: 600, color: '#fff', background: 'rgba(220,0,0,0.6)', border: 'none', cursor: 'pointer' }}>
+                <button onClick={() => { setImage(''); if (fileRef.current) fileRef.current.value = ''; }} style={{ display: 'flex', alignItems: 'center', gap: 4, padding: '5px 10px', fontSize: 12, fontWeight: 600, color: '#fff', background: 'rgba(220,0,0,0.6)', border: 'none', cursor: 'pointer', borderRadius: 8 }}>
                   <Icon name="Trash2" size={12} /> Удалить
                 </button>
               </div>
             )}
           </div>
         ) : (
-          <button onClick={() => fileRef.current?.click()} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 4, width: '50%', aspectRatio: '2/1', border: '2px dashed #DCDFE6', background: '#F7F8FA', cursor: 'pointer', color: '#8A8A8A' }}>
-            <Icon name="ImagePlus" size={18} style={{ color: '#DCDFE6' }} />
-            <span style={{ fontSize: 10, fontWeight: 600 }}>Загрузить фото</span>
-            <span style={{ fontSize: 9, color: '#B0B0B0' }}>JPG, PNG, WEBP · до 5 МБ</span>
-            <span style={{ fontSize: 9, color: '#B0B0B0' }}>Рекомендуем: 1200 × 600 px</span>
+          <button onClick={() => fileRef.current?.click()} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 4, width: '50%', aspectRatio: '2/1', border: '2px dashed rgba(255,255,255,0.3)', background: 'rgba(255,255,255,0.08)', cursor: 'pointer', borderRadius: 10 }}>
+            <Icon name="ImagePlus" size={18} style={{ color: 'rgba(255,255,255,0.5)' }} />
+            <span style={{ fontSize: 10, fontWeight: 600, color: '#fff' }}>Загрузить фото</span>
+            <span style={{ fontSize: 9, color: 'rgba(255,255,255,0.5)' }}>JPG, PNG, WEBP · до 5 МБ</span>
+            <span style={{ fontSize: 9, color: 'rgba(255,255,255,0.5)' }}>Рекомендуем: 1200 × 600 px</span>
           </button>
         )}
-        {uploadError && <div style={{ fontSize: 12, color: '#E64646', marginTop: 4 }}>{uploadError}</div>}
+        {uploadError && <div style={{ fontSize: 12, color: '#FCA5A5', marginTop: 4 }}>{uploadError}</div>}
       </div>
 
-      <Divider />
-
-      {/* Название */}
-      <div style={block}>
-        <Label required>Название</Label>
-        <input className="vk-input" placeholder="Название вашего мероприятия" value={title} onChange={(e) => setTitle(e.target.value)} />
+      {/* Название + Тип + Теги */}
+      <div style={section}>
+        <div style={block}>
+          <Label required>Название</Label>
+          <input className="vk-input" placeholder="Название вашего мероприятия" value={title} onChange={(e) => setTitle(e.target.value)} />
+        </div>
+        <div style={block}>
+          <Label required>Тип события</Label>
+          <select className="vk-input" value={type} onChange={(e) => setType(e.target.value as EventCategory)}>
+            {CATEGORIES.map((c) => <option key={c} value={c}>{c}</option>)}
+          </select>
+        </div>
+        <div style={{ marginBottom: 0 }}>
+          <Label>Теги</Label>
+          <input className="vk-input" placeholder="Джаз, живая музыка, классика..." value={tagsInput} onChange={(e) => setTagsInput(e.target.value)} />
+          <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.4)', marginTop: 3 }}>Через запятую</div>
+        </div>
       </div>
-
-      {/* Тип события */}
-      <div style={block}>
-        <Label required>Тип события</Label>
-        <select className="vk-input" value={type} onChange={(e) => setType(e.target.value as EventCategory)}>
-          {CATEGORIES.map((c) => <option key={c} value={c}>{c}</option>)}
-        </select>
-      </div>
-
-      {/* Теги */}
-      <div style={block}>
-        <Label>Теги</Label>
-        <input className="vk-input" placeholder="Джаз, живая музыка, классика..." value={tagsInput} onChange={(e) => setTagsInput(e.target.value)} />
-        <div style={{ fontSize: 11, color: '#B0B0B0', marginTop: 3 }}>Через запятую</div>
-      </div>
-
-      <Divider />
 
       {/* Расписание */}
-      <div style={block}>
-        <Label required>Событие проходит</Label>
-        <select className="vk-input" value={scheduleType} onChange={(e) => setScheduleType(e.target.value as EventScheduleType)}>
-          <option value="once">Однажды</option>
-          <option value="schedule">По расписанию</option>
-          <option value="multiday">Несколько дней</option>
-        </select>
+      <div style={section}>
+        <div style={block}>
+          <Label required>Событие проходит</Label>
+          <select className="vk-input" value={scheduleType} onChange={(e) => setScheduleType(e.target.value as EventScheduleType)}>
+            <option value="once">Однажды</option>
+            <option value="schedule">По расписанию</option>
+            <option value="multiday">Несколько дней</option>
+          </select>
+        </div>
+
+        {scheduleType === 'once' && (
+          <>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10, marginBottom: 12 }}>
+              <div><Label required>Дата</Label><input type="date" className="vk-input" value={date} onChange={(e) => setDate(e.target.value)} /></div>
+              <div><Label required>Начало</Label><input type="time" className="vk-input" value={startTime} onChange={(e) => setStartTime(e.target.value)} /></div>
+            </div>
+            <div><Label>Время окончания</Label><input type="time" className="vk-input" value={finishTime} onChange={(e) => setFinishTime(e.target.value)} /></div>
+          </>
+        )}
+
+        {scheduleType === 'schedule' && (
+          <div>
+            <div style={{ display: 'flex', borderBottom: '2px solid rgba(255,255,255,0.2)', marginBottom: 12 }}>
+              {(['calendar', 'list'] as const).map((tab) => (
+                <button key={tab} onClick={() => setSchedTab(tab)} style={{
+                  flex: 1, padding: '8px 0', fontSize: 13, fontWeight: 600, background: 'none', border: 'none', cursor: 'pointer',
+                  color: schedTab === tab ? '#fff' : 'rgba(255,255,255,0.4)',
+                  borderBottom: schedTab === tab ? '2px solid #fff' : '2px solid transparent', marginBottom: -2,
+                }}>
+                  {tab === 'calendar' ? 'Календарь' : 'Список'}
+                </button>
+              ))}
+            </div>
+            {schedTab === 'calendar' && renderCalendar()}
+            {schedTab === 'list' && (
+              <div>
+                {listDates.map((row, i) => (
+                  <div key={i} style={{ display: 'grid', gridTemplateColumns: '1fr 90px 90px 32px', gap: 6, marginBottom: 8, alignItems: 'end' }}>
+                    <div>{i === 0 && <Label required>Дата</Label>}<input type="date" className="vk-input" value={row.date} onChange={(e) => { const n = [...listDates]; n[i] = { ...n[i], date: e.target.value }; setListDates(n); }} /></div>
+                    <div>{i === 0 && <Label required>Начало</Label>}<input type="time" className="vk-input" value={row.start} onChange={(e) => { const n = [...listDates]; n[i] = { ...n[i], start: e.target.value }; setListDates(n); }} /></div>
+                    <div>{i === 0 && <Label>Конец</Label>}<input type="time" className="vk-input" value={row.finish} onChange={(e) => { const n = [...listDates]; n[i] = { ...n[i], finish: e.target.value }; setListDates(n); }} /></div>
+                    <button onClick={() => setListDates((prev) => prev.filter((_, j) => j !== i))} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#FCA5A5', padding: '8px 0' }}><Icon name="X" size={16} /></button>
+                  </div>
+                ))}
+                <button onClick={() => setListDates((prev) => [...prev, { date: '', start: '', finish: '' }])}
+                  style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 13, color: '#fff', background: 'rgba(255,255,255,0.1)', border: '1px dashed rgba(255,255,255,0.3)', padding: '6px 12px', cursor: 'pointer', width: '100%', justifyContent: 'center', borderRadius: 8 }}>
+                  <Icon name="Plus" size={14} /> Добавить дату
+                </button>
+              </div>
+            )}
+          </div>
+        )}
+
+        {scheduleType === 'multiday' && (
+          <>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10, marginBottom: 12 }}>
+              <div><Label required>Дата начала</Label><input type="date" className="vk-input" value={multiStart} onChange={(e) => setMultiStart(e.target.value)} /></div>
+              <div><Label required>Дата окончания</Label><input type="date" className="vk-input" value={multiEnd} onChange={(e) => setMultiEnd(e.target.value)} /></div>
+            </div>
+            <div><Label required>Время начала</Label><input type="time" className="vk-input" value={multiStartTime} onChange={(e) => setMultiStartTime(e.target.value)} /></div>
+          </>
+        )}
       </div>
 
-      {scheduleType === 'once' && (
-        <>
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10, marginBottom: 12 }}>
-            <div>
-              <Label required>Дата</Label>
-              <input type="date" className="vk-input" value={date} onChange={(e) => setDate(e.target.value)} />
-            </div>
-            <div>
-              <Label required>Начало</Label>
-              <input type="time" className="vk-input" value={startTime} onChange={(e) => setStartTime(e.target.value)} />
-            </div>
-          </div>
-          <div style={block}>
-            <Label>Время окончания</Label>
-            <input type="time" className="vk-input" value={finishTime} onChange={(e) => setFinishTime(e.target.value)} />
-          </div>
-        </>
-      )}
-
-      {scheduleType === 'schedule' && (
-        <div style={block}>
-          {/* Вкладки */}
-          <div style={{ display: 'flex', borderBottom: '2px solid #DCDFE6', marginBottom: 12 }}>
-            {(['calendar', 'list'] as const).map((tab) => (
-              <button key={tab} onClick={() => setSchedTab(tab)} style={{
-                flex: 1, padding: '8px 0', fontSize: 13, fontWeight: 600, background: 'none', border: 'none', cursor: 'pointer',
-                color: schedTab === tab ? '#3F51B5' : '#8A8A8A',
-                borderBottom: schedTab === tab ? '2px solid #3F51B5' : '2px solid transparent',
-                marginBottom: -2,
-              }}>
-                {tab === 'calendar' ? 'Календарь' : 'Список'}
-              </button>
-            ))}
-          </div>
-
-          {schedTab === 'calendar' && renderCalendar()}
-
-          {schedTab === 'list' && (
-            <div>
-              {listDates.map((row, i) => (
-                <div key={i} style={{ display: 'grid', gridTemplateColumns: '1fr 90px 90px 32px', gap: 6, marginBottom: 8, alignItems: 'end' }}>
-                  <div>
-                    {i === 0 && <Label required>Дата</Label>}
-                    <input type="date" className="vk-input" value={row.date} onChange={(e) => { const n = [...listDates]; n[i] = { ...n[i], date: e.target.value }; setListDates(n); }} />
-                  </div>
-                  <div>
-                    {i === 0 && <Label required>Начало</Label>}
-                    <input type="time" className="vk-input" value={row.start} onChange={(e) => { const n = [...listDates]; n[i] = { ...n[i], start: e.target.value }; setListDates(n); }} />
-                  </div>
-                  <div>
-                    {i === 0 && <Label>Конец</Label>}
-                    <input type="time" className="vk-input" value={row.finish} onChange={(e) => { const n = [...listDates]; n[i] = { ...n[i], finish: e.target.value }; setListDates(n); }} />
-                  </div>
-                  <button onClick={() => setListDates((prev) => prev.filter((_, j) => j !== i))} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#E64646', padding: '8px 0' }}>
-                    <Icon name="X" size={16} />
-                  </button>
-                </div>
-              ))}
-              <button onClick={() => setListDates((prev) => [...prev, { date: '', start: '', finish: '' }])}
-                style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 13, color: '#3F51B5', background: 'none', border: '1px dashed #DCDFE6', padding: '6px 12px', cursor: 'pointer', width: '100%', justifyContent: 'center' }}>
-                <Icon name="Plus" size={14} /> Добавить дату
-              </button>
-            </div>
-          )}
-        </div>
-      )}
-
-      {scheduleType === 'multiday' && (
-        <>
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10, marginBottom: 12 }}>
-            <div>
-              <Label required>Дата начала</Label>
-              <input type="date" className="vk-input" value={multiStart} onChange={(e) => setMultiStart(e.target.value)} />
-            </div>
-            <div>
-              <Label required>Дата окончания</Label>
-              <input type="date" className="vk-input" value={multiEnd} onChange={(e) => setMultiEnd(e.target.value)} />
-            </div>
-          </div>
-          <div style={block}>
-            <Label required>Время начала</Label>
-            <input type="time" className="vk-input" value={multiStartTime} onChange={(e) => setMultiStartTime(e.target.value)} />
-          </div>
-        </>
-      )}
-
-      {/* Показывать даты */}
-      <Toggle checked={showDates} onChange={() => setShowDates((v) => !v)} label="Показывать даты проведения" />
-
-      <Divider />
-
-      {/* Онлайн */}
-      <Toggle checked={online} onChange={() => setOnline((v) => !v)} label="Онлайн событие (часовой пояс МСК)" />
+      {/* Переключатели */}
+      <div style={section}>
+        <Toggle checked={showDates} onChange={() => setShowDates((v) => !v)} label="Показывать даты проведения" />
+        <Toggle checked={online} onChange={() => setOnline((v) => !v)} label="Онлайн событие (часовой пояс МСК)" />
+      </div>
 
       {/* Место */}
       {!online && (
-        <>
+        <div style={section}>
           <div style={block}>
             <Label>Место проведения</Label>
             <select className="vk-input" value={placeId} onChange={(e) => handlePlaceSelect(e.target.value === '' ? '' : Number(e.target.value))}>
@@ -487,87 +459,77 @@ const PageAddEvent = ({ initial = {}, places = [], onSave, onCancel }: Props) =>
             <Label>Адрес</Label>
             <input className="vk-input" placeholder="ул. Примерная, д. 1" value={address} onChange={(e) => setAddress(e.target.value)} />
           </div>
-          <div style={block}>
+          <div>
             <Label>Площадка</Label>
             <input className="vk-input" placeholder="Название площадки" value={placeName} onChange={(e) => setPlaceName(e.target.value)} />
           </div>
-        </>
+        </div>
       )}
 
-      <Divider />
-
-      {/* Возраст */}
-      <div style={block}>
-        <Label>Возрастная маркировка</Label>
-        <select className="vk-input" value={age} onChange={(e) => setAge(e.target.value)}>
-          {AGES.map((a) => <option key={a} value={a}>{a}</option>)}
-        </select>
+      {/* Настройки отображения */}
+      <div style={section}>
+        <div style={block}>
+          <Label>Возрастная маркировка</Label>
+          <select className="vk-input" value={age} onChange={(e) => setAge(e.target.value)}>
+            {AGES.map((a) => <option key={a} value={a}>{a}</option>)}
+          </select>
+        </div>
+        <div style={block}>
+          <Label>Отображение мероприятия</Label>
+          <select className="vk-input" value={visibility} onChange={(e) => setVisibility(Number(e.target.value) as 0 | 1)}>
+            <option value={0}>Показывать всем</option>
+            <option value={1}>Скрыть (доступно только администратору)</option>
+          </select>
+        </div>
+        <div>
+          <Label>Приоритет</Label>
+          <select className="vk-input" value={priority} onChange={(e) => setPriority(Number(e.target.value) as 0 | 1 | 2)}>
+            <option value={0}>Общий — сортировка по дате</option>
+            <option value={1}>Высокий — первая половина списка</option>
+            <option value={2}>Высший — первый в списке</option>
+          </select>
+        </div>
       </div>
-
-      {/* Отображение */}
-      <div style={block}>
-        <Label>Отображение мероприятия</Label>
-        <select className="vk-input" value={visibility} onChange={(e) => setVisibility(Number(e.target.value) as 0 | 1)}>
-          <option value={0}>Показывать всем</option>
-          <option value={1}>Скрыть (доступно только администратору)</option>
-        </select>
-      </div>
-
-      {/* Приоритет */}
-      <div style={block}>
-        <Label>Приоритет</Label>
-        <select className="vk-input" value={priority} onChange={(e) => setPriority(Number(e.target.value) as 0 | 1 | 2)}>
-          <option value={0}>Общий — сортировка по дате</option>
-          <option value={1}>Высокий — первая половина списка</option>
-          <option value={2}>Высший — первый в списке</option>
-        </select>
-      </div>
-
-      <Divider />
 
       {/* Описание */}
-      <div style={block}>
+      <div style={section}>
         <Label>Описание мероприятия</Label>
         <textarea className="vk-input" placeholder="Расскажите о мероприятии..." value={description} rows={4} style={{ resize: 'none' }} onChange={(e) => setDescription(e.target.value)} />
       </div>
 
-      <Divider />
-
-      {/* Ссылка 1 */}
-      <div style={block}>
-        <Label>Ссылка на внешний сайт №1</Label>
-        <input className="vk-input" placeholder="https://..." value={link1Url} onChange={(e) => setLink1Url(e.target.value)} style={{ marginBottom: 6 }} />
-        <Label>Название кнопки</Label>
-        <input className="vk-input" placeholder="Билеты" value={link1Label} onChange={(e) => setLink1Label(e.target.value)} />
+      {/* Ссылки */}
+      <div style={section}>
+        <div style={block}>
+          <Label>Ссылка на внешний сайт №1</Label>
+          <input className="vk-input" placeholder="https://..." value={link1Url} onChange={(e) => setLink1Url(e.target.value)} style={{ marginBottom: 6 }} />
+          <Label>Название кнопки</Label>
+          <input className="vk-input" placeholder="Билеты" value={link1Label} onChange={(e) => setLink1Label(e.target.value)} />
+        </div>
+        <div>
+          <Label>Ссылка на внешний сайт №2</Label>
+          <input className="vk-input" placeholder="https://..." value={link2Url} onChange={(e) => setLink2Url(e.target.value)} style={{ marginBottom: 6 }} />
+          <Label>Название кнопки</Label>
+          <input className="vk-input" placeholder="Подробнее" value={link2Label} onChange={(e) => setLink2Label(e.target.value)} />
+        </div>
       </div>
-
-      {/* Ссылка 2 */}
-      <div style={block}>
-        <Label>Ссылка на внешний сайт №2</Label>
-        <input className="vk-input" placeholder="https://..." value={link2Url} onChange={(e) => setLink2Url(e.target.value)} style={{ marginBottom: 6 }} />
-        <Label>Название кнопки</Label>
-        <input className="vk-input" placeholder="Подробнее" value={link2Label} onChange={(e) => setLink2Label(e.target.value)} />
-      </div>
-
-      <Divider />
 
       {/* Служебные заметки */}
-      <div style={block}>
-        <Label>Служебные заметки <span style={{ fontSize: 10, color: '#B0B0B0', textTransform: 'none', fontWeight: 400 }}>(видит только администратор)</span></Label>
+      <div style={section}>
+        <Label>Служебные заметки <span style={{ fontSize: 10, color: 'rgba(255,255,255,0.4)', textTransform: 'none', fontWeight: 400 }}>(видит только администратор)</span></Label>
         <textarea className="vk-input" placeholder="Внутренние пометки..." value={adminNotes} rows={3} style={{ resize: 'none' }} onChange={(e) => setAdminNotes(e.target.value)} />
       </div>
 
-      <Divider />
-
       {/* Бесплатное */}
-      <Toggle checked={isFree} onChange={() => setIsFree((v) => !v)} label="Бесплатное мероприятие" />
+      <div style={{ ...section, marginBottom: 0 }}>
+        <Toggle checked={isFree} onChange={() => setIsFree((v) => !v)} label="Бесплатное мероприятие" />
+      </div>
 
       {/* Нижняя панель */}
-      <div style={{ position: 'fixed', bottom: 0, left: 0, right: 0, display: 'flex', gap: 10, padding: 10, borderTop: '1px solid #EBEBEB', background: '#fff', boxShadow: '0 -4px 16px rgba(0,0,0,0.06)' }}>
-        <button onClick={onCancel} style={{ flex: 1, padding: '11px 0', fontSize: 14, fontWeight: 600, color: '#7C3AED', background: '#EDE9FE', border: 'none', borderRadius: 12, cursor: 'pointer' }}>
+      <div style={{ position: 'fixed', bottom: 0, left: 0, right: 0, display: 'flex', gap: 10, padding: 10, borderTop: '1px solid rgba(255,255,255,0.15)', background: 'rgba(76,29,149,0.85)', backdropFilter: 'blur(20px)', WebkitBackdropFilter: 'blur(20px)' }}>
+        <button onClick={onCancel} style={{ flex: 1, padding: '11px 0', fontSize: 14, fontWeight: 600, color: '#fff', background: 'rgba(255,255,255,0.15)', border: '1px solid rgba(255,255,255,0.25)', borderRadius: 12, cursor: 'pointer' }}>
           Отмена
         </button>
-        <button onClick={handleSave} disabled={!valid || uploading} style={{ flex: 1, padding: '11px 0', fontSize: 14, fontWeight: 700, color: '#fff', background: (valid && !uploading) ? '#7C3AED' : '#DDD', border: 'none', borderRadius: 12, cursor: (valid && !uploading) ? 'pointer' : 'default', boxShadow: (valid && !uploading) ? '0 4px 12px rgba(124,58,237,0.3)' : 'none' }}>
+        <button onClick={handleSave} disabled={!valid || uploading} style={{ flex: 1, padding: '11px 0', fontSize: 14, fontWeight: 700, color: valid && !uploading ? '#7C3AED' : 'rgba(255,255,255,0.4)', background: valid && !uploading ? '#fff' : 'rgba(255,255,255,0.1)', border: 'none', borderRadius: 12, cursor: valid && !uploading ? 'pointer' : 'default', boxShadow: valid && !uploading ? '0 4px 16px rgba(0,0,0,0.2)' : 'none' }}>
           {uploading ? 'Загрузка...' : (initial.id ? 'Сохранить' : 'Добавить')}
         </button>
       </div>
