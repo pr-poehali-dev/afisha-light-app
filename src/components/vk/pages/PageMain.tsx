@@ -79,7 +79,7 @@ const PageMain = ({
               fontSize: 14,
               fontWeight: 600,
               color: '#fff',
-              background: '#2196F3',
+              background: '#3F51B5',
               border: 'none',
               cursor: 'pointer',
               whiteSpace: 'nowrap',
