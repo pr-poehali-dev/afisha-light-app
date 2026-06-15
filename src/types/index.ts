@@ -16,7 +16,31 @@ export interface VkAppParams {
   widget_name?: string;
 }
 
-export type EventCategory = 'Концерт' | 'Театр' | 'Выставка' | 'Лекция' | 'Мастер-класс' | 'Спорт';
+export type EventCategory =
+  | 'Концерт'
+  | 'Театр'
+  | 'Выставка'
+  | 'Лекция'
+  | 'Мастер-класс'
+  | 'Спорт'
+  | 'Фестиваль'
+  | 'Кино'
+  | 'Детское'
+  | 'Экскурсия'
+  | 'Конференция'
+  | 'Форум'
+  | 'Тренинг'
+  | 'Вебинар'
+  | 'Ярмарка'
+  | 'Выпускной'
+  | 'Корпоратив'
+  | 'Благотворительность'
+  | 'Религиозное'
+  | 'Флешмоб'
+  | 'Встреча'
+  | 'Другое';
+
+export type EventScheduleType = 'once' | 'schedule' | 'multiday';
 
 export interface EventDate {
   date: string;       // YYYY-MM-DD
@@ -30,18 +54,28 @@ export interface EventItem {
   vk_group_id: number;
   title: string;
   type: EventCategory;
+  tags?: string[];
   description: string;
   address: string;
   city: string;
   place: string;
+  place_id?: number;
   is_free: boolean;
   price: number;
   age: string;
   image: string;
   dates: EventDate[];
+  schedule_type?: EventScheduleType;
+  show_dates?: boolean;
   is_past: boolean;
   private: 0 | 1 | 2 | 3;
   online: boolean;
+  priority?: 0 | 1 | 2; // 0=общий, 1=высокий, 2=высший
+  link1_url?: string;
+  link1_label?: string;
+  link2_url?: string;
+  link2_label?: string;
+  admin_notes?: string;
 }
 
 export interface Order {
@@ -65,6 +99,7 @@ export interface Order {
 
 export interface Place {
   id: number;
+  vk_group_id?: number;
   name: string;
   city: string;
   address: string;

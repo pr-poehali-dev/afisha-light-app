@@ -9,9 +9,10 @@ import PagePlaces from '@/components/vk/pages/PagePlaces';
 import PageSettings from '@/components/vk/pages/PageSettings';
 import PageAddOrder from '@/components/vk/pages/PageAddOrder';
 
-import { MOCK_ORDERS, MOCK_PLACES, MOCK_CONFIG } from '@/data/mock';
+import { MOCK_ORDERS, MOCK_CONFIG } from '@/data/mock';
 import { fetchEvents, createEvent, updateEvent, deleteEvent } from '@/api/events';
-import type { EventItem, Order, Page, AppConfig } from '@/types';
+import { fetchPlaces, createPlace, updatePlace } from '@/api/places';
+import type { EventItem, Order, Place, Page, AppConfig } from '@/types';
 
 const VK_PARAMS = {
   is_admin: true,
@@ -30,18 +31,19 @@ const Index = () => {
   const [events, setEvents] = useState<EventItem[]>([]);
   const [pastEvents, setPastEvents] = useState<EventItem[]>([]);
   const [loading, setLoading] = useState(true);
+  const [places, setPlaces] = useState<Place[]>([]);
 
   const [orders, setOrders] = useState<Order[]>(MOCK_ORDERS);
   const [config, setConfig] = useState<AppConfig>(MOCK_CONFIG);
   const [selectedEvent, setSelectedEvent] = useState<EventItem | null>(null);
   const [editEvent, setEditEvent] = useState<EventItem | null>(null);
 
-  // Загружаем события из БД при старте
   useEffect(() => {
-    Promise.all([fetchEvents(false), fetchEvents(true)])
-      .then(([actual, past]) => {
+    Promise.all([fetchEvents(false), fetchEvents(true), fetchPlaces()])
+      .then(([actual, past, pl]) => {
         setEvents(actual);
         setPastEvents(past);
+        setPlaces(pl);
       })
       .finally(() => setLoading(false));
   }, []);
@@ -93,7 +95,7 @@ const Index = () => {
       setPastEvents((prev) => prev.map((e) => (e.id === updated.id ? updated : e)));
       if (selectedEvent?.id === updated.id) setSelectedEvent(updated);
     } else {
-      const created = await createEvent({ ...data, vk_group_id: VK_PARAMS.vk_group_id, is_past: false, private: 0 });
+      const created = await createEvent({ ...data, vk_group_id: VK_PARAMS.vk_group_id, is_past: false });
       setEvents((prev) => [created, ...prev]);
     }
     goBack();
@@ -103,6 +105,16 @@ const Index = () => {
     await deleteEvent(id);
     setEvents((prev) => prev.filter((e) => e.id !== id));
     setPastEvents((prev) => prev.filter((e) => e.id !== id));
+  };
+
+  const handleAddPlace = async (p: Omit<Place, 'id'>) => {
+    const created = await createPlace(p);
+    setPlaces((prev) => [...prev, created]);
+  };
+
+  const handleEditPlace = async (p: Place) => {
+    const updated = await updatePlace(p.id, { name: p.name, city: p.city, address: p.address });
+    setPlaces((prev) => prev.map((x) => (x.id === updated.id ? updated : x)));
   };
 
   const handleChangeOrderState = (id: number, state: Order['state']) => {
@@ -147,12 +159,13 @@ const Index = () => {
         );
 
       case 'add_event':
-        return <PageAddEvent onSave={handleSaveEvent} onCancel={goBack} />;
+        return <PageAddEvent places={places} onSave={handleSaveEvent} onCancel={goBack} />;
 
       case 'edit_event':
         return (
           <PageAddEvent
             initial={editEvent ?? undefined}
+            places={places}
             onSave={handleSaveEvent}
             onCancel={goBack}
           />
@@ -162,7 +175,7 @@ const Index = () => {
         return <PageManager orders={orders} onChangeState={handleChangeOrderState} />;
 
       case 'places':
-        return <PagePlaces places={MOCK_PLACES} onAdd={() => {}} onEdit={() => {}} />;
+        return <PagePlaces places={places} onAdd={handleAddPlace} onEdit={handleEditPlace} />;
 
       case 'settings':
         return <PageSettings config={config} onSave={setConfig} />;
