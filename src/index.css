@@ -98,11 +98,21 @@
   body {
     @apply bg-background text-foreground;
     font-feature-settings: "ss01", "cv01";
+    background-color: hsl(214 15% 82%);
   }
   h1,
   h2,
   h3,
   h4 {
     @apply font-display tracking-tight;
+  }
+  * {
+    -webkit-tap-highlight-color: transparent;
+  }
+  .line-clamp-2 {
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
   }
 }
