@@ -1,5 +1,7 @@
+import { useState } from 'react';
 import Icon from '@/components/ui/icon';
 import type { EventItem } from '@/types';
+import { vkShare, vkAllowNotifications } from '@/lib/vk';
 
 interface Props {
   event: EventItem;
@@ -36,6 +38,16 @@ const glass: React.CSSProperties = {
 
 const PageShowEvent = ({ event, isAdmin, currency, onEdit }: Props) => {
   const imgSrc = event.image && event.image.startsWith('http') ? event.image : FALLBACK;
+  const [notifDone, setNotifDone] = useState(false);
+
+  const handleShare = () => {
+    vkShare(`${event.title} — ${event.dates[0]?.date ? new Date(event.dates[0].date + 'T00:00:00').toLocaleDateString('ru-RU') : ''}`);
+  };
+
+  const handleNotify = async () => {
+    const res = await vkAllowNotifications();
+    if (res) setNotifDone(true);
+  };
 
   return (
     <div style={{ minHeight: '100vh', padding: '12px 12px 40px', background: '#F5F5F7' }}>
@@ -106,8 +118,13 @@ const PageShowEvent = ({ event, isAdmin, currency, onEdit }: Props) => {
                   Редактировать
                 </button>
               )}
-              <button style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '9px 14px', fontSize: 13, color: '#999', background: '#F5F5F7', border: '1.5px solid #E5E5E5', borderRadius: 10, cursor: 'pointer' }}>
+              <button onClick={handleShare} style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '9px 14px', fontSize: 13, color: '#7C3AED', background: '#EDE9FE', border: '1.5px solid #DDD6FE', borderRadius: 10, cursor: 'pointer', fontWeight: 600 }}>
                 <Icon name="Share2" size={13} /> Поделиться
+              </button>
+
+              <button onClick={handleNotify} style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '9px 14px', fontSize: 13, fontWeight: 600, color: notifDone ? '#059669' : '#555', background: notifDone ? '#D1FAE5' : '#F5F5F7', border: `1.5px solid ${notifDone ? '#A7F3D0' : '#E5E5E5'}`, borderRadius: 10, cursor: 'pointer' }}>
+                <Icon name={notifDone ? 'BellRing' : 'Bell'} size={13} />
+                {notifDone ? 'Уведомления включены' : 'Уведомить меня'}
               </button>
             </div>
           </div>
