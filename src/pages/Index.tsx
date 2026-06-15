@@ -1,4 +1,4 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 import Toolbar from '@/components/vk/Toolbar';
 import AdminNav from '@/components/vk/AdminNav';
 import PageMain from '@/components/vk/pages/PageMain';
@@ -9,14 +9,8 @@ import PagePlaces from '@/components/vk/pages/PagePlaces';
 import PageSettings from '@/components/vk/pages/PageSettings';
 import PageAddOrder from '@/components/vk/pages/PageAddOrder';
 
-import {
-  MOCK_EVENTS,
-  MOCK_PAST_EVENTS,
-  MOCK_ORDERS,
-  MOCK_PLACES,
-  MOCK_CONFIG,
-} from '@/data/mock';
-
+import { MOCK_ORDERS, MOCK_PLACES, MOCK_CONFIG } from '@/data/mock';
+import { fetchEvents, createEvent, updateEvent, deleteEvent } from '@/api/events';
 import type { EventItem, Order, Page, AppConfig } from '@/types';
 
 const VK_PARAMS = {
@@ -32,11 +26,25 @@ const Index = () => {
 
   const [page, setPage] = useState<Page>('main');
   const [history, setHistory] = useState<Page[]>([]);
-  const [events, setEvents] = useState<EventItem[]>(MOCK_EVENTS);
+
+  const [events, setEvents] = useState<EventItem[]>([]);
+  const [pastEvents, setPastEvents] = useState<EventItem[]>([]);
+  const [loading, setLoading] = useState(true);
+
   const [orders, setOrders] = useState<Order[]>(MOCK_ORDERS);
   const [config, setConfig] = useState<AppConfig>(MOCK_CONFIG);
   const [selectedEvent, setSelectedEvent] = useState<EventItem | null>(null);
   const [editEvent, setEditEvent] = useState<EventItem | null>(null);
+
+  // Загружаем события из БД при старте
+  useEffect(() => {
+    Promise.all([fetchEvents(false), fetchEvents(true)])
+      .then(([actual, past]) => {
+        setEvents(actual);
+        setPastEvents(past);
+      })
+      .finally(() => setLoading(false));
+  }, []);
 
   const navigate = useCallback((p: Page) => {
     setHistory((h) => [...h, page]);
@@ -78,25 +86,23 @@ const Index = () => {
     navigate('edit_event');
   };
 
-  const handleSaveEvent = (data: Partial<EventItem>) => {
+  const handleSaveEvent = async (data: Partial<EventItem>) => {
     if (data.id) {
-      setEvents((prev) => prev.map((e) => (e.id === data.id ? { ...e, ...data } : e)));
+      const updated = await updateEvent(data.id, data);
+      setEvents((prev) => prev.map((e) => (e.id === updated.id ? updated : e)));
+      setPastEvents((prev) => prev.map((e) => (e.id === updated.id ? updated : e)));
+      if (selectedEvent?.id === updated.id) setSelectedEvent(updated);
     } else {
-      const newEv: EventItem = {
-        id: Date.now(),
-        vk_group_id: VK_PARAMS.vk_group_id,
-        is_past: false,
-        private: 0,
-        image: data.image || 'https://cdn.poehali.dev/projects/f4e93125-1477-4e01-91c4-6b099dbf6ab3/files/456293d6-a925-4567-8a00-de6b5e925233.jpg',
-        ...data,
-      } as EventItem;
-      setEvents((prev) => [newEv, ...prev]);
+      const created = await createEvent({ ...data, vk_group_id: VK_PARAMS.vk_group_id, is_past: false, private: 0 });
+      setEvents((prev) => [created, ...prev]);
     }
     goBack();
   };
 
-  const handleDeleteEvent = (id: number) => {
+  const handleDeleteEvent = async (id: number) => {
+    await deleteEvent(id);
     setEvents((prev) => prev.filter((e) => e.id !== id));
+    setPastEvents((prev) => prev.filter((e) => e.id !== id));
   };
 
   const handleChangeOrderState = (id: number, state: Order['state']) => {
@@ -104,13 +110,21 @@ const Index = () => {
   };
 
   const renderPage = () => {
+    if (loading && (page === 'main' || page === 'past')) {
+      return (
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '60px 0', color: '#8A8A8A', fontSize: 14 }}>
+          Загрузка событий...
+        </div>
+      );
+    }
+
     switch (page) {
       case 'main':
       case 'past':
         return (
           <PageMain
             events={events}
-            pastEvents={MOCK_PAST_EVENTS}
+            pastEvents={pastEvents}
             isAdmin={is_admin}
             onOpenEvent={handleOpenEvent}
             onAddEvent={handleAddEvent}
@@ -172,13 +186,7 @@ const Index = () => {
   const showAdminNav = is_admin && ROOT_PAGES.includes(page);
 
   return (
-    <div style={{
-      width: '100%',
-      minHeight: '100vh',
-      display: 'flex',
-      flexDirection: 'column',
-      background: '#fff',
-    }}>
+    <div style={{ width: '100%', minHeight: '100vh', display: 'flex', flexDirection: 'column', background: '#fff' }}>
       <Toolbar
         page={page}
         widgetName={config.widget_name}
@@ -186,9 +194,7 @@ const Index = () => {
         onBack={goBack}
         onHome={goHome}
       />
-
       {showAdminNav && <AdminNav page={page} onNavigate={navRoot} />}
-
       <div style={{ flex: 1, overflowY: 'auto' }}>
         {renderPage()}
       </div>
