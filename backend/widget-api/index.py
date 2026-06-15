@@ -66,9 +66,8 @@ def resize_image(img_data: bytes, target_w: int, target_h: int) -> tuple[bytes, 
 def upload_image_to_vk(image_url: str, token: str, group_id: int, image_type: str = 'other') -> str | None:
     """Загружает изображение в VK через appWidgets API. Возвращает id или None."""
     try:
-        # 1. Получаем URL для загрузки
+        # 1. Получаем URL для загрузки (group_id не передаём — берётся из токена)
         upload_resp = vk_call('appWidgets.getGroupImageUploadServer', {
-            'group_id': abs(group_id),
             'image_type': image_type,
         }, token)
         if 'error' in upload_resp:
@@ -99,8 +98,14 @@ def upload_image_to_vk(image_url: str, token: str, group_id: int, image_type: st
             upload_result = json.loads(r.read())
         print(f"[widget] upload_result: {upload_result}")
 
-        # 4. Сохраняем — передаём все поля из ответа upload-сервера кроме meta
-        save_params = {k: str(v) for k, v in upload_result.items() if k not in ('meta', 'secret')}
+        # 4. Сохраняем — новый upload API возвращает sha вместо image
+        # Пробуем передать sha как image, и также через photo
+        save_params = {
+            'server': str(upload_result.get('server', '')),
+            'hash': str(upload_result.get('hash', '')),
+            'image': str(upload_result.get('sha', '')),
+            'photo': json.dumps(upload_result),
+        }
         print(f"[widget] saveGroupImage params: {save_params}")
         save_resp = vk_call('appWidgets.saveGroupImage', save_params, token)
         if 'error' in save_resp:
