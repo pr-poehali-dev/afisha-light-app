@@ -26,13 +26,13 @@ const Toolbar = ({ page, widgetName, isAdmin, onBack, onHome }: Props) => {
   const title = isRoot ? (widgetName || 'Афиша') : (PAGE_TITLES[page] ?? '');
 
   return (
-    <div className="vk-toolbar sticky top-0 z-50 flex items-center px-3" style={{ height: 56 }}>
+    <div className="sticky top-0 z-50 flex items-center px-3" style={{ height: 56, background: 'linear-gradient(135deg, #7C3AED, #9333EA)', boxShadow: '0 4px 20px rgba(124,58,237,0.35)' }}>
       <div style={{ minWidth: 44 }}>
         {!isRoot && (
           <button
             onClick={onBack}
             className="flex items-center"
-            style={{ color: '#7C3AED', fontSize: 16, background: 'none', border: 'none', cursor: 'pointer', padding: 0 }}
+            style={{ color: '#fff', fontSize: 16, background: 'none', border: 'none', cursor: 'pointer', padding: 0 }}
           >
             <Icon name="ChevronLeft" size={26} />
           </button>
@@ -42,7 +42,7 @@ const Toolbar = ({ page, widgetName, isAdmin, onBack, onHome }: Props) => {
       <button
         onClick={onHome}
         className="flex-1 text-center font-bold"
-        style={{ color: '#111', fontSize: 17, background: 'none', border: 'none', cursor: 'pointer' }}
+        style={{ color: '#fff', fontSize: 17, fontWeight: 700, background: 'none', border: 'none', cursor: 'pointer' }}
       >
         {title}
       </button>
@@ -51,8 +51,8 @@ const Toolbar = ({ page, widgetName, isAdmin, onBack, onHome }: Props) => {
         {isAdmin && isRoot && (
           <span style={{
             fontSize: 10, fontWeight: 700, letterSpacing: 0.5,
-            color: '#7C3AED',
-            background: '#EDE9FE',
+            color: '#fff',
+            background: 'rgba(255,255,255,0.2)',
             border: 'none',
             padding: '3px 8px',
             borderRadius: 6,
