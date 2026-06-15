@@ -60,8 +60,8 @@ const PreviewTiles = ({ events, title, btn1, btn2 }: { events: WidgetEvent[]; ti
           <img src={e.image || FALLBACK_IMG} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
           <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to top, rgba(0,0,0,0.65) 0%, transparent 55%)' }} />
           <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, padding: '6px 8px' }}>
-            <div style={{ fontSize: 10, fontWeight: 700, color: '#fff', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{e.title}</div>
-            <div style={{ fontSize: 9, color: 'rgba(255,255,255,0.75)' }}>{e.dates[0] ? fmtDate(e.dates[0].date) : ''}</div>
+            <div style={{ fontSize: 20, fontWeight: 700, color: '#fff', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{e.title}</div>
+            <div style={{ fontSize: 18, color: 'rgba(255,255,255,0.75)' }}>{e.dates[0] ? fmtDate(e.dates[0].date) : ''}</div>
           </div>
         </div>
       ))}
