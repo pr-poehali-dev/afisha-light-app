@@ -56,10 +56,11 @@ def upload_image_to_vk(image_url: str, token: str, group_id: int, image_type: st
         print(f"[widget] downloaded image: {len(img_data)} bytes, content_type: {content_type}")
 
         # 3. Загружаем в VK через multipart/form-data
+        ext = 'png' if 'png' in content_type else 'jpg'
         boundary = '----VKWidgetBoundary'
         body = (
             f'--{boundary}\r\n'
-            f'Content-Disposition: form-data; name="image"; filename="image.jpg"\r\n'
+            f'Content-Disposition: form-data; name="file"; filename="image.{ext}"\r\n'
             f'Content-Type: {content_type}\r\n\r\n'
         ).encode() + img_data + f'\r\n--{boundary}--\r\n'.encode()
 
