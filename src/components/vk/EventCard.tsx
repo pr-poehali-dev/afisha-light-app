@@ -29,72 +29,89 @@ const EventCard = ({ event, isAdmin, onClick, onEdit, onDelete }: Props) => {
   const imgSrc = event.image && event.image.startsWith('http') ? event.image : FALLBACK;
 
   return (
-    <div className="event-list-row" style={{ paddingLeft: 14, paddingRight: isAdmin ? 10 : 14 }}>
+    <div style={{
+      display: 'flex', alignItems: 'flex-start', gap: 16,
+      padding: '16px', marginBottom: 12,
+      background: '#fff', border: '1px solid #F0F0F0',
+      borderRadius: 20, boxShadow: '0 2px 12px rgba(0,0,0,0.06)',
+    }}>
 
-      <button onClick={onClick} className="shrink-0" style={{ background: 'none', border: 'none', padding: 0, cursor: 'pointer' }}>
+      {/* Фото — увеличено в 4 раза: было 72px → 288px, скруглённый квадрат */}
+      <button onClick={onClick} style={{ background: 'none', border: 'none', padding: 0, cursor: 'pointer', flexShrink: 0 }}>
         <img
           src={imgSrc}
           alt={event.title}
           loading="lazy"
-          className="event-list-logo"
           onError={(e) => { (e.currentTarget as HTMLImageElement).src = FALLBACK; }}
+          style={{
+            width: 120, height: 120,
+            objectFit: 'cover',
+            borderRadius: 18,
+            display: 'block',
+            boxShadow: '0 4px 16px rgba(124,58,237,0.15)',
+          }}
         />
       </button>
 
+      {/* Текст */}
       <button
         onClick={onClick}
-        className="flex flex-1 min-w-0 flex-col items-start text-left"
-        style={{ background: 'none', border: 'none', padding: 0, cursor: 'pointer' }}
+        style={{ background: 'none', border: 'none', padding: 0, cursor: 'pointer', flex: 1, minWidth: 0, textAlign: 'left', display: 'flex', flexDirection: 'column', alignItems: 'flex-start' }}
       >
-        <div className="event-list-name line-clamp-2">{event.title}</div>
+        {/* Название — крупное */}
+        <div style={{ fontSize: 18, fontWeight: 800, color: '#111', lineHeight: 1.25, marginBottom: 8 }} className="line-clamp-2">
+          {event.title}
+        </div>
 
-        <div className="event-list-date flex items-center gap-1">
-          <Icon name="Clock" size={12} style={{ color: '#7C3AED', flexShrink: 0 }} />
+        {/* Дата */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 15, color: '#7C3AED', fontWeight: 600, marginBottom: 4 }}>
+          <Icon name="Clock" size={15} style={{ color: '#7C3AED', flexShrink: 0 }} />
           {dateStr}
         </div>
 
+        {/* Место */}
         {!event.online && event.city && (
-          <div className="event-list-location flex items-center gap-1">
-            <Icon name="MapPin" size={12} style={{ color: '#AAA', flexShrink: 0 }} />
-            <span className="truncate">
+          <div style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 14, color: '#999', marginBottom: 4 }}>
+            <Icon name="MapPin" size={14} style={{ color: '#CCC', flexShrink: 0 }} />
+            <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
               {event.place ? `${event.place} · ` : ''}{event.city}
             </span>
           </div>
         )}
 
         {event.online && (
-          <div className="event-list-location flex items-center gap-1">
-            <Icon name="Monitor" size={12} style={{ color: '#AAA', flexShrink: 0 }} />
+          <div style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 14, color: '#999', marginBottom: 4 }}>
+            <Icon name="Monitor" size={14} style={{ color: '#CCC', flexShrink: 0 }} />
             <span>Онлайн (МСК)</span>
           </div>
         )}
 
-        <div className="flex items-center gap-2 mt-2 flex-wrap">
+        {/* Бейджи и цена */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginTop: 6, flexWrap: 'wrap' }}>
           {event.is_free ? (
-            <span className="badge-free">Бесплатно</span>
+            <span style={{ fontSize: 14, fontWeight: 800, color: '#059669', background: '#D1FAE5', padding: '3px 10px', borderRadius: 8 }}>Бесплатно</span>
           ) : event.price > 0 ? (
-            <span style={{ fontSize: 13, fontWeight: 700, color: '#fff' }}>
+            <span style={{ fontSize: 16, fontWeight: 800, color: '#111' }}>
               от {event.price.toLocaleString('ru-RU')} ₽
             </span>
           ) : null}
-          {event.online && <span className="badge-online">Онлайн</span>}
-          {event.age && <span className="badge-age">{event.age}</span>}
+          {event.online && (
+            <span style={{ fontSize: 13, fontWeight: 700, color: '#7C3AED', background: '#EDE9FE', padding: '3px 10px', borderRadius: 8 }}>Онлайн</span>
+          )}
+          {event.age && (
+            <span style={{ fontSize: 13, fontWeight: 600, color: '#999', background: '#F3F4F6', padding: '3px 8px', borderRadius: 8 }}>{event.age}</span>
+          )}
         </div>
       </button>
 
+      {/* Меню админа */}
       {isAdmin && (
-        <div className="flex flex-col shrink-0 gap-1 items-center justify-center">
-          <button
-            onClick={onEdit}
-            style={{ padding: 6, color: '#BBB', background: 'none', border: 'none', cursor: 'pointer' }}
-          >
-            <Icon name="Pencil" size={15} />
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 4, flexShrink: 0 }}>
+          <button onClick={onEdit} style={{ padding: 8, color: '#CCC', background: 'none', border: 'none', cursor: 'pointer' }}>
+            <Icon name="Pencil" size={18} />
           </button>
-          <button
-            onClick={onDelete}
-            style={{ padding: 6, color: '#F87171', background: 'none', border: 'none', cursor: 'pointer' }}
-          >
-            <Icon name="Trash2" size={15} />
+          <button onClick={onDelete} style={{ padding: 8, color: '#FCA5A5', background: 'none', border: 'none', cursor: 'pointer' }}>
+            <Icon name="Trash2" size={18} />
           </button>
         </div>
       )}
