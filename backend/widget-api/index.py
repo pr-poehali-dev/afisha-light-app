@@ -1,9 +1,11 @@
 import os
+import io
 import json
 import psycopg2
 import urllib.request
 import urllib.parse
 import urllib.error
+from PIL import Image
 from psycopg2.extras import RealDictCursor
 
 SCHEMA = os.environ.get('MAIN_DB_SCHEMA', 't_p8923173_afisha_light_app')
@@ -33,8 +35,36 @@ def vk_call(method, params, token):
     with urllib.request.urlopen(req, timeout=15) as r:
         return json.loads(r.read())
 
+# Точные размеры для каждого типа изображения VK
+VK_IMAGE_SIZES = {
+    '510x128':  (1530, 384),   # cover_list (VK умножает на 3)
+    '160x160':  (480, 480),    # tiles
+    'other':    (480, 480),
+}
+
+def resize_image(img_data: bytes, target_w: int, target_h: int) -> tuple[bytes, str]:
+    """Ресайзит изображение под точный размер (crop по центру)."""
+    img = Image.open(io.BytesIO(img_data)).convert('RGB')
+    src_w, src_h = img.size
+    src_ratio = src_w / src_h
+    tgt_ratio = target_w / target_h
+    if src_ratio > tgt_ratio:
+        new_h = src_h
+        new_w = int(src_h * tgt_ratio)
+    else:
+        new_w = src_w
+        new_h = int(src_w / tgt_ratio)
+    left = (src_w - new_w) // 2
+    top = (src_h - new_h) // 2
+    img = img.crop((left, top, left + new_w, top + new_h))
+    img = img.resize((target_w, target_h), Image.LANCZOS)
+    buf = io.BytesIO()
+    img.save(buf, format='JPEG', quality=92)
+    return buf.getvalue(), 'image/jpeg'
+
+
 def upload_image_to_vk(image_url: str, token: str, group_id: int, image_type: str = 'other') -> str | None:
-    """Загружает изображение в VK через appWidgets API. Возвращает id вида 'app_type_XXX' или None."""
+    """Загружает изображение в VK через appWidgets API. Возвращает id или None."""
     try:
         # 1. Получаем URL для загрузки
         upload_resp = vk_call('appWidgets.getGroupImageUploadServer', {
@@ -45,22 +75,21 @@ def upload_image_to_vk(image_url: str, token: str, group_id: int, image_type: st
             print(f"[widget] getGroupImageUploadServer error: {upload_resp['error']}")
             return None
         upload_url = upload_resp.get('response', {}).get('upload_url')
-        print(f"[widget] upload_url: {upload_url}")
         if not upload_url:
             return None
 
-        # 2. Скачиваем исходное изображение
+        # 2. Скачиваем и ресайзим под нужный размер
         with urllib.request.urlopen(image_url, timeout=10) as r:
             img_data = r.read()
-            content_type = r.headers.get('Content-Type', 'image/jpeg')
-        print(f"[widget] downloaded image: {len(img_data)} bytes, content_type: {content_type}")
+        target_w, target_h = VK_IMAGE_SIZES.get(image_type, (480, 480))
+        img_data, content_type = resize_image(img_data, target_w, target_h)
+        print(f"[widget] resized to {target_w}x{target_h}, size: {len(img_data)} bytes")
 
         # 3. Загружаем в VK через multipart/form-data
-        ext = 'png' if 'png' in content_type else 'jpg'
         boundary = '----VKWidgetBoundary'
         body = (
             f'--{boundary}\r\n'
-            f'Content-Disposition: form-data; name="file"; filename="image.{ext}"\r\n'
+            f'Content-Disposition: form-data; name="file"; filename="image.jpg"\r\n'
             f'Content-Type: {content_type}\r\n\r\n'
         ).encode() + img_data + f'\r\n--{boundary}--\r\n'.encode()
 
@@ -81,6 +110,7 @@ def upload_image_to_vk(image_url: str, token: str, group_id: int, image_type: st
             return None
 
         img_id = save_resp.get('response', {}).get('id')
+        print(f"[widget] saved image id: {img_id}")
         return img_id
     except Exception as ex:
         print(f"[widget] upload_image_to_vk exception: {ex}")
