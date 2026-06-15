@@ -36,15 +36,23 @@ const PageMain = ({
   return (
     <div style={{ background: '#fff' }}>
 
-      {/* Табы Актуальные / Прошедшие */}
-      <div style={{ display: 'flex', borderBottom: '1px solid #DCDFE6' }}>
+      {/* Табы + кнопка добавить в один ряд */}
+      <div style={{
+        display: 'flex',
+        alignItems: 'center',
+        gap: 4,
+        borderBottom: '1px solid #DCDFE6',
+        padding: '0 8px',
+        overflowX: 'auto',
+        scrollbarWidth: 'none',
+      }}>
         {(['actual', 'past'] as Tab[]).map((t) => (
           <button
             key={t}
             onClick={() => setTab(t)}
             style={{
-              flex: 1,
-              padding: '10px 0',
+              flexShrink: 0,
+              padding: '10px 12px',
               fontSize: 13,
               fontWeight: 500,
               color: tab === t ? '#3F51B5' : '#8A8A8A',
@@ -52,11 +60,36 @@ const PageMain = ({
               border: 'none',
               borderBottom: tab === t ? '2px solid #3F51B5' : '2px solid transparent',
               cursor: 'pointer',
+              whiteSpace: 'nowrap',
             }}
           >
             {t === 'actual' ? 'Актуальные' : 'Прошедшие'}
           </button>
         ))}
+
+        {isAdmin && (
+          <button
+            onClick={onAddEvent}
+            style={{
+              flexShrink: 0,
+              display: 'flex',
+              alignItems: 'center',
+              gap: 5,
+              padding: '6px 12px',
+              fontSize: 12,
+              fontWeight: 600,
+              color: '#fff',
+              background: '#2196F3',
+              border: 'none',
+              cursor: 'pointer',
+              whiteSpace: 'nowrap',
+              marginLeft: 4,
+            }}
+          >
+            <Icon name="Plus" size={13} />
+            Добавить
+          </button>
+        )}
       </div>
 
       {/* Категории */}
@@ -85,32 +118,6 @@ const PageMain = ({
           </button>
         ))}
       </div>
-
-      {/* Кнопка добавить (для админа) */}
-      {isAdmin && tab === 'actual' && (
-        <div style={{ padding: '8px 10px', borderBottom: '1px solid #DCDFE6' }}>
-          <button
-            onClick={onAddEvent}
-            style={{
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              gap: 6,
-              width: '100%',
-              padding: '8px',
-              fontSize: 13,
-              fontWeight: 500,
-              color: '#3F51B5',
-              background: 'none',
-              border: '1px dashed #DCDFE6',
-              cursor: 'pointer',
-            }}
-          >
-            <Icon name="Plus" size={15} />
-            Добавить событие
-          </button>
-        </div>
-      )}
 
       {/* Поиск */}
       <div style={{ position: 'relative', padding: '6px 10px', borderBottom: '1px solid #DCDFE6', background: '#fff' }}>
