@@ -31,7 +31,7 @@ const PageShowEvent = ({ event, isAdmin, currency, onEdit, onBook }: Props) => (
   <div style={{ background: '#fff', minHeight: '100vh' }}>
 
     {/* Обложка */}
-    <div style={{ position: 'relative', aspectRatio: '16/9', overflow: 'hidden', background: '#EDEEF0' }}>
+    <div style={{ position: 'relative', aspectRatio: '2/1', overflow: 'hidden', background: '#EDEEF0' }}>
       <img
         src={event.image}
         alt={event.title}
