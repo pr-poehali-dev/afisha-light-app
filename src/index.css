@@ -15,6 +15,18 @@ body,
   overflow-x: hidden;
 }
 
+body {
+  background: linear-gradient(
+    135deg,
+    #1e1b4b 0%,
+    #312e81 25%,
+    #4c1d95 55%,
+    #6d28d9 100%
+  ) !important;
+  background-attachment: fixed !important;
+  color: #fff !important;
+}
+
 @layer base {
   :root {
     --grad-from: #6366f1;
@@ -85,14 +97,6 @@ body,
     padding: 0;
     width: 100%;
     overflow-x: hidden;
-    background: linear-gradient(
-      135deg,
-      #1e1b4b 0%,
-      #312e81 25%,
-      #4c1d95 55%,
-      #6d28d9 100%
-    );
-    background-attachment: fixed;
     min-height: 100vh;
     color: #fff;
   }
