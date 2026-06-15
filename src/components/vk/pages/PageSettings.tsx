@@ -74,7 +74,7 @@ const PageSettings = ({ config, onSave }: Props) => {
   };
 
   return (
-    <div style={{ background: '#F7F8FA', minHeight: '100vh', paddingBottom: 72 }}>
+    <div style={{ background: '#F7F8FA', minHeight: '100%', paddingBottom: 72 }}>
 
       <SectionTitle>Основное</SectionTitle>
 

@@ -173,14 +173,11 @@ const Index = () => {
 
   return (
     <div style={{
-      margin: '0 auto',
-      maxWidth: 480,
+      width: '100%',
       minHeight: '100vh',
       display: 'flex',
       flexDirection: 'column',
       background: '#fff',
-      boxShadow: '0 0 40px rgba(0,0,0,0.15)',
-      position: 'relative',
     }}>
       <Toolbar
         page={page}

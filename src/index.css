@@ -2,6 +2,18 @@
 @tailwind components;
 @tailwind utilities;
 
+/* VK mini-app: занимаем весь iframe */
+html,
+body,
+#root {
+  width: 100%;
+  height: 100%;
+  min-height: 100vh;
+  margin: 0;
+  padding: 0;
+  overflow-x: hidden;
+}
+
 @layer base {
   :root {
     /* VK mini-app стиль: белый фон, серые разделители, синий акцент */
@@ -65,9 +77,12 @@
       sans-serif;
     font-size: 14px;
     line-height: 1.4;
-    /* Серый фон как у VK снаружи карточки */
-    background-color: #edeef0;
+    background-color: #fff;
     -webkit-font-smoothing: antialiased;
+    margin: 0;
+    padding: 0;
+    width: 100%;
+    overflow-x: hidden;
   }
 
   input,
