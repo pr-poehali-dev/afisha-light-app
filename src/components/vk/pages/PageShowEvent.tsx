@@ -40,16 +40,16 @@ const PageShowEvent = ({ event, isAdmin, currency, onEdit, onBook }: Props) => {
     <div style={{ background: '#fff', minHeight: '100vh' }}>
 
       {/* Шапка: круглое фото + название + мета */}
-      <div style={{ padding: '36px 42px', display: 'flex', gap: 36, alignItems: 'flex-start' }}>
+      <div style={{ padding: '29px 34px', display: 'flex', gap: 29, alignItems: 'flex-start' }}>
 
-        {/* Круглое фото ×5 */}
+        {/* Круглое фото */}
         <div style={{ flexShrink: 0 }}>
           <img
             src={imgSrc}
             alt={event.title}
             onError={(e) => { (e.currentTarget as HTMLImageElement).src = FALLBACK; }}
             style={{
-              width: 400, height: 400,
+              width: 320, height: 320,
               borderRadius: '50%',
               objectFit: 'cover',
               display: 'block',
@@ -57,49 +57,49 @@ const PageShowEvent = ({ event, isAdmin, currency, onEdit, onBook }: Props) => {
           />
         </div>
 
-        {/* Название + мета ×3 */}
+        {/* Название + мета */}
         <div style={{ flex: 1, minWidth: 0 }}>
-          <div style={{ fontSize: 48, fontWeight: 700, color: '#1A1A1A', lineHeight: 1.3, marginBottom: 24 }}>
+          <div style={{ fontSize: 38, fontWeight: 700, color: '#1A1A1A', lineHeight: 1.3, marginBottom: 19 }}>
             {event.title}
           </div>
 
           {/* Строки мета */}
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 12, marginBottom: 30 }}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 10, marginBottom: 24 }}>
             {event.dates.map((d, i) => (
-              <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 18, fontSize: 39, color: '#1A1A1A' }}>
-                <Icon name="Clock" size={42} style={{ color: '#3F51B5', flexShrink: 0 }} />
+              <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 14, fontSize: 31, color: '#1A1A1A' }}>
+                <Icon name="Clock" size={34} style={{ color: '#3F51B5', flexShrink: 0 }} />
                 {formatDateFull(d.date, d.start_time)}
               </div>
             ))}
 
             {!event.online && event.address && (
-              <div style={{ display: 'flex', alignItems: 'flex-start', gap: 18, fontSize: 39, color: '#3F51B5' }}>
-                <Icon name="MapPin" size={42} style={{ color: '#3F51B5', flexShrink: 0, marginTop: 3 }} />
+              <div style={{ display: 'flex', alignItems: 'flex-start', gap: 14, fontSize: 31, color: '#3F51B5' }}>
+                <Icon name="MapPin" size={34} style={{ color: '#3F51B5', flexShrink: 0, marginTop: 3 }} />
                 <span>{event.address}{event.city ? ` / ${event.city}` : ''}</span>
               </div>
             )}
 
             {event.place && (
-              <div style={{ display: 'flex', alignItems: 'center', gap: 18, fontSize: 39, color: '#1A1A1A' }}>
-                <Icon name="Building2" size={42} style={{ color: '#3F51B5', flexShrink: 0 }} />
+              <div style={{ display: 'flex', alignItems: 'center', gap: 14, fontSize: 31, color: '#1A1A1A' }}>
+                <Icon name="Building2" size={34} style={{ color: '#3F51B5', flexShrink: 0 }} />
                 {event.place}
               </div>
             )}
 
             {isAdmin && (
-              <div style={{ display: 'flex', alignItems: 'center', gap: 18, fontSize: 39, color: '#8A8A8A' }}>
-                <Icon name="Globe" size={42} style={{ color: '#3F51B5', flexShrink: 0 }} />
+              <div style={{ display: 'flex', alignItems: 'center', gap: 14, fontSize: 31, color: '#8A8A8A' }}>
+                <Icon name="Globe" size={34} style={{ color: '#3F51B5', flexShrink: 0 }} />
                 {event.private === 2 ? 'Глобальное, отображается во всех афишах' : 'Только в своей афише'}
               </div>
             )}
           </div>
 
           {/* Кнопки действий */}
-          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 24 }}>
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 19 }}>
             <button
               onClick={onBook}
               style={{
-                padding: '21px 42px', fontSize: 39, fontWeight: 600,
+                padding: '17px 34px', fontSize: 31, fontWeight: 600,
                 color: '#fff', background: '#3F51B5', border: 'none', cursor: 'pointer',
               }}
             >
@@ -110,7 +110,7 @@ const PageShowEvent = ({ event, isAdmin, currency, onEdit, onBook }: Props) => {
               <button
                 onClick={onEdit}
                 style={{
-                  padding: '21px 42px', fontSize: 39, fontWeight: 600,
+                  padding: '17px 34px', fontSize: 31, fontWeight: 600,
                   color: '#3F51B5', background: '#fff', border: '1px solid #DCDFE6', cursor: 'pointer',
                 }}
               >
@@ -120,12 +120,12 @@ const PageShowEvent = ({ event, isAdmin, currency, onEdit, onBook }: Props) => {
 
             <button
               style={{
-                display: 'flex', alignItems: 'center', gap: 15,
-                padding: '21px 42px', fontSize: 39, fontWeight: 500,
+                display: 'flex', alignItems: 'center', gap: 12,
+                padding: '17px 34px', fontSize: 31, fontWeight: 500,
                 color: '#555', background: '#fff', border: '1px solid #DCDFE6', cursor: 'pointer',
               }}
             >
-              <Icon name="Share2" size={39} />
+              <Icon name="Share2" size={31} />
               Поделиться
             </button>
           </div>
@@ -134,20 +134,20 @@ const PageShowEvent = ({ event, isAdmin, currency, onEdit, onBook }: Props) => {
 
       {/* Описание */}
       {event.description && (
-        <div style={{ padding: '0 42px 42px', borderBottom: '1px solid #DCDFE6' }}>
-          <p style={{ fontSize: 42, color: '#3F51B5', lineHeight: 1.6, margin: 0 }}>
+        <div style={{ padding: '0 34px 34px', borderBottom: '1px solid #DCDFE6' }}>
+          <p style={{ fontSize: 34, color: '#3F51B5', lineHeight: 1.6, margin: 0 }}>
             {event.description}
           </p>
         </div>
       )}
 
       {/* Блок расписания */}
-      <div style={{ padding: '42px 42px' }}>
-        <div style={{ fontSize: 48, fontWeight: 700, color: '#1A1A1A', marginBottom: 36 }}>
+      <div style={{ padding: '34px 34px' }}>
+        <div style={{ fontSize: 38, fontWeight: 700, color: '#1A1A1A', marginBottom: 29 }}>
           Расписание
         </div>
 
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 30 }}>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 24 }}>
           {event.dates.map((d, i) => {
             const dt = parseDate(d.date);
             const day = dt.getDate();
@@ -169,23 +169,23 @@ const PageShowEvent = ({ event, isAdmin, currency, onEdit, onBook }: Props) => {
                 key={i}
                 style={{
                   border: '1px solid #DCDFE6',
-                  padding: '42px 48px',
+                  padding: '34px 38px',
                   display: 'inline-block',
-                  minWidth: 420,
-                  maxWidth: 600,
+                  minWidth: 336,
+                  maxWidth: 480,
                 }}
               >
-                <div style={{ fontSize: 96, fontWeight: 700, color: '#1A1A1A', lineHeight: 1 }}>
+                <div style={{ fontSize: 77, fontWeight: 700, color: '#1A1A1A', lineHeight: 1 }}>
                   {day}
                 </div>
-                <div style={{ fontSize: 42, color: '#1A1A1A', marginTop: 6 }}>{month}</div>
-                <div style={{ fontSize: 42, color: '#1A1A1A' }}>{weekday}</div>
-                <div style={{ fontSize: 42, color: '#1A1A1A', fontWeight: 600 }}>{d.start_time}</div>
-                <div style={{ fontSize: 36, color: '#8A8A8A', marginTop: 6 }}>{diffText}</div>
+                <div style={{ fontSize: 34, color: '#1A1A1A', marginTop: 5 }}>{month}</div>
+                <div style={{ fontSize: 34, color: '#1A1A1A' }}>{weekday}</div>
+                <div style={{ fontSize: 34, color: '#1A1A1A', fontWeight: 600 }}>{d.start_time}</div>
+                <div style={{ fontSize: 29, color: '#8A8A8A', marginTop: 5 }}>{diffText}</div>
 
-                <div style={{ marginTop: 30, display: 'flex', alignItems: 'center', gap: 12, color: '#8A8A8A' }}>
-                  <Icon name="Eye" size={48} />
-                  <Icon name="ChevronDown" size={42} />
+                <div style={{ marginTop: 24, display: 'flex', alignItems: 'center', gap: 10, color: '#8A8A8A' }}>
+                  <Icon name="Eye" size={38} />
+                  <Icon name="ChevronDown" size={34} />
                 </div>
               </div>
             );
@@ -194,7 +194,7 @@ const PageShowEvent = ({ event, isAdmin, currency, onEdit, onBook }: Props) => {
 
         {/* Стоимость */}
         {!event.is_free && (
-          <div style={{ marginTop: 16, fontSize: 14, color: '#8A8A8A' }}>
+          <div style={{ marginTop: 13, fontSize: 11, color: '#8A8A8A' }}>
             Стоимость:&nbsp;
             <span style={{ fontWeight: 700, color: '#1A1A1A' }}>
               {event.price.toLocaleString('ru-RU')} {currency}
@@ -202,7 +202,7 @@ const PageShowEvent = ({ event, isAdmin, currency, onEdit, onBook }: Props) => {
           </div>
         )}
         {event.is_free && (
-          <div style={{ marginTop: 16, fontSize: 14, fontWeight: 700, color: '#17A050' }}>
+          <div style={{ marginTop: 13, fontSize: 11, fontWeight: 700, color: '#17A050' }}>
             Бесплатно
           </div>
         )}
