@@ -100,7 +100,7 @@ def handler(event: dict, context) -> dict:
     with urllib.request.urlopen(req) as resp:
         resp.read()
 
-    cdn_url = f"https://cdn.poehali.dev/projects/{access_key}/files/{file_key}"
+    cdn_url = f"https://cdn.poehali.dev/projects/{access_key}/bucket/{file_key}"
 
     return {
         'statusCode': 200,

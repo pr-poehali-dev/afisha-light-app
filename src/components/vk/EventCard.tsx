@@ -22,21 +22,24 @@ function formatDate(e: EventItem) {
   return `${day} ${month} · ${time}${finish}${extra}`;
 }
 
+const FALLBACK = 'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="128" height="128" viewBox="0 0 128 128"><rect width="128" height="128" fill="%23EDEEF0"/><text x="50%25" y="54%25" dominant-baseline="middle" text-anchor="middle" font-size="36" fill="%23C0C0C0">🎭</text></svg>';
+
 const EventCard = ({ event, isAdmin, onClick, onEdit, onDelete }: Props) => {
   const dateStr = formatDate(event);
+  const imgSrc = event.image && event.image.startsWith('http') ? event.image : FALLBACK;
 
   return (
     <div
       className="event-list-row"
       style={{ paddingLeft: 0, paddingRight: isAdmin ? 4 : 0 }}
     >
-      {/* Круглое фото как в оригинале */}
       <button onClick={onClick} className="shrink-0" style={{ paddingTop: 2 }}>
         <img
-          src={event.image}
+          src={imgSrc}
           alt={event.title}
           loading="lazy"
           className="event-list-logo"
+          onError={(e) => { (e.currentTarget as HTMLImageElement).src = FALLBACK; }}
         />
       </button>
 

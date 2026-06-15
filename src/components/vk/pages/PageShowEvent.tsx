@@ -31,13 +31,16 @@ const PageShowEvent = ({ event, isAdmin, currency, onEdit, onBook }: Props) => (
   <div style={{ background: '#fff', minHeight: '100vh' }}>
 
     {/* Обложка */}
-    <div style={{ position: 'relative', aspectRatio: '2/1', overflow: 'hidden', background: '#EDEEF0' }}>
-      <img
-        src={event.image}
-        alt={event.title}
-        style={{ width: '100%', height: '100%', objectFit: 'cover' }}
-      />
-    </div>
+    {event.image && event.image.startsWith('http') && (
+      <div style={{ position: 'relative', aspectRatio: '2/1', overflow: 'hidden', background: '#EDEEF0' }}>
+        <img
+          src={event.image}
+          alt={event.title}
+          style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+          onError={(e) => { (e.currentTarget as HTMLImageElement).parentElement!.style.display = 'none'; }}
+        />
+      </div>
+    )}
 
     {/* Контент */}
     <div style={{ padding: '12px 14px' }}>
