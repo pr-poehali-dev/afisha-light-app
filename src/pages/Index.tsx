@@ -1,4 +1,4 @@
-import { useState, useCallback, useEffect } from 'react';
+import React, { useState, useCallback, useEffect } from 'react';
 import Toolbar from '@/components/vk/Toolbar';
 import AdminNav from '@/components/vk/AdminNav';
 import PageMain from '@/components/vk/pages/PageMain';
@@ -198,8 +198,17 @@ const Index = () => {
 
   const showAdminNav = is_admin && ROOT_PAGES.includes(page);
 
+  const bgStyle: React.CSSProperties = {
+    width: '100%',
+    minHeight: '100vh',
+    display: 'flex',
+    flexDirection: 'column',
+    background: 'linear-gradient(135deg, #0f0c29 0%, #1a1740 30%, #302b63 65%, #24243e 100%)',
+    backgroundAttachment: 'fixed',
+  };
+
   return (
-    <div style={{ width: '100%', minHeight: '100vh', display: 'flex', flexDirection: 'column', background: '#fff' }}>
+    <div style={bgStyle}>
       <Toolbar
         page={page}
         widgetName={config.widget_name}

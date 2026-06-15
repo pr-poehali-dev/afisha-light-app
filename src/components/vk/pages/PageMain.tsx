@@ -34,7 +34,7 @@ const PageMain = ({
   });
 
   return (
-    <div style={{ minHeight: '100vh', background: '#1e1b4b' }}>
+    <div style={{ minHeight: '100vh' }}>
 
       {/* Табы */}
       <div style={{

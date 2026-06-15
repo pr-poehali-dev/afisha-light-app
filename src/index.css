@@ -4,57 +4,33 @@
 @tailwind components;
 @tailwind utilities;
 
-html,
-body,
-#root {
-  width: 100%;
-  height: 100%;
-  min-height: 100vh;
-  margin: 0;
-  padding: 0;
-  overflow-x: hidden;
-  background-color: #1e1b4b;
-}
-
 @layer base {
   :root {
-    --bg-page: #1e1b4b;
-    --bg-card: #2d2a6e;
-    --bg-card2: #262260;
-    --bg-input: #2a2760;
-    --accent: #818cf8;
-    --accent-dk: #6366f1;
-    --accent-glow: rgba(129, 140, 248, 0.35);
-    --border-clr: rgba(255, 255, 255, 0.12);
-    --text-1: #ffffff;
-    --text-2: rgba(255, 255, 255, 0.7);
-    --text-3: rgba(255, 255, 255, 0.4);
-
-    --background: 239 47% 20%;
+    --background: 239 47% 14%;
     --foreground: 0 0% 100%;
-    --card: 239 47% 22%;
+    --card: 239 47% 18%;
     --card-foreground: 0 0% 100%;
-    --popover: 239 47% 22%;
+    --popover: 239 47% 18%;
     --popover-foreground: 0 0% 100%;
     --primary: 239 84% 67%;
     --primary-foreground: 0 0% 100%;
-    --secondary: 239 40% 30%;
+    --secondary: 239 40% 25%;
     --secondary-foreground: 0 0% 100%;
-    --muted: 239 40% 28%;
+    --muted: 239 40% 22%;
     --muted-foreground: 0 0% 65%;
     --destructive: 0 72% 50%;
     --destructive-foreground: 0 0% 100%;
-    --border: 239 40% 32%;
-    --input: 239 40% 25%;
+    --border: 239 35% 28%;
+    --input: 239 40% 20%;
     --ring: 239 84% 67%;
     --radius: 0px;
-    --sidebar-background: 239 47% 18%;
+    --sidebar-background: 239 47% 12%;
     --sidebar-foreground: 0 0% 90%;
     --sidebar-primary: 239 84% 67%;
     --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 239 40% 28%;
+    --sidebar-accent: 239 40% 22%;
     --sidebar-accent-foreground: 0 0% 100%;
-    --sidebar-border: 239 40% 32%;
+    --sidebar-border: 239 35% 28%;
     --sidebar-ring: 239 84% 67%;
   }
 }
@@ -66,8 +42,17 @@ body,
     box-sizing: border-box;
   }
 
+  html,
+  body,
+  #root {
+    width: 100%;
+    min-height: 100vh;
+    margin: 0;
+    padding: 0;
+    overflow-x: hidden;
+  }
+
   body {
-    @apply bg-background text-foreground;
     font-family:
       "Inter",
       -apple-system,
@@ -77,8 +62,8 @@ body,
     font-size: 14px;
     line-height: 1.4;
     -webkit-font-smoothing: antialiased;
-    background-color: #1e1b4b !important;
-    color: #fff !important;
+    color: #fff;
+    background: #1a1740;
   }
 
   input,
@@ -100,11 +85,13 @@ body,
 @layer components {
   .vk-toolbar {
     height: 56px;
-    background: #252268;
-    border-bottom: 1px solid var(--border-clr);
+    background: rgba(30, 27, 75, 0.85);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.12);
     display: flex;
     align-items: center;
-    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.3);
+    box-shadow: 0 2px 20px rgba(0, 0, 0, 0.3);
   }
 
   .vk-tag {
@@ -113,9 +100,9 @@ body,
     padding: 6px 14px;
     font-size: 13px;
     font-weight: 600;
-    background: #2d2a6e;
-    color: var(--text-2);
-    border: 1px solid var(--border-clr);
+    background: rgba(255, 255, 255, 0.08);
+    color: rgba(255, 255, 255, 0.6);
+    border: 1px solid rgba(255, 255, 255, 0.14);
     border-radius: 20px !important;
     cursor: pointer;
     white-space: nowrap;
@@ -125,7 +112,7 @@ body,
     background: linear-gradient(135deg, #6366f1, #8b5cf6);
     color: #fff;
     border-color: transparent;
-    box-shadow: 0 4px 12px var(--accent-glow);
+    box-shadow: 0 4px 14px rgba(99, 102, 241, 0.45);
   }
 
   .vk-btn-primary {
@@ -137,7 +124,7 @@ body,
     border: none;
     border-radius: 10px !important;
     cursor: pointer;
-    box-shadow: 0 4px 14px var(--accent-glow);
+    box-shadow: 0 4px 14px rgba(99, 102, 241, 0.4);
     transition: all 0.2s ease;
   }
   .vk-btn-primary:active {
@@ -145,19 +132,19 @@ body,
   }
 
   .vk-btn-outline {
-    background: #2d2a6e;
+    background: rgba(255, 255, 255, 0.08);
     color: #fff;
     font-size: 14px;
     font-weight: 600;
     padding: 10px 20px;
-    border: 1px solid var(--border-clr);
+    border: 1px solid rgba(255, 255, 255, 0.18);
     border-radius: 10px !important;
     cursor: pointer;
   }
 
   .vk-input {
     width: 100%;
-    background: #2a2760;
+    background: rgba(255, 255, 255, 0.07);
     border: 1px solid rgba(255, 255, 255, 0.15);
     border-radius: 10px !important;
     padding: 10px 14px;
@@ -167,11 +154,11 @@ body,
     transition: all 0.2s ease;
   }
   .vk-input::placeholder {
-    color: var(--text-3);
+    color: rgba(255, 255, 255, 0.3);
   }
   .vk-input:focus {
     border-color: #818cf8;
-    background: #312e81;
+    background: rgba(255, 255, 255, 0.11);
     box-shadow: 0 0 0 3px rgba(129, 140, 248, 0.2);
   }
   .vk-input option {
@@ -185,15 +172,14 @@ body,
     gap: 14px;
     padding: 14px;
     margin-bottom: 10px;
-    background: #2d2a6e;
-    border: 1px solid rgba(255, 255, 255, 0.1);
-    border-radius: 14px !important;
-    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
+    background: rgba(255, 255, 255, 0.07);
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    border-radius: 16px !important;
     transition: all 0.15s ease;
   }
   .event-list-row:active {
+    background: rgba(255, 255, 255, 0.11);
     transform: scale(0.99);
-    background: #333080;
   }
 
   .event-list-logo {
@@ -202,7 +188,7 @@ body,
     object-fit: cover;
     border-radius: 12px !important;
     flex-shrink: 0;
-    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
   }
 
   .event-list-name {
@@ -221,7 +207,7 @@ body,
 
   .event-list-location {
     font-size: 12px;
-    color: var(--text-3);
+    color: rgba(255, 255, 255, 0.38);
     margin-top: 2px;
   }
 
@@ -229,8 +215,8 @@ body,
     display: flex;
     overflow-x: auto;
     scrollbar-width: none;
-    background: #252268;
-    border-bottom: 1px solid var(--border-clr);
+    background: rgba(30, 27, 75, 0.7);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
     padding: 0 4px;
   }
   .nav-pills-vk::-webkit-scrollbar {
@@ -241,7 +227,7 @@ body,
     padding: 14px 16px;
     font-size: 14px;
     font-weight: 600;
-    color: var(--text-3);
+    color: rgba(255, 255, 255, 0.4);
     border-bottom: 2px solid transparent;
     cursor: pointer;
     background: none;
@@ -249,7 +235,6 @@ body,
     border-left: none;
     border-right: none;
     transition: all 0.2s;
-    color: rgba(255, 255, 255, 0.45);
   }
   .nav-pills-vk .nav-link.active {
     color: #fff;
@@ -266,7 +251,6 @@ body,
     color: #fff;
     border-radius: 6px !important;
   }
-
   .badge-online {
     display: inline-flex;
     align-items: center;
@@ -277,7 +261,6 @@ body,
     color: #fff;
     border-radius: 6px !important;
   }
-
   .badge-age {
     display: inline-flex;
     align-items: center;
@@ -285,8 +268,8 @@ body,
     font-size: 11px;
     font-weight: 600;
     background: rgba(255, 255, 255, 0.1);
-    color: rgba(255, 255, 255, 0.65);
-    border: 1px solid rgba(255, 255, 255, 0.18);
+    color: rgba(255, 255, 255, 0.6);
+    border: 1px solid rgba(255, 255, 255, 0.16);
     border-radius: 6px !important;
   }
 }
