@@ -177,14 +177,15 @@ const PageAddEvent = ({ initial = {}, onSave, onCancel }: Props) => {
             onClick={() => fileRef.current?.click()}
             style={{
               display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
-              gap: 8, width: '100%', aspectRatio: '2/1',
+              gap: 4, width: '50%', aspectRatio: '2/1',
               border: '2px dashed #DCDFE6', background: '#F7F8FA',
               cursor: 'pointer', color: '#8A8A8A',
             }}
           >
-            <Icon name="ImagePlus" size={32} style={{ color: '#DCDFE6' }} />
-            <span style={{ fontSize: 13 }}>Нажмите чтобы загрузить фото</span>
-            <span style={{ fontSize: 11, color: '#B0B0B0' }}>JPG, PNG, WEBP · до 5 МБ</span>
+            <Icon name="ImagePlus" size={18} style={{ color: '#DCDFE6' }} />
+            <span style={{ fontSize: 10, fontWeight: 600 }}>Загрузить фото</span>
+            <span style={{ fontSize: 9, color: '#B0B0B0' }}>JPG, PNG, WEBP · до 5 МБ</span>
+            <span style={{ fontSize: 9, color: '#B0B0B0' }}>Рекомендуем: 1200 × 600 px</span>
           </button>
         )}
 
