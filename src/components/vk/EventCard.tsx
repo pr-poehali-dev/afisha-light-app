@@ -22,7 +22,7 @@ function formatDate(e: EventItem) {
   return `${day} ${month} · ${time}${finish}${extra}`;
 }
 
-const FALLBACK = 'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="128" height="128" viewBox="0 0 128 128"><rect width="128" height="128" fill="%236366f1" fill-opacity="0.3"/><text x="50%25" y="54%25" dominant-baseline="middle" text-anchor="middle" font-size="36" fill="%23a5b4fc">🎭</text></svg>';
+const FALLBACK = 'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="128" height="128" viewBox="0 0 128 128"><rect width="128" height="128" fill="%23EDE9FE"/><text x="50%25" y="54%25" dominant-baseline="middle" text-anchor="middle" font-size="36" fill="%237C3AED">🎭</text></svg>';
 
 const EventCard = ({ event, isAdmin, onClick, onEdit, onDelete }: Props) => {
   const dateStr = formatDate(event);
@@ -49,13 +49,13 @@ const EventCard = ({ event, isAdmin, onClick, onEdit, onDelete }: Props) => {
         <div className="event-list-name line-clamp-2">{event.title}</div>
 
         <div className="event-list-date flex items-center gap-1">
-          <Icon name="Clock" size={12} style={{ color: '#a5b4fc', flexShrink: 0 }} />
+          <Icon name="Clock" size={12} style={{ color: '#7C3AED', flexShrink: 0 }} />
           {dateStr}
         </div>
 
         {!event.online && event.city && (
           <div className="event-list-location flex items-center gap-1">
-            <Icon name="MapPin" size={12} style={{ color: 'rgba(255,255,255,0.35)', flexShrink: 0 }} />
+            <Icon name="MapPin" size={12} style={{ color: '#AAA', flexShrink: 0 }} />
             <span className="truncate">
               {event.place ? `${event.place} · ` : ''}{event.city}
             </span>
@@ -64,7 +64,7 @@ const EventCard = ({ event, isAdmin, onClick, onEdit, onDelete }: Props) => {
 
         {event.online && (
           <div className="event-list-location flex items-center gap-1">
-            <Icon name="Monitor" size={12} style={{ color: 'rgba(255,255,255,0.35)', flexShrink: 0 }} />
+            <Icon name="Monitor" size={12} style={{ color: '#AAA', flexShrink: 0 }} />
             <span>Онлайн (МСК)</span>
           </div>
         )}
@@ -86,13 +86,13 @@ const EventCard = ({ event, isAdmin, onClick, onEdit, onDelete }: Props) => {
         <div className="flex flex-col shrink-0 gap-1 items-center justify-center">
           <button
             onClick={onEdit}
-            style={{ padding: 6, color: 'rgba(255,255,255,0.5)', background: 'none', border: 'none', cursor: 'pointer' }}
+            style={{ padding: 6, color: '#BBB', background: 'none', border: 'none', cursor: 'pointer' }}
           >
             <Icon name="Pencil" size={15} />
           </button>
           <button
             onClick={onDelete}
-            style={{ padding: 6, color: 'rgba(255,100,100,0.6)', background: 'none', border: 'none', cursor: 'pointer' }}
+            style={{ padding: 6, color: '#F87171', background: 'none', border: 'none', cursor: 'pointer' }}
           >
             <Icon name="Trash2" size={15} />
           </button>

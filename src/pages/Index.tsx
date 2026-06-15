@@ -203,8 +203,7 @@ const Index = () => {
     minHeight: '100vh',
     display: 'flex',
     flexDirection: 'column',
-    background: 'linear-gradient(135deg, #0f0c29 0%, #1a1740 30%, #302b63 65%, #24243e 100%)',
-    backgroundAttachment: 'fixed',
+    background: '#F5F5F7',
   };
 
   return (

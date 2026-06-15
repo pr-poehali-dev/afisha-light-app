@@ -27,31 +27,29 @@ const MONTHS_FULL = [
 ];
 
 const Label = ({ children, required }: { children: React.ReactNode; required?: boolean }) => (
-  <div style={{ fontSize: 11, fontWeight: 600, color: '#8A8A8A', textTransform: 'uppercase', letterSpacing: 0.5, marginBottom: 4 }}>
-    {children}{required && <span style={{ color: '#E64646', marginLeft: 2 }}>*</span>}
+  <div style={{ fontSize: 11, fontWeight: 700, color: '#888', textTransform: 'uppercase', letterSpacing: 0.6, marginBottom: 5 }}>
+    {children}{required && <span style={{ color: '#EF4444', marginLeft: 2 }}>*</span>}
   </div>
 );
 
 const Toggle = ({ checked, onChange, label }: { checked: boolean; onChange: () => void; label: string }) => (
-  <div
-    onClick={onChange}
-    style={{ display: 'flex', alignItems: 'center', gap: 10, cursor: 'pointer', marginBottom: 14 }}
-  >
+  <div onClick={onChange} style={{ display: 'flex', alignItems: 'center', gap: 10, cursor: 'pointer', marginBottom: 14 }}>
     <div style={{
-      width: 36, height: 20, borderRadius: 10, position: 'relative',
-      background: checked ? '#3F51B5' : '#DCDFE6', transition: 'background 0.2s', flexShrink: 0,
+      width: 38, height: 22, borderRadius: 11, position: 'relative',
+      background: checked ? '#7C3AED' : '#DDD', transition: 'background 0.2s', flexShrink: 0,
+      boxShadow: checked ? '0 2px 8px rgba(124,58,237,0.3)' : 'none',
     }}>
       <div style={{
         position: 'absolute', top: 3, left: checked ? 19 : 3,
-        width: 14, height: 14, borderRadius: '50%', background: '#fff',
-        transition: 'left 0.2s',
+        width: 16, height: 16, borderRadius: '50%', background: '#fff',
+        transition: 'left 0.2s', boxShadow: '0 1px 4px rgba(0,0,0,0.15)',
       }} />
     </div>
-    <span style={{ fontSize: 14, color: '#1A1A1A' }}>{label}</span>
+    <span style={{ fontSize: 14, color: '#222', fontWeight: 500 }}>{label}</span>
   </div>
 );
 
-const Divider = () => <div style={{ borderTop: '1px solid rgba(255,255,255,0.1)', margin: '14px 0' }} />;
+const Divider = () => <div style={{ borderTop: '1px solid #EBEBEB', margin: '16px 0' }} />;
 
 function getDaysInMonth(year: number, month: number) {
   return new Date(year, month + 1, 0).getDate();
@@ -565,11 +563,11 @@ const PageAddEvent = ({ initial = {}, places = [], onSave, onCancel }: Props) =>
       <Toggle checked={isFree} onChange={() => setIsFree((v) => !v)} label="Бесплатное мероприятие" />
 
       {/* Нижняя панель */}
-      <div style={{ position: 'fixed', bottom: 0, left: 0, right: 0, display: 'flex', gap: 10, padding: 10, borderTop: '1px solid #DCDFE6', background: '#fff' }}>
-        <button onClick={onCancel} style={{ flex: 1, padding: '10px 0', fontSize: 14, fontWeight: 600, color: '#3F51B5', background: 'none', border: '1px solid #3F51B5', cursor: 'pointer' }}>
+      <div style={{ position: 'fixed', bottom: 0, left: 0, right: 0, display: 'flex', gap: 10, padding: 10, borderTop: '1px solid #EBEBEB', background: '#fff', boxShadow: '0 -4px 16px rgba(0,0,0,0.06)' }}>
+        <button onClick={onCancel} style={{ flex: 1, padding: '11px 0', fontSize: 14, fontWeight: 600, color: '#7C3AED', background: '#EDE9FE', border: 'none', borderRadius: 12, cursor: 'pointer' }}>
           Отмена
         </button>
-        <button onClick={handleSave} disabled={!valid || uploading} style={{ flex: 1, padding: '10px 0', fontSize: 14, fontWeight: 600, color: '#fff', background: (valid && !uploading) ? '#3F51B5' : '#DCDFE6', border: 'none', cursor: (valid && !uploading) ? 'pointer' : 'default' }}>
+        <button onClick={handleSave} disabled={!valid || uploading} style={{ flex: 1, padding: '11px 0', fontSize: 14, fontWeight: 700, color: '#fff', background: (valid && !uploading) ? '#7C3AED' : '#DDD', border: 'none', borderRadius: 12, cursor: (valid && !uploading) ? 'pointer' : 'default', boxShadow: (valid && !uploading) ? '0 4px 12px rgba(124,58,237,0.3)' : 'none' }}>
           {uploading ? 'Загрузка...' : (initial.id ? 'Сохранить' : 'Добавить')}
         </button>
       </div>

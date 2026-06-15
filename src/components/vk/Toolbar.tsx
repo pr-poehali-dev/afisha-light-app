@@ -32,7 +32,7 @@ const Toolbar = ({ page, widgetName, isAdmin, onBack, onHome }: Props) => {
           <button
             onClick={onBack}
             className="flex items-center"
-            style={{ color: 'rgba(255,255,255,0.9)', fontSize: 16, background: 'none', border: 'none', cursor: 'pointer', padding: 0 }}
+            style={{ color: '#7C3AED', fontSize: 16, background: 'none', border: 'none', cursor: 'pointer', padding: 0 }}
           >
             <Icon name="ChevronLeft" size={26} />
           </button>
@@ -42,7 +42,7 @@ const Toolbar = ({ page, widgetName, isAdmin, onBack, onHome }: Props) => {
       <button
         onClick={onHome}
         className="flex-1 text-center font-bold"
-        style={{ color: '#fff', fontSize: 18, background: 'none', border: 'none', cursor: 'pointer', letterSpacing: 0.3 }}
+        style={{ color: '#111', fontSize: 17, background: 'none', border: 'none', cursor: 'pointer' }}
       >
         {title}
       </button>
@@ -51,10 +51,10 @@ const Toolbar = ({ page, widgetName, isAdmin, onBack, onHome }: Props) => {
         {isAdmin && isRoot && (
           <span style={{
             fontSize: 10, fontWeight: 700, letterSpacing: 0.5,
-            color: 'rgba(255,255,255,0.5)',
-            background: 'rgba(255,255,255,0.1)',
-            border: '1px solid rgba(255,255,255,0.2)',
-            padding: '2px 7px',
+            color: '#7C3AED',
+            background: '#EDE9FE',
+            border: 'none',
+            padding: '3px 8px',
             borderRadius: 6,
           }}>
             ADMIN
