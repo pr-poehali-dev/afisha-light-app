@@ -4,26 +4,32 @@ export function initVKBridge() {
   bridge.send('VKWebAppInit');
 }
 
-// Парсит параметры запуска из URL
-export function parseVKParams(): {
+export interface VKParams {
   vk_user_id: number;
   vk_group_id: number;
   is_admin: boolean;
-} {
-  const params = new URLSearchParams(window.location.search);
-  const vk_user_id = parseInt(params.get('vk_user_id') || '0', 10);
-  const vk_group_id = parseInt(params.get('vk_group_id') || '0', 10);
-  const role = params.get('vk_viewer_group_role') || '';
+}
+
+// Парсит параметры запуска из URL — единственный источник истины
+export function parseVKParams(): VKParams {
+  const p = new URLSearchParams(window.location.search);
+  const vk_group_id = parseInt(p.get('vk_group_id') || '0', 10);
+  const vk_user_id  = parseInt(p.get('vk_user_id')  || '0', 10);
+  const role = p.get('vk_viewer_group_role') || '';
   const is_admin = ['admin', 'editor', 'moder'].includes(role);
   return { vk_user_id, vk_group_id, is_admin };
 }
 
-// Получить токен сообщества автоматически через VK Bridge
-// Вызывать только при наличии vk_group_id (приложение открыто в сообществе)
+// Получить app_id из URL
+export function getAppId(): number {
+  return parseInt(new URLSearchParams(window.location.search).get('vk_app_id') || '0', 10);
+}
+
+// Токен сообщества автоматически через VK Bridge
 export async function getGroupToken(groupId: number): Promise<string | null> {
   try {
     const res = await bridge.send('VKWebAppGetCommunityToken', {
-      app_id: parseInt(new URLSearchParams(window.location.search).get('vk_app_id') || '0'),
+      app_id: getAppId(),
       group_id: groupId,
       scope: 'messages,manage',
     });
@@ -33,22 +39,14 @@ export async function getGroupToken(groupId: number): Promise<string | null> {
   }
 }
 
-// Поделиться ссылкой через VK
+// Поделиться через VK
 export async function vkShare(message: string) {
-  try {
-    await bridge.send('VKWebAppShare', { link: window.location.href, message });
-  } catch {
-    // ignore
-  }
+  try { await bridge.send('VKWebAppShare', { link: window.location.href, message }); } catch (e) { void e; }
 }
 
-// Разрешить уведомления
+// Уведомления
 export async function vkAllowNotifications() {
-  try {
-    return await bridge.send('VKWebAppAllowNotifications');
-  } catch {
-    return null;
-  }
+  try { return await bridge.send('VKWebAppAllowNotifications'); } catch (e) { void e; return null; }
 }
 
 export default bridge;

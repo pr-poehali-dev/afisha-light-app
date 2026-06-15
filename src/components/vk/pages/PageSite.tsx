@@ -5,9 +5,7 @@ import {
   DEFAULT_SETTINGS, type LandingSettings,
 } from '@/api/landing';
 
-const VK_GROUP_ID = parseInt(new URLSearchParams(window.location.search).get('vk_group_id') || '234136199');
-const PREVIEW_URL = getLandingUrl(VK_GROUP_ID);
-const PUBLIC_URL = getPublicLandingUrl(VK_GROUP_ID);
+interface SiteProps { groupId: number; }
 
 const s: React.CSSProperties = {
   background: '#fff', border: '1px solid #F0F0F0',
@@ -66,7 +64,10 @@ const TABS: { key: Tab; label: string; icon: string }[] = [
 
 const UPLOAD_URL = 'https://functions.poehali.dev/dec20997-ea70-4e62-9edf-60f5cf25a981';
 
-const PageSite = () => {
+const PageSite = ({ groupId }: SiteProps) => {
+  const VK_GROUP_ID = groupId;
+  const PREVIEW_URL = getLandingUrl(VK_GROUP_ID);
+  const PUBLIC_URL = getPublicLandingUrl(VK_GROUP_ID);
   const [tab, setTab] = useState<Tab>('basic');
   const [cfg, setCfg] = useState<LandingSettings>(DEFAULT_SETTINGS);
   const [loading, setLoading] = useState(true);

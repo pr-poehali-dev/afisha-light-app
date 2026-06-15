@@ -1,7 +1,6 @@
 import type { EventItem } from '@/types';
 
 const API = 'https://functions.poehali.dev/e1916b46-896b-4132-90a4-340801197985';
-const VK_GROUP_ID = 234136199;
 
 function toEvent(row: Record<string, unknown>): EventItem {
   return {
@@ -37,17 +36,17 @@ function toEvent(row: Record<string, unknown>): EventItem {
   };
 }
 
-export async function fetchEvents(isPast = false, isAdmin = false): Promise<EventItem[]> {
-  const res = await fetch(`${API}?vk_group_id=${VK_GROUP_ID}&past=${isPast}&is_admin=${isAdmin}`);
+export async function fetchEvents(groupId: number, isPast = false, isAdmin = false): Promise<EventItem[]> {
+  const res = await fetch(`${API}?vk_group_id=${groupId}&past=${isPast}&is_admin=${isAdmin}`);
   const data = await res.json();
   return (data as Record<string, unknown>[]).map(toEvent);
 }
 
-export async function createEvent(ev: Partial<EventItem>): Promise<EventItem> {
+export async function createEvent(groupId: number, ev: Partial<EventItem>): Promise<EventItem> {
   const res = await fetch(API, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ ...ev, vk_group_id: VK_GROUP_ID }),
+    body: JSON.stringify({ ...ev, vk_group_id: groupId }),
   });
   return toEvent(await res.json());
 }

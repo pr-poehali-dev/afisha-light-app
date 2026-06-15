@@ -7,7 +7,7 @@ import {
 } from '@/api/subscribers';
 import { getGroupToken } from '@/lib/vk';
 
-const VK_GROUP_ID = parseInt(new URLSearchParams(window.location.search).get('vk_group_id') || '234136199');
+interface MailingsProps { groupId: number; }
 
 type SubTab = 'send' | 'base' | 'history';
 
@@ -34,7 +34,8 @@ const STATUS_MAP: Record<string, { label: string; bg: string; color: string }> =
   error:   { label: 'Ошибка', bg: '#FEE2E2', color: '#B91C1C' },
 };
 
-const PageMailings = () => {
+const PageMailings = ({ groupId }: MailingsProps) => {
+  const VK_GROUP_ID = groupId;
   const [subTab, setSubTab] = useState<SubTab>('send');
   const [stats, setStats] = useState<Stats | null>(null);
   const [mailings, setMailings] = useState<Mailing[]>([]);

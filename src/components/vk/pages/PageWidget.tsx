@@ -3,7 +3,7 @@ import Icon from '@/components/ui/icon';
 import { fetchWidgetEvents, publishWidget, type WidgetEvent } from '@/api/widget';
 import { getGroupToken } from '@/lib/vk';
 
-const VK_GROUP_ID = parseInt(new URLSearchParams(window.location.search).get('vk_group_id') || '234136199');
+interface WidgetProps { groupId: number; }
 
 const MONTHS = ['янв','фев','мар','апр','май','июн','июл','авг','сен','окт','ноя','дек'];
 function fmtDate(d: string) {
@@ -103,7 +103,8 @@ const PreviewCompactList = ({ events, title, btn1, btn2 }: { events: WidgetEvent
 
 // ===== ГЛАВНЫЙ КОМПОНЕНТ =====
 
-const PageWidget = () => {
+const PageWidget = ({ groupId }: WidgetProps) => {
+  const VK_GROUP_ID = groupId;
   const [events, setEvents] = useState<WidgetEvent[]>([]);
   const [loading, setLoading] = useState(true);
   const [widgetType, setWidgetType] = useState<WidgetType>('compact_list');

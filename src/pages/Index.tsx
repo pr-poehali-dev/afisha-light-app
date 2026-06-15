@@ -18,19 +18,17 @@ import { fetchPlaces, createPlace, updatePlace } from '@/api/places';
 import { initVKBridge, parseVKParams } from '@/lib/vk';
 import type { EventItem, Order, Place, Page, AppConfig } from '@/types';
 
-// Инициализируем VK Bridge при загрузке
+// Инициализируем VK Bridge
 initVKBridge();
 
-// Читаем реальные параметры из URL (при запуске из VK) или используем дефолт для разработки
-const rawParams = parseVKParams();
-const VK_PARAMS = rawParams.vk_group_id > 0
-  ? rawParams
-  : { is_admin: true, vk_group_id: 234136199, vk_user_id: 1107808138 };
+// Параметры из URL — единственный источник истины
+// В режиме разработки (вне VK) group_id = 0, is_admin = false
+const VK_PARAMS = parseVKParams();
 
 const ROOT_PAGES: Page[] = ['main', 'past', 'manager', 'places', 'mailings', 'widget', 'site', 'settings'];
 
 const Index = () => {
-  const { is_admin } = VK_PARAMS;
+  const { is_admin, vk_group_id } = VK_PARAMS;
 
   const [page, setPage] = useState<Page>('main');
   const [history, setHistory] = useState<Page[]>([]);
@@ -46,13 +44,19 @@ const Index = () => {
   const [editEvent, setEditEvent] = useState<EventItem | null>(null);
 
   useEffect(() => {
-    Promise.all([fetchEvents(false, is_admin), fetchEvents(true, is_admin), fetchPlaces()])
-      .then(([actual, past, pl]) => {
-        setEvents(actual);
-        setPastEvents(past);
-        setPlaces(pl);
-      })
-      .finally(() => setLoading(false));
+    if (!vk_group_id) {
+      setLoading(false);
+      return;
+    }
+    Promise.all([
+      fetchEvents(vk_group_id, false, is_admin),
+      fetchEvents(vk_group_id, true, is_admin),
+      fetchPlaces(vk_group_id),
+    ]).then(([actual, past, pl]) => {
+      setEvents(actual);
+      setPastEvents(past);
+      setPlaces(pl);
+    }).finally(() => setLoading(false));
   }, []);
 
   const navigate = useCallback((p: Page) => {
@@ -80,20 +84,9 @@ const Index = () => {
     setEditEvent(null);
   };
 
-  const handleOpenEvent = (e: EventItem) => {
-    setSelectedEvent(e);
-    navigate('show_event');
-  };
-
-  const handleAddEvent = () => {
-    setEditEvent(null);
-    navigate('add_event');
-  };
-
-  const handleEditEvent = (e: EventItem) => {
-    setEditEvent(e);
-    navigate('edit_event');
-  };
+  const handleOpenEvent = (e: EventItem) => { setSelectedEvent(e); navigate('show_event'); };
+  const handleAddEvent  = () => { setEditEvent(null); navigate('add_event'); };
+  const handleEditEvent = (e: EventItem) => { setEditEvent(e); navigate('edit_event'); };
 
   const handleSaveEvent = async (data: Partial<EventItem>) => {
     if (data.id) {
@@ -102,7 +95,7 @@ const Index = () => {
       setPastEvents((prev) => prev.map((e) => (e.id === updated.id ? updated : e)));
       if (selectedEvent?.id === updated.id) setSelectedEvent(updated);
     } else {
-      const created = await createEvent({ ...data, vk_group_id: VK_PARAMS.vk_group_id, is_past: false });
+      const created = await createEvent(vk_group_id, { ...data, is_past: false });
       setEvents((prev) => [created, ...prev]);
     }
     goBack();
@@ -115,7 +108,7 @@ const Index = () => {
   };
 
   const handleAddPlace = async (p: Omit<Place, 'id'>) => {
-    const created = await createPlace(p);
+    const created = await createPlace(vk_group_id, p);
     setPlaces((prev) => [...prev, created]);
   };
 
@@ -129,10 +122,21 @@ const Index = () => {
   };
 
   const renderPage = () => {
+    // Если не открыто из сообщества — показываем заглушку
+    if (!vk_group_id) {
+      return (
+        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '60px 20px', textAlign: 'center', color: '#999' }}>
+          <div style={{ fontSize: 40, marginBottom: 12 }}>🚀</div>
+          <div style={{ fontSize: 16, fontWeight: 700, color: '#333', marginBottom: 8 }}>Приложение установлено в сообществе</div>
+          <div style={{ fontSize: 13 }}>Откройте приложение из страницы сообщества ВКонтакте</div>
+        </div>
+      );
+    }
+
     if (loading && (page === 'main' || page === 'past')) {
       return (
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '60px 0', color: '#8A8A8A', fontSize: 14 }}>
-          Загрузка событий...
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '60px 0', color: '#999', fontSize: 14 }}>
+          Загрузка...
         </div>
       );
     }
@@ -142,13 +146,9 @@ const Index = () => {
       case 'past':
         return (
           <PageMain
-            events={events}
-            pastEvents={pastEvents}
-            isAdmin={is_admin}
-            onOpenEvent={handleOpenEvent}
-            onAddEvent={handleAddEvent}
-            onEditEvent={handleEditEvent}
-            onDeleteEvent={handleDeleteEvent}
+            events={events} pastEvents={pastEvents} isAdmin={is_admin}
+            onOpenEvent={handleOpenEvent} onAddEvent={handleAddEvent}
+            onEditEvent={handleEditEvent} onDeleteEvent={handleDeleteEvent}
             onNavigate={navigate}
           />
         );
@@ -156,27 +156,15 @@ const Index = () => {
       case 'show_event':
         if (!selectedEvent) return null;
         return (
-          <PageShowEvent
-            event={selectedEvent}
-            isAdmin={is_admin}
-            currency={config.currency}
-            onEdit={() => handleEditEvent(selectedEvent)}
-            onBook={() => navigate('add_order')}
-          />
+          <PageShowEvent event={selectedEvent} isAdmin={is_admin} currency={config.currency}
+            onEdit={() => handleEditEvent(selectedEvent)} onBook={() => navigate('add_order')} />
         );
 
       case 'add_event':
         return <PageAddEvent places={places} onSave={handleSaveEvent} onCancel={goBack} />;
 
       case 'edit_event':
-        return (
-          <PageAddEvent
-            initial={editEvent ?? undefined}
-            places={places}
-            onSave={handleSaveEvent}
-            onCancel={goBack}
-          />
-        );
+        return <PageAddEvent initial={editEvent ?? undefined} places={places} onSave={handleSaveEvent} onCancel={goBack} />;
 
       case 'manager':
         return <PageManager orders={orders} onChangeState={handleChangeOrderState} />;
@@ -185,27 +173,20 @@ const Index = () => {
         return <PagePlaces places={places} onAdd={handleAddPlace} onEdit={handleEditPlace} />;
 
       case 'mailings':
-        return <PageMailings />;
+        return <PageMailings groupId={vk_group_id} />;
 
       case 'widget':
-        return <PageWidget />;
+        return <PageWidget groupId={vk_group_id} />;
 
       case 'site':
-        return <PageSite />;
+        return <PageSite groupId={vk_group_id} />;
 
       case 'settings':
         return <PageSettings config={config} onSave={setConfig} />;
 
       case 'add_order':
         if (!selectedEvent) return null;
-        return (
-          <PageAddOrder
-            event={selectedEvent}
-            currency={config.currency}
-            onSubmit={goBack}
-            onCancel={goBack}
-          />
-        );
+        return <PageAddOrder event={selectedEvent} currency={config.currency} onSubmit={goBack} onCancel={goBack} />;
 
       default:
         return null;
@@ -214,23 +195,9 @@ const Index = () => {
 
   const showAdminNav = is_admin && ROOT_PAGES.includes(page);
 
-  const bgStyle: React.CSSProperties = {
-    width: '100%',
-    minHeight: '100vh',
-    display: 'flex',
-    flexDirection: 'column',
-    background: '#F5F5F7',
-  };
-
   return (
-    <div style={bgStyle}>
-      <Toolbar
-        page={page}
-        widgetName={config.widget_name}
-        isAdmin={is_admin}
-        onBack={goBack}
-        onHome={goHome}
-      />
+    <div style={{ width: '100%', minHeight: '100vh', display: 'flex', flexDirection: 'column', background: '#F5F5F7' }}>
+      <Toolbar page={page} widgetName={config.widget_name} isAdmin={is_admin} onBack={goBack} onHome={goHome} />
       {showAdminNav && <AdminNav page={page} onNavigate={navRoot} />}
       <div style={{ flex: 1, overflowY: 'auto' }}>
         {renderPage()}
