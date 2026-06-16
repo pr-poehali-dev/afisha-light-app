@@ -9,9 +9,10 @@ interface Props {
   onImageChange: (url: string) => void;
   onUploadingChange: (v: boolean) => void;
   onUploadErrorChange: (msg: string) => void;
+  onVkCoverIdChange?: (id: string) => void;
 }
 
-const EventFormCover = ({ image, uploading, uploadError, onImageChange, onUploadingChange, onUploadErrorChange }: Props) => {
+const EventFormCover = ({ image, uploading, uploadError, onImageChange, onUploadingChange, onUploadErrorChange, onVkCoverIdChange }: Props) => {
   const fileRef = useRef<HTMLInputElement>(null);
 
   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -26,8 +27,10 @@ const EventFormCover = ({ image, uploading, uploadError, onImageChange, onUpload
       try {
         const res = await fetch(UPLOAD_URL, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ image: base64 }) });
         const data = await res.json();
-        if (data.url) onImageChange(data.url);
-        else onUploadErrorChange('Ошибка загрузки');
+        if (data.url) {
+          onImageChange(data.url);
+          if (data.vk_cover_id) onVkCoverIdChange?.(data.vk_cover_id);
+        } else onUploadErrorChange('Ошибка загрузки');
       } catch { onUploadErrorChange('Ошибка сети'); }
       finally { onUploadingChange(false); }
     };

@@ -50,10 +50,9 @@ const PageWidget = ({ groupId }: Props) => {
   const [token, setToken] = useState<string | null>(null);
   const [tokenLoading, setTokenLoading] = useState(false);
 
-  // cover_list: изображения VK
+  // cover_list: доп. cover_id если у мероприятия нет vk_cover_id
   const [vkImages, setVkImages] = useState<VkImage[]>([]);
   const [vkImagesLoading, setVkImagesLoading] = useState(false);
-  // map: event_id -> cover_id
   const [coverIds, setCoverIds] = useState<Record<number, string>>({});
   const [uploadingFor, setUploadingFor] = useState<number | null>(null);
   const fileRef = useRef<HTMLInputElement>(null);
@@ -63,11 +62,15 @@ const PageWidget = ({ groupId }: Props) => {
 
   useEffect(() => {
     fetchEvents(groupId, false, true).then(data => {
-      setEvents(Array.isArray(data) ? data : []);
+      const arr = Array.isArray(data) ? data : [];
+      setEvents(arr);
+      // Предзаполняем coverIds из vk_cover_id мероприятий
+      const ids: Record<number, string> = {};
+      arr.forEach(e => { if (e.vk_cover_id) ids[e.id] = e.vk_cover_id; });
+      setCoverIds(ids);
     }).finally(() => setLoading(false));
   }, []);
 
-  // Загружаем список VK-изображений при переключении на cover_list
   useEffect(() => {
     if (widgetType === 'cover_list') loadVkImages();
   }, [widgetType]);
@@ -103,7 +106,8 @@ const PageWidget = ({ groupId }: Props) => {
     .map(id => events.find(e => e.id === id))
     .filter(Boolean) as EventItem[];
 
-  // Загрузка фото для конкретного события в cover_list
+  const getCoverId = (e: EventItem) => coverIds[e.id] || e.vk_cover_id || '';
+
   const handleUploadForEvent = (eventId: number) => {
     uploadForRef.current = eventId;
     fileRef.current?.click();
@@ -129,7 +133,6 @@ const PageWidget = ({ groupId }: Props) => {
         if (data.id) {
           setCoverIds(prev => ({ ...prev, [eventId]: data.id }));
           await loadVkImages();
-          setResult({ msg: undefined });
         } else {
           setResult({ msg: data.error || 'Ошибка загрузки в VK' });
         }
@@ -146,19 +149,16 @@ const PageWidget = ({ groupId }: Props) => {
     const tok = token || await requestToken();
     if (!tok) { setResult({ msg: 'Не удалось получить токен сообщества' }); return; }
     if (selectedIds.length < currentType.min) {
-      setResult({ msg: `Выберите минимум ${currentType.min} событий` });
-      return;
+      setResult({ msg: `Выберите минимум ${currentType.min} событий` }); return;
     }
     if (widgetType === 'cover_list') {
-      const missing = selectedEvents.filter(e => !coverIds[e.id]);
+      const missing = selectedEvents.filter(e => !getCoverId(e));
       if (missing.length > 0) {
-        setResult({ msg: `Загрузите обложку для: ${missing.map(e => e.title).join(', ')}` });
-        return;
+        setResult({ msg: `Загрузите обложку для: ${missing.map(e => e.title).join(', ')}` }); return;
       }
     }
 
     setPublishing(true); setResult(null);
-
     try {
       const appUrl = `https://vk.com/app${getAppId()}_-${groupId}`;
       const evs = selectedEvents;
@@ -168,23 +168,16 @@ const PageWidget = ({ groupId }: Props) => {
         widgetData = {
           title, title_url: appUrl, more: btn2, more_url: appUrl,
           rows: evs.map(e => ({
-            title: e.title,
-            button: btn1,
-            button_url: appUrl,
-            cover_id: coverIds[e.id],
-            descr: fmtLabel(e),
-            url: appUrl,
+            title: e.title, button: btn1, button_url: appUrl,
+            cover_id: getCoverId(e), descr: fmtLabel(e), url: appUrl,
           })),
         };
       } else if (widgetType === 'tiles') {
         widgetData = {
           title, title_url: appUrl, more: btn2, more_url: appUrl,
           tiles: evs.map(e => ({
-            title: e.title,
-            descr: fmtLabel(e),
-            url: appUrl,
-            link: btn1,
-            link_url: appUrl,
+            title: e.title, descr: fmtLabel(e),
+            url: appUrl, link: btn1, link_url: appUrl,
           })),
         };
       } else if (widgetType === 'table') {
@@ -201,20 +194,15 @@ const PageWidget = ({ groupId }: Props) => {
         widgetData = {
           title, title_url: appUrl, more: btn2, more_url: appUrl,
           rows: evs.map(e => ({
-            title: e.title.slice(0, 100),
-            title_url: appUrl,
-            button: btn1,
-            button_url: appUrl,
-            descr: fmtLabel(e),
+            title: e.title.slice(0, 100), title_url: appUrl,
+            button: btn1, button_url: appUrl, descr: fmtLabel(e),
           })),
         };
       }
 
       const code = `return ${JSON.stringify(widgetData)};`;
       await bridge.send('VKWebAppShowCommunityWidgetPreviewBox', {
-        group_id: groupId,
-        type: widgetType,
-        code,
+        group_id: groupId, type: widgetType, code,
       });
       setResult({ ok: true });
     } catch (e: unknown) {
@@ -296,7 +284,7 @@ const PageWidget = ({ groupId }: Props) => {
             const sel = selectedIds.includes(e.id);
             const disabled = !sel && selectedIds.length >= currentType.max;
             const order = selectedIds.indexOf(e.id) + 1;
-            const hasCover = !!coverIds[e.id];
+            const coverId = getCoverId(e);
             return (
               <div key={e.id} style={{ marginBottom: 8 }}>
                 <div onClick={() => !disabled && toggle(e.id)} style={{
@@ -319,53 +307,59 @@ const PageWidget = ({ groupId }: Props) => {
                     <div style={{ fontSize: 13, fontWeight: 700, color: '#111', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{e.title}</div>
                     <div style={{ fontSize: 11, color: '#999' }}>{fmtLabel(e)}</div>
                   </div>
+                  {widgetType === 'cover_list' && sel && (
+                    <div style={{ fontSize: 10, fontWeight: 700, flexShrink: 0, color: coverId ? '#059669' : '#EF4444' }}>
+                      {coverId ? '✓ обложка' : '⚠ нет обложки'}
+                    </div>
+                  )}
                 </div>
 
-                {/* Обложка для cover_list */}
+                {/* Блок обложки для cover_list */}
                 {sel && widgetType === 'cover_list' && (
-                  <div style={{ marginTop: 6, marginLeft: 10, padding: '10px 12px', background: '#F5F3FF', borderRadius: 10, border: '1px solid #EDE9FE' }}>
-                    <div style={{ fontSize: 11, fontWeight: 700, color: '#7C3AED', marginBottom: 6 }}>Обложка для виджета (510×128)</div>
-                    {hasCover ? (
-                      <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                        {/* Превью из загруженных */}
-                        {vkImages.find(img => img.id === coverIds[e.id])?.images?.[0]?.url && (
-                          <img src={vkImages.find(img => img.id === coverIds[e.id])!.images[0].url}
-                            alt="" style={{ height: 36, borderRadius: 6, objectFit: 'cover' }} />
-                        )}
-                        <div style={{ fontSize: 11, color: '#059669', fontWeight: 600 }}>✓ {coverIds[e.id]}</div>
-                        <button onClick={() => handleUploadForEvent(e.id)} style={{ fontSize: 11, color: '#7C3AED', background: 'none', border: 'none', cursor: 'pointer', textDecoration: 'underline' }}>
+                  <div style={{ marginTop: 4, marginLeft: 10, padding: '10px 12px', background: '#F5F3FF', borderRadius: 10, border: '1px solid #EDE9FE' }}>
+                    <div style={{ fontSize: 11, fontWeight: 700, color: '#7C3AED', marginBottom: 6 }}>
+                      Обложка 510×128 для виджета
+                    </div>
+                    {coverId ? (
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
+                        <div style={{ fontSize: 11, color: '#059669', fontWeight: 600 }}>✓ ID: {coverId}</div>
+                        <button onClick={() => handleUploadForEvent(e.id)} style={{ fontSize: 11, color: '#7C3AED', background: 'none', border: 'none', cursor: 'pointer', textDecoration: 'underline', padding: 0 }}>
                           Заменить
                         </button>
                       </div>
                     ) : (
-                      <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', alignItems: 'center' }}>
+                      <div>
+                        <div style={{ fontSize: 11, color: '#92400E', marginBottom: 6 }}>
+                          Фото не загружено в VK. Загрузите мероприятие с фото — оно автоматически попадёт в VK. Или загрузите вручную:
+                        </div>
                         <button onClick={() => handleUploadForEvent(e.id)} disabled={uploadingFor === e.id} style={{
                           padding: '6px 12px', fontSize: 12, fontWeight: 700, color: '#7C3AED',
                           background: '#fff', border: '1.5px solid #DDD6FE', borderRadius: 8, cursor: 'pointer',
                           display: 'flex', alignItems: 'center', gap: 4,
                         }}>
-                          {uploadingFor === e.id ? <><Icon name="Loader" size={12} /> Загрузка…</> : <><Icon name="Upload" size={12} /> Загрузить фото</>}
+                          {uploadingFor === e.id ? <><Icon name="Loader" size={12} /> Загрузка…</> : <><Icon name="Upload" size={12} /> Загрузить обложку</>}
                         </button>
-                        {vkImages.length > 0 && (
-                          <span style={{ fontSize: 11, color: '#999' }}>или выбери ниже</span>
-                        )}
                       </div>
                     )}
 
-                    {/* Галерея уже загруженных */}
+                    {/* Галерея загруженных */}
                     {vkImagesLoading && <div style={{ fontSize: 11, color: '#BBB', marginTop: 6 }}>Загрузка галереи…</div>}
                     {vkImages.length > 0 && (
-                      <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', marginTop: 8 }}>
-                        {vkImages.map(img => {
-                          const thumb = img.images?.[0]?.url;
-                          const chosen = coverIds[e.id] === img.id;
-                          return thumb ? (
-                            <div key={img.id} onClick={() => setCoverIds(prev => ({ ...prev, [e.id]: img.id }))}
-                              style={{ cursor: 'pointer', borderRadius: 6, overflow: 'hidden', border: `2px solid ${chosen ? '#7C3AED' : 'transparent'}` }}>
-                              <img src={thumb} alt="" style={{ width: 80, height: 20, objectFit: 'cover', display: 'block' }} />
-                            </div>
-                          ) : null;
-                        })}
+                      <div>
+                        <div style={{ fontSize: 11, color: '#888', marginTop: 8, marginBottom: 4 }}>Выбрать из загруженных:</div>
+                        <div style={{ display: 'flex', gap: 4, flexWrap: 'wrap' }}>
+                          {vkImages.map(img => {
+                            const thumb = img.images?.[0]?.url;
+                            const chosen = getCoverId(e) === img.id;
+                            return thumb ? (
+                              <div key={img.id} onClick={() => setCoverIds(prev => ({ ...prev, [e.id]: img.id }))}
+                                title={img.id}
+                                style={{ cursor: 'pointer', borderRadius: 6, overflow: 'hidden', border: `2px solid ${chosen ? '#7C3AED' : '#E5E5E5'}` }}>
+                                <img src={thumb} alt="" style={{ width: 80, height: 20, objectFit: 'cover', display: 'block' }} />
+                              </div>
+                            ) : null;
+                          })}
+                        </div>
                       </div>
                     )}
                   </div>

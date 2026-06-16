@@ -78,6 +78,7 @@ const PageAddEvent = ({ initial = {}, places = [], onSave, onCancel }: Props) =>
   );
 
   const [image, setImage] = useState<string>(initial.image ?? '');
+  const [vkCoverId, setVkCoverId] = useState<string>(initial.vk_cover_id ?? '');
   const [uploading, setUploading] = useState(false);
   const [uploadError, setUploadError] = useState('');
 
@@ -134,6 +135,7 @@ const PageAddEvent = ({ initial = {}, places = [], onSave, onCancel }: Props) =>
       price_to: isFree ? 0 : priceTo,
       online,
       image: image || undefined,
+      vk_cover_id: vkCoverId || undefined,
       dates: buildDates(),
       schedule_type: scheduleType,
       show_dates: showDates,
@@ -152,6 +154,7 @@ const PageAddEvent = ({ initial = {}, places = [], onSave, onCancel }: Props) =>
       <EventFormCover
         image={image} uploading={uploading} uploadError={uploadError}
         onImageChange={setImage} onUploadingChange={setUploading} onUploadErrorChange={setUploadError}
+        onVkCoverIdChange={setVkCoverId}
       />
 
       {/* Название + Тип + Теги */}
