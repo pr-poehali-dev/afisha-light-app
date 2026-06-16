@@ -81,9 +81,10 @@ def upload_photo_to_vk(img_url: str, token: str) -> str | None:
         mime = 'image/jpeg'
         boundary = uuid.uuid4().hex
 
+        # VK ожидает поле "photo" в multipart
         body_parts = (
             f'--{boundary}\r\n'
-            f'Content-Disposition: form-data; name="file"; filename="{filename}"\r\n'
+            f'Content-Disposition: form-data; name="photo"; filename="{filename}"\r\n'
             f'Content-Type: {mime}\r\n\r\n'
         ).encode() + img_data + f'\r\n--{boundary}--\r\n'.encode()
 
@@ -101,12 +102,19 @@ def upload_photo_to_vk(img_url: str, token: str) -> str | None:
         print(f"[cover] upload_url={upload_url}, host={host}, path={path}")
         print(f"[cover] upload resp: {upload_resp}")
 
-        # 5. Сохраняем изображение — передаём весь ответ upload как JSON-строку в image
-        save_params = {
-            'hash': upload_resp.get('hash', ''),
-            'server': upload_resp.get('server', ''),
-            'image': json.dumps(upload_resp),
-        }
+        # 5. Сохраняем изображение
+        save_params = {'hash': upload_resp.get('hash', '')}
+        # Старый upload API возвращает поле image, новый — sha+secret
+        if 'image' in upload_resp:
+            save_params['image'] = upload_resp['image']
+        elif 'sha' in upload_resp:
+            # Для нового v2 API передаём весь ответ как image
+            save_params['image'] = json.dumps({
+                'sha': upload_resp.get('sha', ''),
+                'secret': upload_resp.get('secret', ''),
+                'server': upload_resp.get('server', ''),
+                'app_id': upload_resp.get('app_id', ''),
+            })
         save_resp = vk_call('appWidgets.saveAppImage', save_params, service_token)
         print(f"[cover] saveAppImage resp: {save_resp}")
         if 'error' in save_resp:
