@@ -11,11 +11,12 @@ function fmtDate(d: string) {
   return `${parseInt(day)} ${MONTHS[parseInt(m) - 1]}`;
 }
 
-type WidgetType = 'compact_list' | 'table' | 'list' | 'tiles';
+type WidgetType = 'compact_list' | 'table' | 'list' | 'cover_list' | 'tiles';
 
 const WIDGET_TYPES: { key: WidgetType; label: string; icon: string; desc: string; min: number; max: number }[] = [
   { key: 'compact_list', label: 'Список компактный', icon: 'List',        desc: '1–6 событий',  min: 1, max: 6  },
   { key: 'list',         label: 'Список',            icon: 'AlignLeft',   desc: '1–6 событий',  min: 1, max: 6  },
+  { key: 'cover_list',   label: 'Обложка',           icon: 'Image',       desc: 'до 3 событий', min: 1, max: 3  },
   { key: 'tiles',        label: 'Плитка',            icon: 'LayoutGrid',  desc: '3–10 событий', min: 3, max: 10 },
   { key: 'table',        label: 'Таблица',           icon: 'Table',       desc: '1–10 событий', min: 1, max: 10 },
 ];
@@ -211,7 +212,21 @@ const PageWidget = ({ groupId }: WidgetProps) => {
       let widgetData: object;
       let vkType = widgetType;
 
-      if (widgetType === 'tiles') {
+      if (widgetType === 'cover_list') {
+        widgetData = {
+          title: widgetTitle, title_url: appUrl, more: btn2Text, more_url: appUrl,
+          rows: evs.map((e) => {
+            const d = e.dates[0];
+            const dateLabel = d ? `${fmtDate(d.date)} · ${d.start_time || ''}`.replace(/·\s*$/, '').trim() : '';
+            return {
+              title: e.title, title_url: appUrl,
+              button: btn1Text, button_url: appUrl,
+              text: dateLabel,
+              ...(e.image ? { images: [{ url: e.image, width: 510, height: 128 }] } : {}),
+            };
+          }),
+        };
+      } else if (widgetType === 'tiles') {
         widgetData = {
           title: widgetTitle, title_url: appUrl, more: btn2Text, more_url: appUrl,
           tiles: evs.map((e) => {
@@ -297,6 +312,7 @@ const PageWidget = ({ groupId }: WidgetProps) => {
   const PreviewMap: Record<WidgetType, React.ComponentType<PreviewProps>> = {
     compact_list: PreviewCompactList,
     list:         PreviewList,
+    cover_list:   PreviewCoverList,
     tiles:        PreviewTiles,
     table:        PreviewTable,
   };
