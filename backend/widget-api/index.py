@@ -48,13 +48,12 @@ def format_date(date_str: str) -> str:
     return f"{int(parts[2])} {months_ru(int(parts[1]))}"
 
 
-def upload_photo_to_vk(img_url: str, token: str) -> str | None:
-    """Скачивает картинку с CDN и загружает в VK через appWidgets, возвращает cover_id."""
+def upload_photo_to_vk(img_url: str, token: str, image_type: str = '510x128') -> str | None:
+    """Скачивает картинку с CDN и загружает в VK через appWidgets, возвращает cover_id/icon_id."""
     try:
-        # 1. Получаем upload URL через токен сообщества (group token)
-        #    saveAppImage тоже вызываем через него — сервисный токен даёт v2 URL несовместимый с saveAppImage
+        # 1. Получаем upload URL через сервисный токен
         service_token = os.environ.get('VK_SERVICE_TOKEN', '')
-        resp = vk_call('appWidgets.getAppImageUploadServer', {'image_type': '510x128'}, token)
+        resp = vk_call('appWidgets.getAppImageUploadServer', {'image_type': image_type}, service_token)
         if 'error' in resp:
             print(f"[cover] getAppImageUploadServer error: {resp['error']}")
             return None
@@ -66,9 +65,16 @@ def upload_photo_to_vk(img_url: str, token: str) -> str | None:
             content_type = r.headers.get('Content-Type', 'image/jpeg')
         print(f"[cover] img downloaded: {len(img_data)} bytes, content_type={content_type}, url={img_url}")
 
-        # 3. Масштабируем до 1530x384 (требование VK upload API)
+        # 3. Масштабируем под требования VK (размер зависит от image_type)
+        size_map = {
+            '510x128': (1530, 384),
+            '160x160': (160, 160),
+            '160x240': (160, 240),
+            '50x50': (50, 50),
+        }
+        target_w, target_h = size_map.get(image_type, (1530, 384))
         img_obj = Image.open(io.BytesIO(img_data)).convert('RGB')
-        img_obj = img_obj.resize((1530, 384), Image.LANCZOS)
+        img_obj = img_obj.resize((target_w, target_h), Image.LANCZOS)
         buf = io.BytesIO()
         img_obj.save(buf, format='JPEG', quality=90)
         img_data = buf.getvalue()
@@ -87,7 +93,7 @@ def upload_photo_to_vk(img_url: str, token: str) -> str | None:
             'hash': upload_resp.get('hash', ''),
             'image': upload_raw,
         }
-        save_resp = vk_call('appWidgets.saveAppImage', save_params, token)
+        save_resp = vk_call('appWidgets.saveAppImage', save_params, service_token)
         print(f"[cover] saveAppImage resp: {save_resp}")
         if 'error' in save_resp:
             return None
@@ -126,13 +132,15 @@ def build_widget(events: list, widget_type: str, title: str,
         if widget_type == 'tiles':
             row = {
                 'title': e.get('title', ''),
-                'link': app_url,
-                'text': date_label,
-                'button': btn1_text,
-                'button_url': app_url,
+                'descr': date_label,
+                'link': btn1_text,
+                'link_url': app_url,
+                'url': app_url,
             }
-            if img:
-                row['images'] = [{'url': img, 'width': 200, 'height': 200}]
+            if img and token:
+                icon_id = upload_photo_to_vk(img, token, '160x160')
+                if icon_id:
+                    row['icon_id'] = icon_id
         elif widget_type == 'cover_list':
             row = {
                 'title': e.get('title', ''),
@@ -142,7 +150,7 @@ def build_widget(events: list, widget_type: str, title: str,
                 'text': date_label,
             }
             if img and token:
-                cover_id = upload_photo_to_vk(img, token)
+                cover_id = upload_photo_to_vk(img, token, '510x128')
                 if cover_id:
                     row['cover_id'] = cover_id
                 else:
