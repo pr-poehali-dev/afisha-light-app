@@ -191,8 +191,8 @@ def handler(event: dict, context) -> dict:
                 return err('Токен сообщества не передан')
 
             resp = vk_call('appWidgets.update', {
-                'type': 'compact_list',
-                'code': 'return {"title":"Виджет отключён","rows":[]};',
+                'type': 'text',
+                'code': 'return {"title":"","body":"Виджет отключён"};',
                 'group_id': abs(vk_group_id),
             }, token)
 
