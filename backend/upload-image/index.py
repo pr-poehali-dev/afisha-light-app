@@ -121,35 +121,37 @@ def handler(event: dict, context) -> dict:
             img_obj.save(buf, format='JPEG', quality=90)
             cover_data = buf.getvalue()
 
-            # Получаем upload URL
-            vk_api = 'https://api.vk.com/method'
-            params = urllib.parse.urlencode({'group_id': abs(int(group_id)), 'access_token': vk_token, 'v': '5.199'})
-            req_us = urllib.request.Request(f"{vk_api}/photos.getWallUploadServer?{params}")
-            with urllib.request.urlopen(req_us, timeout=10) as r:
-                us_resp = json.loads(r.read())
+            # Используем сервисный токен для appWidgets API
+            service_token = os.environ.get('VK_SERVICE_TOKEN', '')
+            if not service_token:
+                print(f"[upload] no VK_SERVICE_TOKEN")
+            else:
+                vk_api = 'https://api.vk.com/method'
+                # Получаем upload URL
+                params = urllib.parse.urlencode({'image_type': '510x128', 'access_token': service_token, 'v': '5.199'})
+                req_us = urllib.request.Request(f"{vk_api}/appWidgets.getAppImageUploadServer?{params}")
+                with urllib.request.urlopen(req_us, timeout=10) as r:
+                    us_resp = json.loads(r.read())
+                print(f"[upload] us_resp={us_resp}")
 
-            print(f"[upload] us_resp={us_resp}")
-            if 'response' in us_resp:
-                upload_url = us_resp['response']['upload_url']
-                up_r = req_lib.post(upload_url, files={'photo': ('cover.jpg', cover_data, 'image/jpeg')}, timeout=20)
-                up_data = up_r.json()
-                print(f"[upload] up_data={up_data}")
+                if 'response' in us_resp:
+                    upload_url = us_resp['response']['upload_url']
+                    up_r = req_lib.post(upload_url, files={'file': ('cover.jpg', cover_data, 'image/jpeg')}, timeout=20)
+                    up_data = up_r.json()
+                    print(f"[upload] up_data={up_data}")
 
-                if up_data.get('photo') and up_data.get('photo') != '[]':
                     save_params = urllib.parse.urlencode({
-                        'group_id': abs(int(group_id)),
-                        'photo': up_data.get('photo', ''),
-                        'server': up_data.get('server', ''),
                         'hash': up_data.get('hash', ''),
-                        'access_token': vk_token,
+                        'image': up_r.text,
+                        'access_token': service_token,
                         'v': '5.199',
                     })
-                    req_save = urllib.request.Request(f"{vk_api}/photos.saveWallPhoto", data=save_params.encode())
+                    req_save = urllib.request.Request(f"{vk_api}/appWidgets.saveAppImage", data=save_params.encode())
                     with urllib.request.urlopen(req_save, timeout=10) as r:
                         save_resp = json.loads(r.read())
-                    if save_resp.get('response'):
-                        photo = save_resp['response'][0]
-                        vk_cover_id = f"{photo['owner_id']}_{photo['id']}"
+                    print(f"[upload] saveAppImage={save_resp}")
+                    if save_resp.get('response', {}).get('id'):
+                        vk_cover_id = save_resp['response']['id']
         except Exception as ex:
             import traceback
             print(f"[upload] vk cover upload error: {ex}")

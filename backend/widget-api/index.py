@@ -49,53 +49,51 @@ def format_date(date_str: str) -> str:
 
 
 def upload_photo_to_vk(img_url: str, token: str, group_id: int = 0) -> str | None:
-    """Загружает картинку в VK через photos API, возвращает cover_id вида owner_id_photo_id."""
+    """Загружает картинку через appWidgets API, возвращает cover_id (id из saveAppImage)."""
     try:
         import requests as req_lib
+
+        service_token = os.environ.get('VK_SERVICE_TOKEN', '')
+        if not service_token:
+            print(f"[cover] no VK_SERVICE_TOKEN")
+            return None
 
         # 1. Скачиваем картинку с CDN
         with urllib.request.urlopen(img_url, timeout=10) as r:
             img_data = r.read()
         print(f"[cover] img downloaded: {len(img_data)} bytes")
 
-        # 2. Масштабируем до 510x128 (cover_list требует именно этот размер)
+        # 2. Масштабируем до 1530x384 (требование VK upload v2 API для 510x128)
         img_obj = Image.open(io.BytesIO(img_data)).convert('RGB')
-        img_obj = img_obj.resize((510, 128), Image.LANCZOS)
+        img_obj = img_obj.resize((1530, 384), Image.LANCZOS)
         buf = io.BytesIO()
         img_obj.save(buf, format='JPEG', quality=90)
         img_data = buf.getvalue()
 
-        # 3. Получаем upload URL через токен сообщества
-        upload_server_resp = vk_call('photos.getWallUploadServer', {'group_id': group_id}, token)
-        print(f"[cover] getWallUploadServer: {upload_server_resp}")
-        if 'error' in upload_server_resp:
+        # 3. Получаем upload URL через сервисный токен
+        resp = vk_call('appWidgets.getAppImageUploadServer', {'image_type': '510x128'}, service_token)
+        print(f"[cover] getAppImageUploadServer: {resp}")
+        if 'error' in resp:
             return None
-        upload_url = upload_server_resp['response']['upload_url']
+        upload_url = resp['response']['upload_url']
 
-        # 4. Загружаем фото
-        upload_r = req_lib.post(upload_url, files={'photo': ('cover.jpg', img_data, 'image/jpeg')}, timeout=20)
-        upload_resp = upload_r.json()
+        # 4. Загружаем файл
+        up_r = req_lib.post(upload_url, files={'file': ('cover.jpg', img_data, 'image/jpeg')}, timeout=20)
+        upload_resp = up_r.json()
         print(f"[cover] upload resp: {upload_resp}")
-        if 'photo' not in upload_resp or upload_resp.get('photo') == '[]':
-            return None
 
-        # 5. Сохраняем фото на стене группы
-        save_resp = vk_call('photos.saveWallPhoto', {
-            'group_id': group_id,
-            'photo': upload_resp.get('photo', ''),
-            'server': upload_resp.get('server', ''),
+        # 5. Сохраняем через saveAppImage — возвращает id который и есть cover_id
+        save_resp = vk_call('appWidgets.saveAppImage', {
             'hash': upload_resp.get('hash', ''),
-        }, token)
-        print(f"[cover] saveWallPhoto: {save_resp}")
-        if 'error' in save_resp or not save_resp.get('response'):
+            'image': up_r.text,
+        }, service_token)
+        print(f"[cover] saveAppImage: {save_resp}")
+        if 'error' in save_resp:
             return None
 
-        photo = save_resp['response'][0]
-        owner_id = photo.get('owner_id', '')
-        photo_id = photo.get('id', '')
-        cover_id = f"{owner_id}_{photo_id}"
+        cover_id = save_resp['response'].get('id', '')
         print(f"[cover] cover_id: {cover_id}")
-        return cover_id
+        return cover_id if cover_id else None
 
     except Exception as ex:
         print(f"[cover] upload_photo_to_vk error: {ex}")
