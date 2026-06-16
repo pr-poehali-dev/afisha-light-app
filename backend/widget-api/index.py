@@ -101,7 +101,7 @@ def build_widget(events: list, widget_type: str, title: str,
         rows_key: rows,
     }
 
-    return widget, widget_type if widget_type in ('cover_list', 'tiles', 'compact_list', 'table', 'table_two_cols') else 'compact_list'
+    return widget, widget_type if widget_type in ('compact_list', 'list', 'table') else 'compact_list'
 
 
 def handler(event: dict, context) -> dict:
@@ -192,7 +192,7 @@ def handler(event: dict, context) -> dict:
 
             resp = vk_call('appWidgets.update', {
                 'type': 'compact_list',
-                'code': 'return {"title":"","rows":[]};',
+                'code': 'return {"title":"Виджет отключён","rows":[]};',
                 'group_id': abs(vk_group_id),
             }, token)
 

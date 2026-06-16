@@ -11,14 +11,12 @@ function fmtDate(d: string) {
   return `${parseInt(day)} ${MONTHS[parseInt(m) - 1]}`;
 }
 
-type WidgetType = 'compact_list' | 'cover_list' | 'tiles' | 'table' | 'table_two_cols';
+type WidgetType = 'compact_list' | 'table' | 'list';
 
 const WIDGET_TYPES: { key: WidgetType; label: string; icon: string; desc: string; min: number; max: number }[] = [
-  { key: 'compact_list',   label: 'Список',          icon: 'List',          desc: '1–6 событий',                  min: 1, max: 6  },
-  { key: 'tiles',          label: 'Плитка',          icon: 'LayoutGrid',    desc: 'мин. 3 события, до 10',         min: 3, max: 10 },
-  { key: 'cover_list',     label: 'С картинками',    icon: 'LayoutTemplate',desc: 'до 3 событий с фото',           min: 1, max: 3  },
-  { key: 'table',          label: 'Таблица',         icon: 'Table',         desc: '1–10 событий',                  min: 1, max: 10 },
-  { key: 'table_two_cols', label: 'Таблица 2 кол.',  icon: 'Columns2',      desc: '1–10 строк (до 20 событий)',    min: 1, max: 10 },
+  { key: 'compact_list', label: 'Список компактный', icon: 'List',      desc: '1–6 событий',   min: 1, max: 6  },
+  { key: 'list',         label: 'Список',            icon: 'AlignLeft', desc: '1–6 событий',   min: 1, max: 6  },
+  { key: 'table',        label: 'Таблица',           icon: 'Table',     desc: '1–10 событий',  min: 1, max: 10 },
 ];
 
 const section: React.CSSProperties = {
@@ -30,46 +28,6 @@ const section: React.CSSProperties = {
 const FALLBACK_IMG = 'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="80" height="80" viewBox="0 0 80 80"><rect width="80" height="80" fill="%23EDE9FE"/><text x="50%25" y="54%25" dominant-baseline="middle" text-anchor="middle" font-size="28" fill="%237C3AED">🎭</text></svg>';
 
 // ===== ПРЕВЬЮ =====
-
-const PreviewCoverList = ({ events, title, btn1, btn2 }: { events: WidgetEvent[]; title: string; btn1: string; btn2: string }) => (
-  <div style={{ border: '1px solid #E5E5E5', borderRadius: 12, overflow: 'hidden', background: '#fff' }}>
-    <div style={{ padding: '10px 14px', borderBottom: '1px solid #F0F0F0', display: 'flex', justifyContent: 'space-between' }}>
-      <span style={{ fontSize: 14, fontWeight: 800, color: '#111' }}>{title || 'Афиша'}</span>
-      <span style={{ fontSize: 12, color: '#7C3AED', fontWeight: 600 }}>{btn2 || 'Показать все'}</span>
-    </div>
-    {events.map((e) => (
-      <div key={e.id} style={{ display: 'flex', gap: 12, padding: '10px 14px', borderBottom: '1px solid #F5F5F5', alignItems: 'center' }}>
-        <img src={e.image || FALLBACK_IMG} style={{ width: 56, height: 56, borderRadius: 10, objectFit: 'cover', flexShrink: 0 }} />
-        <div style={{ flex: 1, minWidth: 0 }}>
-          <div style={{ fontSize: 13, fontWeight: 700, color: '#111', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{e.title}</div>
-          <div style={{ fontSize: 12, color: '#7C3AED' }}>{e.dates[0] ? `${fmtDate(e.dates[0].date)} · ${e.dates[0].start_time}` : ''}</div>
-        </div>
-        <span style={{ fontSize: 11, fontWeight: 700, color: '#7C3AED', background: '#EDE9FE', padding: '4px 8px', borderRadius: 6 }}>{btn1 || 'Подробнее'}</span>
-      </div>
-    ))}
-  </div>
-);
-
-const PreviewTiles = ({ events, title, btn2 }: { events: WidgetEvent[]; title: string; btn1: string; btn2: string }) => (
-  <div style={{ border: '1px solid #E5E5E5', borderRadius: 12, overflow: 'hidden', background: '#fff' }}>
-    <div style={{ padding: '10px 14px', borderBottom: '1px solid #F0F0F0', display: 'flex', justifyContent: 'space-between' }}>
-      <span style={{ fontSize: 14, fontWeight: 800, color: '#111' }}>{title || 'Афиша'}</span>
-      <span style={{ fontSize: 12, color: '#7C3AED', fontWeight: 600 }}>{btn2 || 'Показать все'}</span>
-    </div>
-    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 2, padding: 2 }}>
-      {events.map((e) => (
-        <div key={e.id} style={{ position: 'relative', aspectRatio: '1/1', overflow: 'hidden', borderRadius: 8 }}>
-          <img src={e.image || FALLBACK_IMG} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-          <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to top, rgba(0,0,0,0.65) 0%, transparent 55%)' }} />
-          <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, padding: '6px 8px' }}>
-            <div style={{ fontSize: 11, fontWeight: 700, color: '#fff', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{e.title}</div>
-            <div style={{ fontSize: 10, color: 'rgba(255,255,255,0.75)' }}>{e.dates[0] ? fmtDate(e.dates[0].date) : ''}</div>
-          </div>
-        </div>
-      ))}
-    </div>
-  </div>
-);
 
 const PreviewCompactList = ({ events, title, btn1, btn2 }: { events: WidgetEvent[]; title: string; btn1: string; btn2: string }) => (
   <div style={{ border: '1px solid #E5E5E5', borderRadius: 12, overflow: 'hidden', background: '#fff' }}>
@@ -97,6 +55,25 @@ const PreviewCompactList = ({ events, title, btn1, btn2 }: { events: WidgetEvent
     <div style={{ padding: '8px 14px', textAlign: 'center' }}>
       <span style={{ fontSize: 12, color: '#7C3AED', fontWeight: 600 }}>{btn2 || 'Показать все'}</span>
     </div>
+  </div>
+);
+
+const PreviewList = ({ events, title, btn1, btn2 }: { events: WidgetEvent[]; title: string; btn1: string; btn2: string }) => (
+  <div style={{ border: '1px solid #E5E5E5', borderRadius: 12, overflow: 'hidden', background: '#fff' }}>
+    <div style={{ padding: '10px 14px', borderBottom: '1px solid #F0F0F0', display: 'flex', justifyContent: 'space-between' }}>
+      <span style={{ fontSize: 14, fontWeight: 800, color: '#111' }}>{title || 'Афиша'}</span>
+      <span style={{ fontSize: 12, color: '#7C3AED', fontWeight: 600 }}>{btn2 || 'Показать все'}</span>
+    </div>
+    {events.map((e) => (
+      <div key={e.id} style={{ display: 'flex', gap: 12, padding: '10px 14px', borderBottom: '1px solid #F5F5F5', alignItems: 'center' }}>
+        <img src={e.image || FALLBACK_IMG} style={{ width: 48, height: 48, borderRadius: 8, objectFit: 'cover', flexShrink: 0 }} />
+        <div style={{ flex: 1, minWidth: 0 }}>
+          <div style={{ fontSize: 13, fontWeight: 700, color: '#111', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{e.title}</div>
+          <div style={{ fontSize: 11, color: '#7C3AED' }}>{e.dates[0] ? `${fmtDate(e.dates[0].date)} · ${e.dates[0].start_time}` : ''}</div>
+        </div>
+        <span style={{ fontSize: 11, fontWeight: 700, color: '#7C3AED', background: '#EDE9FE', padding: '4px 8px', borderRadius: 6 }}>{btn1 || 'Подробнее'}</span>
+      </div>
+    ))}
   </div>
 );
 
@@ -178,7 +155,6 @@ const PageWidget = ({ groupId }: WidgetProps) => {
   const handlePublish = async () => {
     if (!groupToken) { const t = await requestToken(); if (!t) { alert('Не удалось получить токен'); return; } }
     if (selectedIds.length === 0) { alert('Выберите хотя бы одно мероприятие'); return; }
-    if (widgetType === 'tiles' && selectedIds.length < 3) { alert('Для плитки нужно минимум 3 мероприятия'); return; }
     setPublishing(true); setPublishResult(null);
     const res = await publishWidget({
       groupId,
@@ -206,11 +182,9 @@ const PageWidget = ({ groupId }: WidgetProps) => {
 
   type PreviewProps = { events: WidgetEvent[]; title: string; btn1: string; btn2: string };
   const PreviewMap: Record<WidgetType, React.ComponentType<PreviewProps>> = {
-    cover_list:     PreviewCoverList,
-    tiles:          PreviewTiles,
-    compact_list:   PreviewCompactList,
-    table:          PreviewTable,
-    table_two_cols: PreviewTable,
+    compact_list: PreviewCompactList,
+    list:         PreviewList,
+    table:        PreviewTable,
   };
   const Preview = PreviewMap[widgetType];
 
@@ -248,11 +222,7 @@ const PageWidget = ({ groupId }: WidgetProps) => {
               {selectedIds.length} / {currentType.max}
             </span>
           </div>
-          {widgetType === 'tiles' && selectedIds.length < 3 && (
-            <div style={{ fontSize: 11, color: '#D97706', background: '#FEF9C3', padding: '6px 10px', borderRadius: 8, marginBottom: 8 }}>
-              Для плитки нужно минимум 3 мероприятия
-            </div>
-          )}
+
           {loading ? (
             <div style={{ padding: '20px 0', textAlign: 'center', color: '#CCC', fontSize: 13 }}>Загрузка…</div>
           ) : events.length === 0 ? (
@@ -326,11 +296,9 @@ const PageWidget = ({ groupId }: WidgetProps) => {
               }}
             />
             <div style={{ fontSize: 10, color: '#BBB', marginTop: 3 }}>
-              {widgetType === 'compact_list' && 'Список: не более 6'}
-              {widgetType === 'tiles' && 'Плитка: от 3 до 10. Нужно минимум 3 будущих события'}
-              {widgetType === 'cover_list' && 'С картинками: до 3 событий'}
+              {widgetType === 'compact_list' && 'Компактный список: не более 6'}
+              {widgetType === 'list' && 'Список: не более 6'}
               {widgetType === 'table' && 'Таблица: от 1 до 10'}
-              {widgetType === 'table_two_cols' && 'Таблица 2 кол.: от 1 до 10 строк'}
             </div>
           </div>
         </div>
