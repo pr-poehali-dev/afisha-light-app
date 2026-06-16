@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import Icon from '@/components/ui/icon';
 import { fetchWidgetEvents, publishWidget, removeWidget, type WidgetEvent } from '@/api/widget';
-import { getGroupTokenForWidget } from '@/lib/vk';
+import bridge, { getGroupTokenForWidget, getAppId } from '@/lib/vk';
 
 interface WidgetProps { groupId: number; }
 
@@ -201,12 +201,75 @@ const PageWidget = ({ groupId }: WidgetProps) => {
     .filter(Boolean) as WidgetEvent[];
 
   const handlePublish = async () => {
-    if (!groupToken) { const t = await requestToken(); if (!t) { alert('Не удалось получить токен'); return; } }
+    const token = groupToken || await requestToken();
+    if (!token) { alert('Не удалось получить токен'); return; }
     if (selectedIds.length === 0) { alert('Выберите хотя бы одно мероприятие'); return; }
+
     setPublishing(true); setPublishResult(null);
+
+    if (widgetType === 'cover_list' || widgetType === 'tiles') {
+      // Для cover_list и tiles используем VKWebAppShowCommunityWidgetPreviewBox
+      try {
+        const appUrl = `https://vk.com/app${getAppId()}_-${groupId}`;
+        let widgetData: object;
+
+        if (widgetType === 'cover_list') {
+          widgetData = {
+            title: widgetTitle,
+            title_url: appUrl,
+            more: btn2Text,
+            more_url: appUrl,
+            rows: selectedEvents.slice(0, 3).map((e) => {
+              const d = e.dates[0];
+              const dateLabel = d ? `${fmtDate(d.date)} · ${d.start_time || ''}`.trim().replace(/·\s*$/, '') : '';
+              return {
+                title: e.title,
+                title_url: appUrl,
+                button: btn1Text,
+                button_url: appUrl,
+                text: dateLabel,
+                ...(e.image ? { images: [{ url: e.image, width: 510, height: 128 }] } : {}),
+              };
+            }),
+          };
+        } else {
+          widgetData = {
+            title: widgetTitle,
+            title_url: appUrl,
+            more: btn2Text,
+            more_url: appUrl,
+            tiles: selectedEvents.slice(0, 10).map((e) => {
+              const d = e.dates[0];
+              const dateLabel = d ? `${fmtDate(d.date)} · ${d.start_time || ''}`.trim().replace(/·\s*$/, '') : '';
+              return {
+                title: e.title,
+                descr: dateLabel,
+                link: btn1Text,
+                link_url: appUrl,
+                url: appUrl,
+              };
+            }),
+          };
+        }
+
+        const code = `return ${JSON.stringify(widgetData)};`;
+        await bridge.send('VKWebAppShowCommunityWidgetPreviewBox', {
+          group_id: groupId,
+          type: widgetType,
+          code,
+        });
+        setPublishResult({ success: true });
+      } catch (e: unknown) {
+        const msg = e instanceof Error ? e.message : String(e);
+        setPublishResult({ error: msg });
+      }
+      setPublishing(false);
+      return;
+    }
+
     const res = await publishWidget({
       groupId,
-      token: groupToken!,
+      token,
       eventIds: selectedIds,
       widgetType,
       title: widgetTitle,
