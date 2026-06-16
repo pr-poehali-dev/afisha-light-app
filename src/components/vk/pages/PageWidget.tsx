@@ -402,11 +402,6 @@ const PageWidget = ({ groupId }: WidgetProps) => {
             <div style={{ fontSize: 10, color: '#BBB', marginTop: 3 }}>до 100 символов</div>
           </div>
 
-          <div style={{ marginBottom: 10 }}>
-            <div style={{ fontSize: 11, fontWeight: 700, color: '#888', textTransform: 'uppercase', marginBottom: 4 }}>Видимость виджета</div>
-            <div style={{ fontSize: 10, color: '#BBB', marginBottom: 8 }}>VK покажет диалог подтверждения, где можно выбрать кому показывать виджет</div>
-          </div>
-
           <div>
             <div style={{ fontSize: 11, fontWeight: 700, color: '#888', textTransform: 'uppercase', marginBottom: 5 }}>
               Количество строк / плиток
