@@ -1,11 +1,8 @@
 import os
-import io
 import json
 import psycopg2
 import urllib.request
 import urllib.parse
-import urllib.error
-from PIL import Image
 from psycopg2.extras import RealDictCursor
 
 SCHEMA = os.environ.get('MAIN_DB_SCHEMA', 't_p8923173_afisha_light_app')
@@ -35,96 +32,8 @@ def vk_call(method, params, token):
     with urllib.request.urlopen(req, timeout=15) as r:
         return json.loads(r.read())
 
-def resize_image(img_data: bytes, target_w: int, target_h: int) -> bytes:
-    """Ресайзит изображение под точный размер (crop по центру)."""
-    img = Image.open(io.BytesIO(img_data)).convert('RGB')
-    src_w, src_h = img.size
-    src_ratio = src_w / src_h
-    tgt_ratio = target_w / target_h
-    if src_ratio > tgt_ratio:
-        new_h = src_h
-        new_w = int(src_h * tgt_ratio)
-    else:
-        new_w = src_w
-        new_h = int(src_w / tgt_ratio)
-    left = (src_w - new_w) // 2
-    top = (src_h - new_h) // 2
-    img = img.crop((left, top, left + new_w, top + new_h))
-    img = img.resize((target_w, target_h), Image.LANCZOS)
-    buf = io.BytesIO()
-    img.save(buf, format='JPEG', quality=92)
-    return buf.getvalue()
 
 
-def multipart_upload(upload_url: str, field: str, filename: str, data: bytes, content_type: str = 'image/jpeg') -> dict:
-    """Загружает файл через multipart/form-data."""
-    boundary = '----VKWidgetBoundary'
-    body = (
-        f'--{boundary}\r\n'
-        f'Content-Disposition: form-data; name="{field}"; filename="{filename}"\r\n'
-        f'Content-Type: {content_type}\r\n\r\n'
-    ).encode() + data + f'\r\n--{boundary}--\r\n'.encode()
-    req = urllib.request.Request(upload_url, data=body, method='POST')
-    req.add_header('Content-Type', f'multipart/form-data; boundary={boundary}')
-    with urllib.request.urlopen(req, timeout=15) as r:
-        return json.loads(r.read())
-
-
-VK_IMAGE_SIZES = {
-    'cover_list': (1530, 384),
-    'tiles':      (480, 480),
-}
-
-def upload_image_to_vk(image_url: str, token: str, group_id: int, widget_type: str = 'compact_list') -> str | None:
-    """Загружает изображение через appWidgets API и возвращает cover_id."""
-    try:
-        # 1. Скачиваем и ресайзим
-        with urllib.request.urlopen(image_url, timeout=10) as r:
-            img_data = r.read()
-        target_w, target_h = VK_IMAGE_SIZES.get(widget_type, (480, 480))
-        img_data = resize_image(img_data, target_w, target_h)
-
-        # 2. image_type для VK
-        image_type = '510x128' if widget_type == 'cover_list' else '160x160'
-
-        # 3. Получаем upload URL
-        upload_resp = vk_call('appWidgets.getGroupImageUploadServer', {
-            'image_type': image_type,
-        }, token)
-        if 'error' in upload_resp:
-            print(f"[widget] getGroupImageUploadServer error: {upload_resp['error']}")
-            return None
-        upload_url = upload_resp.get('response', {}).get('upload_url')
-        if not upload_url:
-            return None
-
-        # 4. Загружаем — пробуем оба поля: file и photo
-        upload_result = multipart_upload(upload_url, 'file', 'image.jpg', img_data)
-        print(f"[widget] upload_result (file): {upload_result}")
-
-        if upload_result.get('error_code'):
-            upload_result = multipart_upload(upload_url, 'photo', 'image.jpg', img_data)
-            print(f"[widget] upload_result (photo): {upload_result}")
-
-        # 5. saveGroupImage — передаём все поля из ответа включая secret
-        save_resp = vk_call('appWidgets.saveGroupImage', {
-            'server': str(upload_result.get('server', '')),
-            'hash':   str(upload_result.get('hash', '')),
-            'image':  str(upload_result.get('sha', upload_result.get('image', ''))),
-            'secret': str(upload_result.get('secret', '')),
-        }, token)
-        print(f"[widget] saveGroupImage resp: {save_resp}")
-        if 'error' in save_resp:
-            print(f"[widget] saveGroupImage error: {save_resp['error']}")
-            return None
-
-        img_id = save_resp.get('response', {}).get('id')
-        print(f"[widget] saved image id: {img_id}")
-        return img_id
-
-    except Exception as ex:
-        print(f"[widget] upload_image_to_vk exception: {ex}")
-        return None
 
 
 def months_ru(month: int) -> str:
@@ -138,13 +47,20 @@ def format_date(date_str: str) -> str:
 
 
 def build_widget(events: list, widget_type: str, title: str,
-                 btn1_text: str, btn2_text: str, group_id: int, token: str = '') -> dict:
-    """Формирует объект виджета VK по типу: cover_list, tiles, compact_list."""
+                 btn1_text: str, btn2_text: str, group_id: int, show_rows: int = 3) -> dict:
+    """Формирует объект виджета VK по типу: cover_list, tiles, compact_list, table, table_two_cols, calendar."""
 
     app_url = f"https://vk.com/app{os.environ.get('VK_APP_ID', '0')}_-{abs(group_id)}"
 
-    # Для cover_list и tiles нужны изображения загруженные в VK
-    needs_vk_image = widget_type in ('cover_list', 'tiles')
+    # Ограничиваем количество событий
+    max_rows = {
+        'compact_list': min(show_rows, 6),
+        'cover_list':   min(show_rows, 3),
+        'tiles':        min(show_rows, 10),
+        'table':        min(show_rows, 10),
+        'table_two_cols': min(show_rows, 10),
+    }.get(widget_type, show_rows)
+    events = events[:max_rows]
 
     rows = []
     for e in events:
@@ -163,19 +79,17 @@ def build_widget(events: list, widget_type: str, title: str,
 
         img = e.get('image', '')
         if img:
-            if needs_vk_image and token:
-                vk_img_id = upload_image_to_vk(img, token, group_id, widget_type)
-                if vk_img_id:
-                    row['cover_id'] = vk_img_id
-                else:
-                    row['images'] = [{'url': img, 'width': 400, 'height': 400}]
-            else:
-                row['images'] = [{'url': img, 'width': 400, 'height': 400}]
+            row['images'] = [{'url': img, 'width': 510, 'height': 128}]
 
         rows.append(row)
 
-    # tiles использует поле 'tiles', остальные — 'rows'
-    rows_key = 'tiles' if widget_type == 'tiles' else 'rows'
+    # tiles и table_two_cols используют другой ключ
+    if widget_type == 'tiles':
+        rows_key = 'tiles'
+    elif widget_type == 'table_two_cols':
+        rows_key = 'rows'
+    else:
+        rows_key = 'rows'
 
     widget = {
         'title': title,
@@ -185,13 +99,7 @@ def build_widget(events: list, widget_type: str, title: str,
         rows_key: rows,
     }
 
-    vk_type_map = {
-        'cover_list': 'cover_list',
-        'tiles': 'tiles',
-        'compact_list': 'compact_list',
-    }
-
-    return widget, vk_type_map.get(widget_type, 'compact_list')
+    return widget, widget_type if widget_type in ('cover_list', 'tiles', 'compact_list', 'table', 'table_two_cols') else 'compact_list'
 
 
 def handler(event: dict, context) -> dict:
@@ -236,6 +144,7 @@ def handler(event: dict, context) -> dict:
             title = body.get('title', 'Афиша')
             btn1_text = body.get('btn1_text', 'Подробнее')
             btn2_text = body.get('btn2_text', 'Показать все мероприятия')
+            show_rows = int(body.get('show_rows', 3))
 
             if not event_ids:
                 return err('Выберите хотя бы одно мероприятие')
@@ -253,7 +162,7 @@ def handler(event: dict, context) -> dict:
             events_data.sort(key=lambda e: id_order.get(e['id'], 99))
 
             widget_data, vk_type = build_widget(
-                events_data, widget_type, title, btn1_text, btn2_text, vk_group_id, token
+                events_data, widget_type, title, btn1_text, btn2_text, vk_group_id, show_rows
             )
 
             # Публикуем через VK API
