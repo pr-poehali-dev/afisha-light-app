@@ -453,6 +453,18 @@ const PageWidget = ({ groupId }: WidgetProps) => {
           </div>
         )}
 
+        {/* Предупреждение для cover_list без cover_id */}
+        {widgetType === 'cover_list' && selectedEvents.some(e => !e.vk_cover_id) && (
+          <div style={{ marginBottom: 12, padding: '10px 14px', borderRadius: 10, background: '#FEF9C3', border: '1px solid #FDE68A', display: 'flex', alignItems: 'flex-start', gap: 8 }}>
+            <Icon name="AlertTriangle" size={16} style={{ color: '#D97706', flexShrink: 0, marginTop: 1 }} />
+            <div style={{ fontSize: 12, color: '#92400E' }}>
+              <b>Для виджета «Обложка» нужно фото</b><br />
+              Зайди в редактирование каждого мероприятия и загрузи или пересохрани фото — тогда оно зарегистрируется в VK и виджет заработает.<br />
+              <span style={{ color: '#B45309' }}>Без фото: {selectedEvents.filter(e => !e.vk_cover_id).map(e => e.title).join(', ')}</span>
+            </div>
+          </div>
+        )}
+
         {/* Публикация */}
         <div style={section}>
           {publishResult && (
@@ -466,7 +478,7 @@ const PageWidget = ({ groupId }: WidgetProps) => {
 
           <button
             onClick={handlePublish}
-            disabled={publishing || selectedIds.length === 0}
+            disabled={publishing || selectedIds.length === 0 || (widgetType === 'cover_list' && selectedEvents.some(e => !e.vk_cover_id))}
             style={{
               width: '100%', padding: '13px', fontSize: 15, fontWeight: 800,
               color: '#fff', border: 'none', borderRadius: 12,
