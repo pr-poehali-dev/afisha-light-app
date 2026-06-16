@@ -50,8 +50,9 @@ def format_date(date_str: str) -> str:
 def upload_photo_to_vk(img_url: str, token: str) -> str | None:
     """Скачивает картинку с CDN и загружает в VK через appWidgets, возвращает cover_id."""
     try:
-        # 1. Получаем сервер для загрузки виджет-изображения
-        resp = vk_call('appWidgets.getAppImageUploadServer', {'image_type': 'rectangle'}, token)
+        # 1. Получаем сервер для загрузки — требует сервисный токен приложения
+        service_token = os.environ.get('VK_SERVICE_TOKEN', '')
+        resp = vk_call('appWidgets.getAppImageUploadServer', {'image_type': 'rectangle'}, service_token)
         if 'error' in resp:
             print(f"[cover] getAppImageUploadServer error: {resp['error']}")
             return None
@@ -78,8 +79,8 @@ def upload_photo_to_vk(img_url: str, token: str) -> str | None:
 
         print(f"[cover] upload resp: {upload_resp}")
 
-        # 4. Сохраняем изображение и получаем id
-        save_resp = vk_call('appWidgets.saveAppImage', {'hash': upload_resp.get('hash', '')}, token)
+        # 4. Сохраняем изображение и получаем id — тоже сервисный токен
+        save_resp = vk_call('appWidgets.saveAppImage', {'hash': upload_resp.get('hash', '')}, service_token)
         print(f"[cover] saveAppImage resp: {save_resp}")
         if 'error' in save_resp:
             return None
