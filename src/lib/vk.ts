@@ -45,7 +45,7 @@ export async function getGroupTokenForWidget(groupId: number): Promise<string | 
     const res = await bridge.send('VKWebAppGetCommunityToken', {
       app_id: getAppId(),
       group_id: groupId,
-      scope: 'app_widget,photos,docs,manage',
+      scope: 'app_widget,photos,docs,manage,wall',
     });
     return res.access_token ?? null;
   } catch {
