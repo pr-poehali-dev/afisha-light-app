@@ -6,8 +6,6 @@ import hmac
 import hashlib
 import datetime
 import urllib.request
-import urllib.parse
-import io
 
 def handler(event: dict, context) -> dict:
     """Загрузка изображения обложки мероприятия в S3. Принимает base64, возвращает URL."""
@@ -23,9 +21,6 @@ def handler(event: dict, context) -> dict:
 
     body = json.loads(event.get('body') or '{}')
     image_b64 = body.get('image')
-    group_id = body.get('group_id', 0)
-    vk_token = body.get('vk_token', '')
-    print(f"[upload] group_id={group_id}, has_token={bool(vk_token)}, has_image={bool(image_b64)}")
 
     if not image_b64:
         return {'statusCode': 400, 'headers': cors, 'body': json.dumps({'error': 'image required'})}
@@ -51,7 +46,6 @@ def handler(event: dict, context) -> dict:
     host = 'bucket.poehali.dev'
     endpoint = f'https://{host}'
 
-    # AWS Signature V4
     now = datetime.datetime.utcnow()
     date_str = now.strftime('%Y%m%d')
     datetime_str = now.strftime('%Y%m%dT%H%M%SZ')
@@ -107,58 +101,8 @@ def handler(event: dict, context) -> dict:
 
     cdn_url = f"https://cdn.poehali.dev/projects/{access_key}/bucket/{file_key}"
 
-    # Загружаем фото в VK если переданы токен и group_id — получаем cover_id
-    vk_cover_id = ''
-    if vk_token and group_id:
-        try:
-            import requests as req_lib
-            from PIL import Image as PILImage
-
-            # Масштабируем до 510x128 для cover_list
-            img_obj = PILImage.open(io.BytesIO(image_data)).convert('RGB')
-            img_obj = img_obj.resize((510, 128), PILImage.LANCZOS)
-            buf = io.BytesIO()
-            img_obj.save(buf, format='JPEG', quality=90)
-            cover_data = buf.getvalue()
-
-            # Используем сервисный токен для appWidgets API
-            service_token = os.environ.get('VK_SERVICE_TOKEN', '')
-            if not service_token:
-                print(f"[upload] no VK_SERVICE_TOKEN")
-            else:
-                vk_api = 'https://api.vk.com/method'
-                # Получаем upload URL
-                params = urllib.parse.urlencode({'image_type': '510x128', 'access_token': service_token, 'v': '5.199'})
-                req_us = urllib.request.Request(f"{vk_api}/appWidgets.getAppImageUploadServer?{params}")
-                with urllib.request.urlopen(req_us, timeout=10) as r:
-                    us_resp = json.loads(r.read())
-                print(f"[upload] us_resp={us_resp}")
-
-                if 'response' in us_resp:
-                    upload_url = us_resp['response']['upload_url']
-                    up_r = req_lib.post(upload_url, files={'file': ('cover.jpg', cover_data, 'image/jpeg')}, timeout=20)
-                    up_data = up_r.json()
-                    print(f"[upload] up_data={up_data}")
-
-                    save_params = urllib.parse.urlencode({
-                        'hash': up_data.get('hash', ''),
-                        'image': up_r.text,
-                        'access_token': service_token,
-                        'v': '5.199',
-                    })
-                    req_save = urllib.request.Request(f"{vk_api}/appWidgets.saveAppImage", data=save_params.encode())
-                    with urllib.request.urlopen(req_save, timeout=10) as r:
-                        save_resp = json.loads(r.read())
-                    print(f"[upload] saveAppImage={save_resp}")
-                    if save_resp.get('response', {}).get('id'):
-                        vk_cover_id = save_resp['response']['id']
-        except Exception as ex:
-            import traceback
-            print(f"[upload] vk cover upload error: {ex}")
-            print(f"[upload] traceback: {traceback.format_exc()}")
-
     return {
         'statusCode': 200,
         'headers': cors,
-        'body': json.dumps({'url': cdn_url, 'vk_cover_id': vk_cover_id}),
+        'body': json.dumps({'url': cdn_url}),
     }

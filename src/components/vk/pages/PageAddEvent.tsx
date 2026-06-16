@@ -8,13 +8,11 @@ import EventFormDetails from './event-form/EventFormDetails';
 interface Props {
   initial?: Partial<EventItem>;
   places?: Place[];
-  groupId?: number;
-  vkToken?: string | null;
   onSave: (data: Partial<EventItem>) => void;
   onCancel: () => void;
 }
 
-const PageAddEvent = ({ initial = {}, places = [], groupId = 0, vkToken = null, onSave, onCancel }: Props) => {
+const PageAddEvent = ({ initial = {}, places = [], onSave, onCancel }: Props) => {
   const firstDate = initial.dates?.[0];
 
   const [title, setTitle] = useState(initial.title ?? '');
@@ -80,7 +78,6 @@ const PageAddEvent = ({ initial = {}, places = [], groupId = 0, vkToken = null, 
   );
 
   const [image, setImage] = useState<string>(initial.image ?? '');
-  const [vkCoverId, setVkCoverId] = useState<string>(initial.vk_cover_id ?? '');
   const [uploading, setUploading] = useState(false);
   const [uploadError, setUploadError] = useState('');
 
@@ -137,7 +134,6 @@ const PageAddEvent = ({ initial = {}, places = [], groupId = 0, vkToken = null, 
       price_to: isFree ? 0 : priceTo,
       online,
       image: image || undefined,
-      vk_cover_id: vkCoverId || undefined,
       dates: buildDates(),
       schedule_type: scheduleType,
       show_dates: showDates,
@@ -155,9 +151,7 @@ const PageAddEvent = ({ initial = {}, places = [], groupId = 0, vkToken = null, 
 
       <EventFormCover
         image={image} uploading={uploading} uploadError={uploadError}
-        groupId={groupId} vkToken={vkToken}
         onImageChange={setImage} onUploadingChange={setUploading} onUploadErrorChange={setUploadError}
-        onVkCoverIdChange={setVkCoverId}
       />
 
       {/* Название + Тип + Теги */}

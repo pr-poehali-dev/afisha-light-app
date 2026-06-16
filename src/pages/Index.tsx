@@ -9,23 +9,20 @@ import PagePlaces from '@/components/vk/pages/PagePlaces';
 import PageSettings from '@/components/vk/pages/PageSettings';
 import PageAddOrder from '@/components/vk/pages/PageAddOrder';
 import PageMailings from '@/components/vk/pages/PageMailings';
-import PageWidget from '@/components/vk/pages/PageWidget';
 import PageSite from '@/components/vk/pages/PageSite';
 
 import { MOCK_ORDERS, MOCK_CONFIG } from '@/data/mock';
 import { fetchEvents, createEvent, updateEvent, deleteEvent } from '@/api/events';
 import { fetchPlaces, createPlace, updatePlace } from '@/api/places';
-import { initVKBridge, parseVKParams, getGroupTokenForWidget } from '@/lib/vk';
+import { initVKBridge, parseVKParams } from '@/lib/vk';
 import type { EventItem, Order, Place, Page, AppConfig } from '@/types';
 
 // Инициализируем VK Bridge
 initVKBridge();
 
-// Параметры из URL — единственный источник истины
-// В режиме разработки (вне VK) group_id = 0, is_admin = false
 const VK_PARAMS = parseVKParams();
 
-const ROOT_PAGES: Page[] = ['main', 'past', 'manager', 'places', 'mailings', 'widget', 'site', 'settings'];
+const ROOT_PAGES: Page[] = ['main', 'past', 'manager', 'places', 'mailings', 'site', 'settings'];
 
 const Index = () => {
   const { is_admin, vk_group_id } = VK_PARAMS;
@@ -42,7 +39,6 @@ const Index = () => {
   const [config, setConfig] = useState<AppConfig>(MOCK_CONFIG);
   const [selectedEvent, setSelectedEvent] = useState<EventItem | null>(null);
   const [editEvent, setEditEvent] = useState<EventItem | null>(null);
-  const [groupToken, setGroupToken] = useState<string | null>(null);
 
   useEffect(() => {
     if (!vk_group_id) {
@@ -58,9 +54,6 @@ const Index = () => {
       setPastEvents(past);
       setPlaces(pl);
     }).finally(() => setLoading(false));
-
-    // Получаем токен группы сразу при старте
-    getGroupTokenForWidget(vk_group_id).then(t => { if (t) setGroupToken(t); });
   }, []);
 
   const navigate = useCallback((p: Page) => {
@@ -126,7 +119,6 @@ const Index = () => {
   };
 
   const renderPage = () => {
-    // Если не открыто из сообщества — показываем заглушку
     if (!vk_group_id) {
       return (
         <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '60px 20px', textAlign: 'center', color: '#999' }}>
@@ -165,10 +157,10 @@ const Index = () => {
         );
 
       case 'add_event':
-        return <PageAddEvent places={places} groupId={vk_group_id} vkToken={groupToken} onSave={handleSaveEvent} onCancel={goBack} />;
+        return <PageAddEvent places={places} onSave={handleSaveEvent} onCancel={goBack} />;
 
       case 'edit_event':
-        return <PageAddEvent initial={editEvent ?? undefined} places={places} groupId={vk_group_id} vkToken={groupToken} onSave={handleSaveEvent} onCancel={goBack} />;
+        return <PageAddEvent initial={editEvent ?? undefined} places={places} onSave={handleSaveEvent} onCancel={goBack} />;
 
       case 'manager':
         return <PageManager orders={orders} onChangeState={handleChangeOrderState} />;
@@ -178,9 +170,6 @@ const Index = () => {
 
       case 'mailings':
         return <PageMailings groupId={vk_group_id} />;
-
-      case 'widget':
-        return <PageWidget groupId={vk_group_id} />;
 
       case 'site':
         return <PageSite groupId={vk_group_id} />;

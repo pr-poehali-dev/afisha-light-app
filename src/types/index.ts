@@ -7,7 +7,6 @@ export type Page =
   | 'manager'
   | 'places'
   | 'mailings'
-  | 'widget'
   | 'site'
   | 'settings'
   | 'add_order';
@@ -69,7 +68,6 @@ export interface EventItem {
   price_to?: number;
   age: string;
   image: string;
-  vk_cover_id?: string;
   dates: EventDate[];
   schedule_type?: EventScheduleType;
   show_dates?: boolean;
