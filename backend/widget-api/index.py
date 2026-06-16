@@ -62,6 +62,7 @@ def upload_photo_to_vk(img_url: str, token: str) -> str | None:
         with urllib.request.urlopen(img_url, timeout=10) as r:
             img_data = r.read()
             content_type = r.headers.get('Content-Type', 'image/jpeg')
+        print(f"[cover] img downloaded: {len(img_data)} bytes, content_type={content_type}, url={img_url}")
 
         # 3. Загружаем на сервер VK (multipart/form-data через http.client)
         import http.client
@@ -90,6 +91,7 @@ def upload_photo_to_vk(img_url: str, token: str) -> str | None:
         resp_http = conn_http.getresponse()
         upload_resp = json.loads(resp_http.read())
 
+        print(f"[cover] upload_url={upload_url}, host={host}, path={path}")
         print(f"[cover] upload resp: {upload_resp}")
 
         # 4. Сохраняем изображение и получаем id — тоже сервисный токен
