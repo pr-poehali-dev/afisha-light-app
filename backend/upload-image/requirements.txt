@@ -1,1 +1,1 @@
-requests
+# no external deps needed
