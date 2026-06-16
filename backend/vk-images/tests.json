@@ -1,0 +1,17 @@
+{
+  "tests": [
+    {
+      "name": "OPTIONS preflight",
+      "method": "OPTIONS",
+      "path": "/",
+      "expectedStatus": 200
+    },
+    {
+      "name": "GET list images",
+      "method": "GET",
+      "path": "/?action=list&image_type=510x128",
+      "expectedStatus": 200,
+      "bodyMatcher": "partial"
+    }
+  ]
+}

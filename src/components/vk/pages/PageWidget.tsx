@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import bridge, { getGroupTokenForWidget, getAppId } from '@/lib/vk';
 import { fetchEvents } from '@/api/events';
 import type { EventItem } from '@/types';
@@ -17,6 +17,7 @@ const WIDGET_TYPES: { key: WidgetType; label: string; desc: string; min: number;
 ];
 
 const MONTHS = ['янв','фев','мар','апр','май','июн','июл','авг','сен','окт','ноя','дек'];
+const VK_IMAGES_API = 'https://functions.poehali.dev/894c77a2-33bc-4925-8fac-38bb82c58a7d';
 
 function fmtDate(d: string) {
   const [,m,day] = d.split('-');
@@ -28,6 +29,8 @@ function fmtLabel(e: EventItem) {
   if (!d) return '';
   return `${fmtDate(d.date)} · ${d.start_time || ''}`.replace(/·\s*$/, '').trim();
 }
+
+interface VkImage { id: string; images: { url: string; width: number; height: number }[] }
 
 const s: React.CSSProperties = {
   background: '#fff', borderRadius: 16, padding: 16,
@@ -47,6 +50,15 @@ const PageWidget = ({ groupId }: Props) => {
   const [token, setToken] = useState<string | null>(null);
   const [tokenLoading, setTokenLoading] = useState(false);
 
+  // cover_list: изображения VK
+  const [vkImages, setVkImages] = useState<VkImage[]>([]);
+  const [vkImagesLoading, setVkImagesLoading] = useState(false);
+  // map: event_id -> cover_id
+  const [coverIds, setCoverIds] = useState<Record<number, string>>({});
+  const [uploadingFor, setUploadingFor] = useState<number | null>(null);
+  const fileRef = useRef<HTMLInputElement>(null);
+  const uploadForRef = useRef<number | null>(null);
+
   const currentType = WIDGET_TYPES.find(t => t.key === widgetType)!;
 
   useEffect(() => {
@@ -54,6 +66,21 @@ const PageWidget = ({ groupId }: Props) => {
       setEvents(Array.isArray(data) ? data : []);
     }).finally(() => setLoading(false));
   }, []);
+
+  // Загружаем список VK-изображений при переключении на cover_list
+  useEffect(() => {
+    if (widgetType === 'cover_list') loadVkImages();
+  }, [widgetType]);
+
+  const loadVkImages = async () => {
+    setVkImagesLoading(true);
+    try {
+      const r = await fetch(`${VK_IMAGES_API}?action=list&image_type=510x128`);
+      const data = await r.json();
+      if (Array.isArray(data)) setVkImages(data);
+    } catch (_e) { void _e; }
+    setVkImagesLoading(false);
+  };
 
   const requestToken = async () => {
     setTokenLoading(true);
@@ -76,12 +103,58 @@ const PageWidget = ({ groupId }: Props) => {
     .map(id => events.find(e => e.id === id))
     .filter(Boolean) as EventItem[];
 
+  // Загрузка фото для конкретного события в cover_list
+  const handleUploadForEvent = (eventId: number) => {
+    uploadForRef.current = eventId;
+    fileRef.current?.click();
+  };
+
+  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    const eventId = uploadForRef.current;
+    if (!file || !eventId) return;
+    if (file.size > 5 * 1024 * 1024) { setResult({ msg: 'Файл слишком большой. Максимум 5 МБ' }); return; }
+
+    setUploadingFor(eventId);
+    const reader = new FileReader();
+    reader.onload = async (ev) => {
+      const base64 = ev.target?.result as string;
+      try {
+        const r = await fetch(`${VK_IMAGES_API}?action=upload&image_type=510x128`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ image: base64 }),
+        });
+        const data = await r.json();
+        if (data.id) {
+          setCoverIds(prev => ({ ...prev, [eventId]: data.id }));
+          await loadVkImages();
+          setResult({ msg: undefined });
+        } else {
+          setResult({ msg: data.error || 'Ошибка загрузки в VK' });
+        }
+      } catch {
+        setResult({ msg: 'Ошибка сети' });
+      }
+      setUploadingFor(null);
+      if (fileRef.current) fileRef.current.value = '';
+    };
+    reader.readAsDataURL(file);
+  };
+
   const publish = async () => {
     const tok = token || await requestToken();
     if (!tok) { setResult({ msg: 'Не удалось получить токен сообщества' }); return; }
     if (selectedIds.length < currentType.min) {
-      setResult({ msg: `Выберите минимум ${currentType.min} событий для этого типа` });
+      setResult({ msg: `Выберите минимум ${currentType.min} событий` });
       return;
+    }
+    if (widgetType === 'cover_list') {
+      const missing = selectedEvents.filter(e => !coverIds[e.id]);
+      if (missing.length > 0) {
+        setResult({ msg: `Загрузите обложку для: ${missing.map(e => e.title).join(', ')}` });
+        return;
+      }
     }
 
     setPublishing(true); setResult(null);
@@ -98,6 +171,7 @@ const PageWidget = ({ groupId }: Props) => {
             title: e.title,
             button: btn1,
             button_url: appUrl,
+            cover_id: coverIds[e.id],
             descr: fmtLabel(e),
             url: appUrl,
           })),
@@ -124,7 +198,6 @@ const PageWidget = ({ groupId }: Props) => {
           ]),
         };
       } else {
-        // list / compact_list
         widgetData = {
           title, title_url: appUrl, more: btn2, more_url: appUrl,
           rows: evs.map(e => ({
@@ -158,9 +231,7 @@ const PageWidget = ({ groupId }: Props) => {
     setPublishing(true); setResult(null);
     try {
       await bridge.send('VKWebAppShowCommunityWidgetPreviewBox', {
-        group_id: groupId,
-        type: 'text',
-        code: 'return {};',
+        group_id: groupId, type: 'text', code: 'return {};',
       });
       setResult({ ok: true });
     } catch (e: unknown) {
@@ -173,6 +244,7 @@ const PageWidget = ({ groupId }: Props) => {
 
   return (
     <div style={{ background: '#F5F5F7', minHeight: '100vh', paddingBottom: 24 }}>
+      <input ref={fileRef} type="file" accept="image/jpeg,image/png,image/webp" style={{ display: 'none' }} onChange={handleFileChange} />
 
       {/* Тип виджета */}
       <div style={{ background: '#fff', borderBottom: '1px solid #EBEBEB', padding: '14px 16px' }}>
@@ -188,11 +260,6 @@ const PageWidget = ({ groupId }: Props) => {
             </button>
           ))}
         </div>
-        {widgetType === 'cover_list' && (
-          <div style={{ marginTop: 10, padding: '8px 12px', background: '#FEF9C3', borderRadius: 8, fontSize: 12, color: '#92400E' }}>
-            ⚠️ Для виджета «Обложка» требуется поле <b>cover_id</b> — ID фото загруженного в VK через appWidgets API. VK покажет диалог — можно будет настроить вручную.
-          </div>
-        )}
       </div>
 
       <div style={{ padding: '12px 12px 0' }}>
@@ -200,21 +267,17 @@ const PageWidget = ({ groupId }: Props) => {
         {/* Настройки */}
         <div style={s}>
           <div style={{ fontSize: 15, fontWeight: 800, color: '#111', marginBottom: 12 }}>Настройки</div>
-          <div style={{ marginBottom: 10 }}>
-            <div style={{ fontSize: 11, fontWeight: 700, color: '#888', textTransform: 'uppercase', marginBottom: 4 }}>Заголовок виджета</div>
-            <input value={title} onChange={e => setTitle(e.target.value)} maxLength={100} placeholder="Афиша"
-              style={{ width: '100%', padding: '9px 12px', border: '1.5px solid #E5E5E5', borderRadius: 10, fontSize: 14, boxSizing: 'border-box' }} />
-          </div>
-          <div style={{ marginBottom: 10 }}>
-            <div style={{ fontSize: 11, fontWeight: 700, color: '#888', textTransform: 'uppercase', marginBottom: 4 }}>Текст кнопки</div>
-            <input value={btn1} onChange={e => setBtn1(e.target.value)} maxLength={50} placeholder="Подробнее"
-              style={{ width: '100%', padding: '9px 12px', border: '1.5px solid #E5E5E5', borderRadius: 10, fontSize: 14, boxSizing: 'border-box' }} />
-          </div>
-          <div>
-            <div style={{ fontSize: 11, fontWeight: 700, color: '#888', textTransform: 'uppercase', marginBottom: 4 }}>Текст в футере</div>
-            <input value={btn2} onChange={e => setBtn2(e.target.value)} maxLength={100} placeholder="Посмотреть все"
-              style={{ width: '100%', padding: '9px 12px', border: '1.5px solid #E5E5E5', borderRadius: 10, fontSize: 14, boxSizing: 'border-box' }} />
-          </div>
+          {[
+            { label: 'Заголовок виджета', val: title, set: setTitle, max: 100, ph: 'Афиша' },
+            { label: 'Текст кнопки', val: btn1, set: setBtn1, max: 50, ph: 'Подробнее' },
+            { label: 'Текст в футере', val: btn2, set: setBtn2, max: 100, ph: 'Посмотреть все' },
+          ].map(f => (
+            <div key={f.label} style={{ marginBottom: 10 }}>
+              <div style={{ fontSize: 11, fontWeight: 700, color: '#888', textTransform: 'uppercase', marginBottom: 4 }}>{f.label}</div>
+              <input value={f.val} onChange={e => f.set(e.target.value)} maxLength={f.max} placeholder={f.ph}
+                style={{ width: '100%', padding: '9px 12px', border: '1.5px solid #E5E5E5', borderRadius: 10, fontSize: 14, boxSizing: 'border-box' }} />
+            </div>
+          ))}
         </div>
 
         {/* Выбор мероприятий */}
@@ -233,27 +296,80 @@ const PageWidget = ({ groupId }: Props) => {
             const sel = selectedIds.includes(e.id);
             const disabled = !sel && selectedIds.length >= currentType.max;
             const order = selectedIds.indexOf(e.id) + 1;
+            const hasCover = !!coverIds[e.id];
             return (
-              <div key={e.id} onClick={() => !disabled && toggle(e.id)} style={{
-                display: 'flex', alignItems: 'center', gap: 10, padding: '9px 10px',
-                marginBottom: 6, borderRadius: 12, cursor: disabled ? 'default' : 'pointer',
-                background: sel ? '#F5F3FF' : disabled ? '#FAFAFA' : '#F9F9F9',
-                border: `1.5px solid ${sel ? '#DDD6FE' : 'transparent'}`,
-                opacity: disabled ? 0.5 : 1,
-              }}>
-                <div style={{
-                  width: 24, height: 24, borderRadius: 6, flexShrink: 0,
-                  background: sel ? '#7C3AED' : '#E5E5E5',
-                  display: 'flex', alignItems: 'center', justifyContent: 'center',
-                  fontSize: 11, fontWeight: 800, color: sel ? '#fff' : '#AAA',
+              <div key={e.id} style={{ marginBottom: 8 }}>
+                <div onClick={() => !disabled && toggle(e.id)} style={{
+                  display: 'flex', alignItems: 'center', gap: 10, padding: '9px 10px',
+                  borderRadius: 12, cursor: disabled ? 'default' : 'pointer',
+                  background: sel ? '#F5F3FF' : disabled ? '#FAFAFA' : '#F9F9F9',
+                  border: `1.5px solid ${sel ? '#DDD6FE' : 'transparent'}`,
+                  opacity: disabled ? 0.5 : 1,
                 }}>
-                  {sel ? order : ''}
+                  <div style={{
+                    width: 24, height: 24, borderRadius: 6, flexShrink: 0,
+                    background: sel ? '#7C3AED' : '#E5E5E5',
+                    display: 'flex', alignItems: 'center', justifyContent: 'center',
+                    fontSize: 11, fontWeight: 800, color: sel ? '#fff' : '#AAA',
+                  }}>
+                    {sel ? order : ''}
+                  </div>
+                  {e.image && <img src={e.image} alt="" style={{ width: 40, height: 40, borderRadius: 8, objectFit: 'cover', flexShrink: 0 }} />}
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <div style={{ fontSize: 13, fontWeight: 700, color: '#111', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{e.title}</div>
+                    <div style={{ fontSize: 11, color: '#999' }}>{fmtLabel(e)}</div>
+                  </div>
                 </div>
-                {e.image && <img src={e.image} alt="" style={{ width: 40, height: 40, borderRadius: 8, objectFit: 'cover', flexShrink: 0 }} />}
-                <div style={{ flex: 1, minWidth: 0 }}>
-                  <div style={{ fontSize: 13, fontWeight: 700, color: '#111', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{e.title}</div>
-                  <div style={{ fontSize: 11, color: '#999' }}>{fmtLabel(e)}</div>
-                </div>
+
+                {/* Обложка для cover_list */}
+                {sel && widgetType === 'cover_list' && (
+                  <div style={{ marginTop: 6, marginLeft: 10, padding: '10px 12px', background: '#F5F3FF', borderRadius: 10, border: '1px solid #EDE9FE' }}>
+                    <div style={{ fontSize: 11, fontWeight: 700, color: '#7C3AED', marginBottom: 6 }}>Обложка для виджета (510×128)</div>
+                    {hasCover ? (
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                        {/* Превью из загруженных */}
+                        {vkImages.find(img => img.id === coverIds[e.id])?.images?.[0]?.url && (
+                          <img src={vkImages.find(img => img.id === coverIds[e.id])!.images[0].url}
+                            alt="" style={{ height: 36, borderRadius: 6, objectFit: 'cover' }} />
+                        )}
+                        <div style={{ fontSize: 11, color: '#059669', fontWeight: 600 }}>✓ {coverIds[e.id]}</div>
+                        <button onClick={() => handleUploadForEvent(e.id)} style={{ fontSize: 11, color: '#7C3AED', background: 'none', border: 'none', cursor: 'pointer', textDecoration: 'underline' }}>
+                          Заменить
+                        </button>
+                      </div>
+                    ) : (
+                      <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', alignItems: 'center' }}>
+                        <button onClick={() => handleUploadForEvent(e.id)} disabled={uploadingFor === e.id} style={{
+                          padding: '6px 12px', fontSize: 12, fontWeight: 700, color: '#7C3AED',
+                          background: '#fff', border: '1.5px solid #DDD6FE', borderRadius: 8, cursor: 'pointer',
+                          display: 'flex', alignItems: 'center', gap: 4,
+                        }}>
+                          {uploadingFor === e.id ? <><Icon name="Loader" size={12} /> Загрузка…</> : <><Icon name="Upload" size={12} /> Загрузить фото</>}
+                        </button>
+                        {vkImages.length > 0 && (
+                          <span style={{ fontSize: 11, color: '#999' }}>или выбери ниже</span>
+                        )}
+                      </div>
+                    )}
+
+                    {/* Галерея уже загруженных */}
+                    {vkImagesLoading && <div style={{ fontSize: 11, color: '#BBB', marginTop: 6 }}>Загрузка галереи…</div>}
+                    {vkImages.length > 0 && (
+                      <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', marginTop: 8 }}>
+                        {vkImages.map(img => {
+                          const thumb = img.images?.[0]?.url;
+                          const chosen = coverIds[e.id] === img.id;
+                          return thumb ? (
+                            <div key={img.id} onClick={() => setCoverIds(prev => ({ ...prev, [e.id]: img.id }))}
+                              style={{ cursor: 'pointer', borderRadius: 6, overflow: 'hidden', border: `2px solid ${chosen ? '#7C3AED' : 'transparent'}` }}>
+                              <img src={thumb} alt="" style={{ width: 80, height: 20, objectFit: 'cover', display: 'block' }} />
+                            </div>
+                          ) : null;
+                        })}
+                      </div>
+                    )}
+                  </div>
+                )}
               </div>
             );
           })}
@@ -266,9 +382,7 @@ const PageWidget = ({ groupId }: Props) => {
             {tokenLoading ? (
               <div style={{ fontSize: 11, color: '#999' }}>Получение…</div>
             ) : token ? (
-              <div style={{ fontSize: 11, fontWeight: 700, color: '#059669', background: '#D1FAE5', padding: '3px 8px', borderRadius: 6 }}>
-                ✓ Получен
-              </div>
+              <div style={{ fontSize: 11, fontWeight: 700, color: '#059669', background: '#D1FAE5', padding: '3px 8px', borderRadius: 6 }}>✓ Получен</div>
             ) : (
               <button onClick={requestToken} style={{ fontSize: 11, fontWeight: 700, color: '#D97706', background: '#FEF9C3', border: 'none', borderRadius: 6, padding: '4px 10px', cursor: 'pointer' }}>
                 Получить токен
