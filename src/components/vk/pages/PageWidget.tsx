@@ -278,7 +278,9 @@ const PageWidget = ({ groupId }: WidgetProps) => {
       });
       setPublishResult({ success: true });
     } catch (e: unknown) {
-      const msg = e instanceof Error ? e.message : String(e);
+      const msg = e instanceof Error ? e.message
+        : (e as {error_data?: {error_reason?: string}})?.error_data?.error_reason
+        ?? JSON.stringify(e);
       setPublishResult({ error: msg });
     }
     setPublishing(false);
@@ -296,7 +298,10 @@ const PageWidget = ({ groupId }: WidgetProps) => {
       });
       setPublishResult({ success: true });
     } catch (e: unknown) {
-      setPublishResult({ error: e instanceof Error ? e.message : String(e) });
+      const msg = e instanceof Error ? e.message
+        : (e as {error_data?: {error_reason?: string}})?.error_data?.error_reason
+        ?? JSON.stringify(e);
+      setPublishResult({ error: msg });
     }
     setRemoving(false);
   };
