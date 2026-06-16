@@ -97,24 +97,17 @@ def upload_photo_to_vk(img_url: str, token: str) -> str | None:
             'Content-Length': str(len(body_parts)),
         })
         resp_http = conn_http.getresponse()
-        upload_resp = json.loads(resp_http.read())
+        upload_raw = resp_http.read()
+        upload_resp = json.loads(upload_raw)
 
         print(f"[cover] upload_url={upload_url}, host={host}, path={path}")
         print(f"[cover] upload resp: {upload_resp}")
 
-        # 5. Сохраняем изображение
-        save_params = {'hash': upload_resp.get('hash', '')}
-        # Старый upload API возвращает поле image, новый — sha+secret
-        if 'image' in upload_resp:
-            save_params['image'] = upload_resp['image']
-        elif 'sha' in upload_resp:
-            # Для нового v2 API передаём весь ответ как image
-            save_params['image'] = json.dumps({
-                'sha': upload_resp.get('sha', ''),
-                'secret': upload_resp.get('secret', ''),
-                'server': upload_resp.get('server', ''),
-                'app_id': upload_resp.get('app_id', ''),
-            })
+        # 5. Сохраняем — передаём сырую строку ответа upload сервера в image
+        save_params = {
+            'hash': upload_resp.get('hash', ''),
+            'image': upload_raw.decode('utf-8'),
+        }
         save_resp = vk_call('appWidgets.saveAppImage', save_params, service_token)
         print(f"[cover] saveAppImage resp: {save_resp}")
         if 'error' in save_resp:
