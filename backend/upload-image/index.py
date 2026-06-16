@@ -151,7 +151,9 @@ def handler(event: dict, context) -> dict:
                         photo = save_resp['response'][0]
                         vk_cover_id = f"{photo['owner_id']}_{photo['id']}"
         except Exception as ex:
+            import traceback
             print(f"[upload] vk cover upload error: {ex}")
+            print(f"[upload] traceback: {traceback.format_exc()}")
 
     return {
         'statusCode': 200,
