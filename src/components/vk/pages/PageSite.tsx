@@ -145,16 +145,6 @@ const PageSite = ({ groupId }: SiteProps) => {
           <>
             <div style={s}>
               <SectionTitle>Настройки сайта</SectionTitle>
-              <Field label="Поддомен (адрес сайта)">
-                <div style={{ display: 'flex', gap: 0 }}>
-                  <input className="vk-input" placeholder="myclub" value={cfg.site_domain} onChange={e => set('site_domain', e.target.value)}
-                    style={{ borderRadius: '10px 0 0 10px !important', flex: 1 }} />
-                  <div style={{ background: '#EDE9FE', border: '1.5px solid #DDD6FE', borderLeft: 'none', padding: '10px 12px', fontSize: 13, fontWeight: 700, color: '#7C3AED', borderRadius: '0 10px 10px 0', whiteSpace: 'nowrap' }}>.a-fisha.ru</div>
-                </div>
-                <div style={{ fontSize: 11, color: '#999', marginTop: 4 }}>
-                  После сохранения сайт будет доступен по адресу: <a href={`https://${cfg.site_domain || 'ваш-домен'}.a-fisha.ru`} target="_blank" rel="noreferrer" style={{ color: '#7C3AED' }}>{cfg.site_domain || 'ваш-домен'}.a-fisha.ru</a>
-                </div>
-              </Field>
               <Field label="Название сайта">
                 <input className="vk-input" placeholder="Афиша" maxLength={100} value={cfg.site_title} onChange={e => set('site_title', e.target.value)} />
               </Field>
@@ -364,19 +354,27 @@ const PageSite = ({ groupId }: SiteProps) => {
         )}
       </div>
 
-      {/* Нижняя кнопка сохранения (не на превью и домене) */}
+      {/* Нижняя кнопка сохранения */}
       {tab !== 'preview' && tab !== 'connect' && (
-        <div style={{ position: 'fixed', bottom: 0, left: 0, right: 0, padding: 12, background: '#fff', borderTop: '1px solid #EBEBEB', boxShadow: '0 -4px 16px rgba(0,0,0,0.06)' }}>
+        <div style={{ position: 'fixed', bottom: 0, left: 0, right: 0, padding: 12, background: '#fff', borderTop: '1px solid #EBEBEB', boxShadow: '0 -4px 16px rgba(0,0,0,0.06)', display: 'flex', gap: 8 }}>
           <button onClick={handleSave} disabled={saving} style={{
-            width: '100%', padding: '13px', fontSize: 15, fontWeight: 800, border: 'none', borderRadius: 12,
+            flex: 1, padding: '13px', fontSize: 15, fontWeight: 800, border: 'none', borderRadius: 12,
             cursor: saving ? 'default' : 'pointer',
             background: saving ? '#DDD' : 'linear-gradient(135deg, #7C3AED, #9333EA)', color: '#fff',
             boxShadow: saving ? 'none' : '0 4px 16px rgba(124,58,237,.3)',
             display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
           }}>
             <Icon name={saved ? 'Check' : 'Save'} size={16} />
-            {saving ? 'Сохранение…' : saved ? 'Сохранено!' : 'Сохранить настройки'}
+            {saving ? 'Сохранение…' : saved ? 'Опубликовано!' : 'Опубликовать'}
           </button>
+          <a href={PUBLIC_URL} target="_blank" rel="noreferrer" style={{
+            padding: '13px 16px', fontSize: 15, fontWeight: 800, borderRadius: 12,
+            border: '1.5px solid #DDD6FE', background: '#F5F3FF', color: '#7C3AED',
+            display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6,
+            textDecoration: 'none', flexShrink: 0,
+          }}>
+            <Icon name="ExternalLink" size={16} />
+          </a>
         </div>
       )}
     </div>
