@@ -70,28 +70,42 @@ def build_widget(events: list, widget_type: str, title: str,
         date_str = format_date(dates[0]['date']) if dates else ''
         time_str = dates[0].get('start_time', '') if dates else ''
         date_label = f"{date_str} · {time_str}".strip(' ·')
-
-        row = {
-            'title': e.get('title', ''),
-            'title_url': app_url,
-            'button': btn1_text,
-            'button_url': app_url,
-            'text': date_label,
-        }
-
         img = e.get('image', '')
-        if img:
-            row['images'] = [{'url': img, 'width': 510, 'height': 128}]
+
+        if widget_type == 'tiles':
+            row = {
+                'title': e.get('title', ''),
+                'link': app_url,
+                'text': date_label,
+                'button': btn1_text,
+                'button_url': app_url,
+            }
+            if img:
+                row['images'] = [{'url': img, 'width': 200, 'height': 200}]
+        elif widget_type == 'cover_list':
+            row = {
+                'title': e.get('title', ''),
+                'title_url': app_url,
+                'button': btn1_text,
+                'button_url': app_url,
+                'text': date_label,
+            }
+            if img:
+                row['images'] = [{'url': img, 'width': 510, 'height': 128}]
+        else:
+            row = {
+                'title': e.get('title', ''),
+                'title_url': app_url,
+                'button': btn1_text,
+                'button_url': app_url,
+                'text': date_label,
+            }
+            if img:
+                row['images'] = [{'url': img, 'width': 510, 'height': 128}]
 
         rows.append(row)
 
-    # tiles и table_two_cols используют другой ключ
-    if widget_type == 'tiles':
-        rows_key = 'tiles'
-    elif widget_type == 'table_two_cols':
-        rows_key = 'rows'
-    else:
-        rows_key = 'rows'
+    rows_key = 'tiles' if widget_type == 'tiles' else 'rows'
 
     widget = {
         'title': title,
@@ -113,7 +127,8 @@ def build_widget(events: list, widget_type: str, title: str,
         widget.pop('rows', None)
         widget['body'] = body_rows
 
-    return widget, widget_type if widget_type in ('compact_list', 'list', 'table') else 'compact_list'
+    VALID_VK_TYPES = ('compact_list', 'list', 'cover_list', 'tiles', 'table')
+    return widget, widget_type if widget_type in VALID_VK_TYPES else 'compact_list'
 
 
 def handler(event: dict, context) -> dict:

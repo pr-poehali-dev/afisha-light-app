@@ -11,12 +11,14 @@ function fmtDate(d: string) {
   return `${parseInt(day)} ${MONTHS[parseInt(m) - 1]}`;
 }
 
-type WidgetType = 'compact_list' | 'table' | 'list';
+type WidgetType = 'compact_list' | 'table' | 'list' | 'cover_list' | 'tiles';
 
 const WIDGET_TYPES: { key: WidgetType; label: string; icon: string; desc: string; min: number; max: number }[] = [
-  { key: 'compact_list', label: 'Список компактный', icon: 'List',      desc: '1–6 событий',   min: 1, max: 6  },
-  { key: 'list',         label: 'Список',            icon: 'AlignLeft', desc: '1–6 событий',   min: 1, max: 6  },
-  { key: 'table',        label: 'Таблица',           icon: 'Table',     desc: '1–10 событий',  min: 1, max: 10 },
+  { key: 'compact_list', label: 'Список компактный', icon: 'List',        desc: '1–6 событий',  min: 1, max: 6  },
+  { key: 'list',         label: 'Список',            icon: 'AlignLeft',   desc: '1–6 событий',  min: 1, max: 6  },
+  { key: 'cover_list',   label: 'Обложка',           icon: 'Image',       desc: 'до 3 событий', min: 1, max: 3  },
+  { key: 'tiles',        label: 'Плитка',            icon: 'LayoutGrid',  desc: '3–10 событий', min: 3, max: 10 },
+  { key: 'table',        label: 'Таблица',           icon: 'Table',       desc: '1–10 событий', min: 1, max: 10 },
 ];
 
 const section: React.CSSProperties = {
@@ -93,6 +95,51 @@ const PreviewTable = ({ events, title, btn2 }: { events: WidgetEvent[]; title: s
         ))}
       </tbody>
     </table>
+  </div>
+);
+
+const PreviewCoverList = ({ events, title, btn1, btn2 }: { events: WidgetEvent[]; title: string; btn1: string; btn2: string }) => (
+  <div style={{ border: '1px solid #E5E5E5', borderRadius: 12, overflow: 'hidden', background: '#fff' }}>
+    <div style={{ padding: '10px 14px', borderBottom: '1px solid #F0F0F0', display: 'flex', justifyContent: 'space-between' }}>
+      <span style={{ fontSize: 14, fontWeight: 800, color: '#111' }}>{title || 'Афиша'}</span>
+      <span style={{ fontSize: 12, color: '#7C3AED', fontWeight: 600 }}>{btn2 || 'Показать все'}</span>
+    </div>
+    {events.map((e) => (
+      <div key={e.id} style={{ position: 'relative', borderBottom: '1px solid #F5F5F5' }}>
+        <img
+          src={e.image || FALLBACK_IMG}
+          style={{ width: '100%', height: 90, objectFit: 'cover', display: 'block' }}
+        />
+        <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, background: 'linear-gradient(transparent, rgba(0,0,0,0.65))', padding: '18px 14px 10px' }}>
+          <div style={{ fontSize: 13, fontWeight: 800, color: '#fff', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{e.title}</div>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: 3 }}>
+            <span style={{ fontSize: 11, color: 'rgba(255,255,255,0.8)' }}>{e.dates[0] ? `${fmtDate(e.dates[0].date)} · ${e.dates[0].start_time}` : ''}</span>
+            <span style={{ fontSize: 11, fontWeight: 700, color: '#fff', background: 'rgba(124,58,237,0.8)', padding: '3px 8px', borderRadius: 6 }}>{btn1 || 'Подробнее'}</span>
+          </div>
+        </div>
+      </div>
+    ))}
+  </div>
+);
+
+const PreviewTiles = ({ events, title, btn1, btn2 }: { events: WidgetEvent[]; title: string; btn1: string; btn2: string }) => (
+  <div style={{ border: '1px solid #E5E5E5', borderRadius: 12, overflow: 'hidden', background: '#fff' }}>
+    <div style={{ padding: '10px 14px', borderBottom: '1px solid #F0F0F0', display: 'flex', justifyContent: 'space-between' }}>
+      <span style={{ fontSize: 14, fontWeight: 800, color: '#111' }}>{title || 'Афиша'}</span>
+      <span style={{ fontSize: 12, color: '#7C3AED', fontWeight: 600 }}>{btn2 || 'Показать все'}</span>
+    </div>
+    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 2, padding: 2 }}>
+      {events.map((e) => (
+        <div key={e.id} style={{ position: 'relative', borderRadius: 8, overflow: 'hidden' }}>
+          <img src={e.image || FALLBACK_IMG} style={{ width: '100%', aspectRatio: '1', objectFit: 'cover', display: 'block' }} />
+          <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, background: 'linear-gradient(transparent, rgba(0,0,0,0.7))', padding: '12px 6px 5px' }}>
+            <div style={{ fontSize: 9, fontWeight: 700, color: '#fff', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{e.title}</div>
+            <div style={{ fontSize: 8, color: 'rgba(255,255,255,0.75)', marginTop: 1 }}>{e.dates[0] ? fmtDate(e.dates[0].date) : ''}</div>
+          </div>
+          <div style={{ position: 'absolute', top: 4, right: 4, fontSize: 8, fontWeight: 700, color: '#fff', background: 'rgba(124,58,237,0.85)', padding: '2px 5px', borderRadius: 4 }}>{btn1 || 'Подробнее'}</div>
+        </div>
+      ))}
+    </div>
   </div>
 );
 
@@ -186,6 +233,8 @@ const PageWidget = ({ groupId }: WidgetProps) => {
   const PreviewMap: Record<WidgetType, React.ComponentType<PreviewProps>> = {
     compact_list: PreviewCompactList,
     list:         PreviewList,
+    cover_list:   PreviewCoverList,
+    tiles:        PreviewTiles,
     table:        PreviewTable,
   };
   const Preview = PreviewMap[widgetType];
@@ -321,8 +370,10 @@ const PageWidget = ({ groupId }: WidgetProps) => {
               }}
             />
             <div style={{ fontSize: 10, color: '#BBB', marginTop: 3 }}>
-              {widgetType === 'compact_list' && 'Компактный список: не более 6'}
-              {widgetType === 'list' && 'Список: не более 6'}
+              {widgetType === 'compact_list' && 'Компактный список: от 1 до 6'}
+              {widgetType === 'list' && 'Список: от 1 до 6'}
+              {widgetType === 'cover_list' && 'Обложка: до 3 событий с картинками'}
+              {widgetType === 'tiles' && 'Плитка: минимум 3 события, максимум 10'}
               {widgetType === 'table' && 'Таблица: от 1 до 10'}
             </div>
           </div>
