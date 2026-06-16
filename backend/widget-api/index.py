@@ -72,41 +72,19 @@ def upload_photo_to_vk(img_url: str, token: str) -> str | None:
         img_obj.save(buf, format='JPEG', quality=90)
         img_data = buf.getvalue()
 
-        # 4. Загружаем на сервер VK (multipart/form-data через http.client)
-        import http.client
-        import uuid
-        from urllib.parse import urlparse
-
-        filename = 'cover.jpg'
-        mime = 'image/jpeg'
-        boundary = uuid.uuid4().hex
-
-        # VK ожидает поле "photo" в multipart
-        body_parts = (
-            f'--{boundary}\r\n'
-            f'Content-Disposition: form-data; name="photo"; filename="{filename}"\r\n'
-            f'Content-Type: {mime}\r\n\r\n'
-        ).encode() + img_data + f'\r\n--{boundary}--\r\n'.encode()
-
-        parsed = urlparse(upload_url)
-        host = parsed.netloc
-        path = parsed.path + (f'?{parsed.query}' if parsed.query else '')
-        conn_http = http.client.HTTPSConnection(host, timeout=20)
-        conn_http.request('POST', path, body=body_parts, headers={
-            'Content-Type': f'multipart/form-data; boundary={boundary}',
-            'Content-Length': str(len(body_parts)),
-        })
-        resp_http = conn_http.getresponse()
-        upload_raw = resp_http.read()
-        upload_resp = json.loads(upload_raw)
-
-        print(f"[cover] upload_url={upload_url}, host={host}, path={path}")
+        # 4. Загружаем на сервер VK через requests (поле photo)
+        import requests as req_lib
+        upload_r = req_lib.post(upload_url, files={'photo': ('cover.jpg', img_data, 'image/jpeg')}, timeout=20)
+        upload_raw = upload_r.text
+        upload_resp = upload_r.json()
+        print(f"[cover] upload_url={upload_url}")
+        print(f"[cover] upload raw: {upload_raw}")
         print(f"[cover] upload resp: {upload_resp}")
 
-        # 5. Сохраняем — передаём сырую строку ответа upload сервера в image
+        # 5. Сохраняем — hash + image (сырая строка ответа upload)
         save_params = {
             'hash': upload_resp.get('hash', ''),
-            'image': upload_raw.decode('utf-8'),
+            'image': upload_raw,
         }
         save_resp = vk_call('appWidgets.saveAppImage', save_params, service_token)
         print(f"[cover] saveAppImage resp: {save_resp}")
