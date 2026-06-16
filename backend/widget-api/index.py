@@ -48,56 +48,55 @@ def format_date(date_str: str) -> str:
     return f"{int(parts[2])} {months_ru(int(parts[1]))}"
 
 
-def upload_photo_to_vk(img_url: str, token: str, image_type: str = '510x128') -> str | None:
-    """Скачивает картинку с CDN и загружает в VK через appWidgets, возвращает cover_id/icon_id."""
+def upload_photo_to_vk(img_url: str, token: str, group_id: int = 0) -> str | None:
+    """Загружает картинку в VK через photos API, возвращает cover_id вида owner_id_photo_id."""
     try:
-        # 1. Получаем upload URL через сервисный токен
-        service_token = os.environ.get('VK_SERVICE_TOKEN', '')
-        resp = vk_call('appWidgets.getAppImageUploadServer', {'image_type': image_type}, service_token)
-        if 'error' in resp:
-            print(f"[cover] getAppImageUploadServer error: {resp['error']}")
-            return None
-        upload_url = resp['response']['upload_url']
+        import requests as req_lib
 
-        # 2. Скачиваем картинку с CDN
+        # 1. Скачиваем картинку с CDN
         with urllib.request.urlopen(img_url, timeout=10) as r:
             img_data = r.read()
-            content_type = r.headers.get('Content-Type', 'image/jpeg')
-        print(f"[cover] img downloaded: {len(img_data)} bytes, content_type={content_type}, url={img_url}")
+        print(f"[cover] img downloaded: {len(img_data)} bytes")
 
-        # 3. Масштабируем под требования VK (размер зависит от image_type)
-        size_map = {
-            '510x128': (1530, 384),
-            '160x160': (160, 160),
-            '160x240': (160, 240),
-            '50x50': (50, 50),
-        }
-        target_w, target_h = size_map.get(image_type, (1530, 384))
+        # 2. Масштабируем до 510x128 (cover_list требует именно этот размер)
         img_obj = Image.open(io.BytesIO(img_data)).convert('RGB')
-        img_obj = img_obj.resize((target_w, target_h), Image.LANCZOS)
+        img_obj = img_obj.resize((510, 128), Image.LANCZOS)
         buf = io.BytesIO()
         img_obj.save(buf, format='JPEG', quality=90)
         img_data = buf.getvalue()
 
-        # 4. Загружаем на сервер VK через requests (поле photo)
-        import requests as req_lib
-        upload_r = req_lib.post(upload_url, files={'photo': ('cover.jpg', img_data, 'image/jpeg')}, timeout=20)
-        upload_raw = upload_r.text
-        upload_resp = upload_r.json()
-        print(f"[cover] upload_url={upload_url}")
-        print(f"[cover] upload raw: {upload_raw}")
-        print(f"[cover] upload resp: {upload_resp}")
-
-        # 5. Сохраняем — hash + image (сырая строка ответа upload)
-        save_params = {
-            'hash': upload_resp.get('hash', ''),
-            'image': upload_raw,
-        }
-        save_resp = vk_call('appWidgets.saveAppImage', save_params, service_token)
-        print(f"[cover] saveAppImage resp: {save_resp}")
-        if 'error' in save_resp:
+        # 3. Получаем upload URL через токен сообщества
+        upload_server_resp = vk_call('photos.getWallUploadServer', {'group_id': group_id}, token)
+        print(f"[cover] getWallUploadServer: {upload_server_resp}")
+        if 'error' in upload_server_resp:
             return None
-        return save_resp['response'].get('id')
+        upload_url = upload_server_resp['response']['upload_url']
+
+        # 4. Загружаем фото
+        upload_r = req_lib.post(upload_url, files={'photo': ('cover.jpg', img_data, 'image/jpeg')}, timeout=20)
+        upload_resp = upload_r.json()
+        print(f"[cover] upload resp: {upload_resp}")
+        if 'photo' not in upload_resp or upload_resp.get('photo') == '[]':
+            return None
+
+        # 5. Сохраняем фото на стене группы
+        save_resp = vk_call('photos.saveWallPhoto', {
+            'group_id': group_id,
+            'photo': upload_resp.get('photo', ''),
+            'server': upload_resp.get('server', ''),
+            'hash': upload_resp.get('hash', ''),
+        }, token)
+        print(f"[cover] saveWallPhoto: {save_resp}")
+        if 'error' in save_resp or not save_resp.get('response'):
+            return None
+
+        photo = save_resp['response'][0]
+        owner_id = photo.get('owner_id', '')
+        photo_id = photo.get('id', '')
+        cover_id = f"{owner_id}_{photo_id}"
+        print(f"[cover] cover_id: {cover_id}")
+        return cover_id
+
     except Exception as ex:
         print(f"[cover] upload_photo_to_vk error: {ex}")
         return None
@@ -137,26 +136,18 @@ def build_widget(events: list, widget_type: str, title: str,
                 'link_url': app_url,
                 'url': app_url,
             }
-            if img and token:
-                icon_id = upload_photo_to_vk(img, token, '160x160')
-                if icon_id:
-                    row['icon_id'] = icon_id
         elif widget_type == 'cover_list':
             row = {
                 'title': e.get('title', ''),
-                'title_url': app_url,
                 'button': btn1_text,
                 'button_url': app_url,
-                'text': date_label,
+                'descr': date_label,
+                'url': app_url,
             }
             if img and token:
-                cover_id = upload_photo_to_vk(img, token, '510x128')
+                cover_id = upload_photo_to_vk(img, token, abs(group_id))
                 if cover_id:
                     row['cover_id'] = cover_id
-                else:
-                    row['images'] = [{'url': img, 'width': 510, 'height': 128}]
-            elif img:
-                row['images'] = [{'url': img, 'width': 510, 'height': 128}]
         else:
             row = {
                 'title': e.get('title', ''),

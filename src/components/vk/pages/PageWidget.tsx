@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import Icon from '@/components/ui/icon';
-import { fetchWidgetEvents, type WidgetEvent } from '@/api/widget';
+import { fetchWidgetEvents, publishWidget, type WidgetEvent } from '@/api/widget';
 import bridge, { getGroupTokenForWidget, getAppId } from '@/lib/vk';
 
 interface WidgetProps { groupId: number; }
@@ -11,11 +11,12 @@ function fmtDate(d: string) {
   return `${parseInt(day)} ${MONTHS[parseInt(m) - 1]}`;
 }
 
-type WidgetType = 'compact_list' | 'list' | 'tiles' | 'table';
+type WidgetType = 'compact_list' | 'list' | 'cover_list' | 'tiles' | 'table';
 
 const WIDGET_TYPES: { key: WidgetType; label: string; icon: string; desc: string; min: number; max: number }[] = [
   { key: 'compact_list', label: 'Компактный список', icon: 'List',       desc: '1–6 событий',  min: 1, max: 6  },
   { key: 'list',         label: 'Список',            icon: 'AlignLeft',  desc: '1–6 событий',  min: 1, max: 6  },
+  { key: 'cover_list',   label: 'Обложка',           icon: 'Image',      desc: '1–3 события',  min: 1, max: 3  },
   { key: 'tiles',        label: 'Плитка',            icon: 'LayoutGrid', desc: '3–10 событий', min: 3, max: 10 },
   { key: 'table',        label: 'Таблица',           icon: 'Table',      desc: '1–10 событий', min: 1, max: 10 },
 ];
@@ -205,6 +206,17 @@ const PageWidget = ({ groupId }: WidgetProps) => {
 
     setPublishing(true); setPublishResult(null);
 
+    // cover_list требует загрузки фото на сервер — идёт через бэкенд
+    if (widgetType === 'cover_list') {
+      const res = await publishWidget({
+        groupId, token, eventIds: selectedIds,
+        widgetType, title: widgetTitle, btn1Text, btn2Text, showRows, visibility: 'all',
+      });
+      setPublishResult(res);
+      setPublishing(false);
+      return;
+    }
+
     try {
       const appUrl = `https://vk.com/app${getAppId()}_-${groupId}`;
       const evs = selectedEvents.slice(0, showRows);
@@ -310,6 +322,7 @@ const PageWidget = ({ groupId }: WidgetProps) => {
   const PreviewMap: Record<WidgetType, React.ComponentType<PreviewProps>> = {
     compact_list: PreviewCompactList,
     list:         PreviewList,
+    cover_list:   PreviewCoverList,
     tiles:        PreviewTiles,
     table:        PreviewTable,
   };
