@@ -192,7 +192,7 @@ def handler(event: dict, context) -> dict:
 
             resp = vk_call('appWidgets.update', {
                 'type': 'text',
-                'code': 'return {"title":"","body":"Виджет отключён"};',
+                'code': 'return {"title":" ","body":" "};',
                 'group_id': abs(vk_group_id),
             }, token)
 
