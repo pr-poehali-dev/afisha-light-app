@@ -39,13 +39,13 @@ export async function getGroupToken(groupId: number): Promise<string | null> {
   }
 }
 
-// Токен сообщества для виджетов
+// Токен сообщества для виджетов (+ фото и файлы)
 export async function getGroupTokenForWidget(groupId: number): Promise<string | null> {
   try {
     const res = await bridge.send('VKWebAppGetCommunityToken', {
       app_id: getAppId(),
       group_id: groupId,
-      scope: 'app_widget',
+      scope: 'app_widget,photos,docs,manage',
     });
     return res.access_token ?? null;
   } catch {
