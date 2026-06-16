@@ -101,17 +101,12 @@ def upload_photo_to_vk(img_url: str, token: str) -> str | None:
         print(f"[cover] upload_url={upload_url}, host={host}, path={path}")
         print(f"[cover] upload resp: {upload_resp}")
 
-        # 5. Сохраняем изображение — передаём все поля из upload ответа
+        # 5. Сохраняем изображение — передаём весь ответ upload как JSON-строку в image
         save_params = {
             'hash': upload_resp.get('hash', ''),
             'server': upload_resp.get('server', ''),
+            'image': json.dumps(upload_resp),
         }
-        if 'sha' in upload_resp:
-            save_params['sha'] = upload_resp['sha']
-        if 'secret' in upload_resp:
-            save_params['secret'] = upload_resp['secret']
-        if 'image' in upload_resp:
-            save_params['image'] = upload_resp['image']
         save_resp = vk_call('appWidgets.saveAppImage', save_params, service_token)
         print(f"[cover] saveAppImage resp: {save_resp}")
         if 'error' in save_resp:
