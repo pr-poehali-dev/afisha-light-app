@@ -28,15 +28,17 @@ const EventFormCover = ({ image, uploading, uploadError, groupId, vkToken, onIma
       const base64 = ev.target?.result as string;
       onImageChange(base64);
       try {
-        const payload: Record<string, unknown> = { image: base64 };
-        if (groupId && vkToken) { payload.group_id = groupId; payload.vk_token = vkToken; }
+        if (!groupId || !vkToken) {
+          onUploadErrorChange('Нет доступа к фото группы. Перезайдите в приложение.');
+          return;
+        }
+        const payload = { image: base64, group_id: groupId, vk_token: vkToken };
         const res = await fetch(UPLOAD_URL, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
         const data = await res.json();
         if (data.url) {
           onImageChange(data.url);
-          if (data.vk_cover_id) onVkCoverIdChange?.(data.vk_cover_id);
           if (data.vk_photo_id) onVkPhotoIdChange?.(data.vk_photo_id);
-        } else onUploadErrorChange('Ошибка загрузки');
+        } else onUploadErrorChange(data.error || 'Ошибка загрузки');
       } catch { onUploadErrorChange('Ошибка сети'); }
       finally { onUploadingChange(false); }
     };
