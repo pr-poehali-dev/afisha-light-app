@@ -32,6 +32,7 @@ export async function publishWidget(params: {
   btn1Text: string;
   btn2Text: string;
   showRows: number;
+  visibility: string;
 }): Promise<{ success?: boolean; error?: string }> {
   const res = await fetch(`${API}?action=publish&vk_group_id=${params.groupId}`, {
     method: 'POST',
@@ -44,6 +45,7 @@ export async function publishWidget(params: {
       btn1_text: params.btn1Text,
       btn2_text: params.btn2Text,
       show_rows: params.showRows,
+      visibility: params.visibility,
     }),
   });
   return res.json();

@@ -107,6 +107,7 @@ const PageWidget = ({ groupId }: WidgetProps) => {
   const [btn1Text, setBtn1Text] = useState('Подробнее');
   const [btn2Text, setBtn2Text] = useState('Посмотреть все события');
   const [showRows, setShowRows] = useState(3);
+  const [visibility, setVisibility] = useState<'all' | 'members' | 'admin'>('all');
   const [groupToken, setGroupToken] = useState<string | null>(null);
   const [tokenLoading, setTokenLoading] = useState(false);
   const [publishing, setPublishing] = useState(false);
@@ -165,6 +166,7 @@ const PageWidget = ({ groupId }: WidgetProps) => {
       btn1Text,
       btn2Text,
       showRows,
+      visibility,
     });
     setPublishResult(res);
     setPublishing(false);
@@ -277,6 +279,29 @@ const PageWidget = ({ groupId }: WidgetProps) => {
             <div style={{ fontSize: 11, fontWeight: 700, color: '#888', textTransform: 'uppercase', marginBottom: 5 }}>Текст в футере</div>
             <input className="vk-input" value={btn2Text} onChange={(e) => setBtn2Text(e.target.value)} placeholder="Посмотреть все события" maxLength={100} />
             <div style={{ fontSize: 10, color: '#BBB', marginTop: 3 }}>до 100 символов</div>
+          </div>
+
+          <div style={{ marginBottom: 10 }}>
+            <div style={{ fontSize: 11, fontWeight: 700, color: '#888', textTransform: 'uppercase', marginBottom: 8 }}>Видимость виджета</div>
+            <div style={{ display: 'flex', gap: 6 }}>
+              {([
+                { key: 'all',     label: 'Все',          icon: 'Globe' },
+                { key: 'members', label: 'Подписчики',   icon: 'Users' },
+                { key: 'admin',   label: 'Только я',     icon: 'ShieldCheck' },
+              ] as const).map((v) => (
+                <button key={v.key} onClick={() => setVisibility(v.key)} style={{
+                  flex: 1, padding: '8px 4px', border: `2px solid ${visibility === v.key ? '#7C3AED' : '#F0F0F0'}`,
+                  borderRadius: 10, background: visibility === v.key ? '#F5F3FF' : '#fff',
+                  cursor: 'pointer', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4,
+                }}>
+                  <Icon name={v.icon} size={16} style={{ color: visibility === v.key ? '#7C3AED' : '#BBB' }} />
+                  <span style={{ fontSize: 11, fontWeight: 700, color: visibility === v.key ? '#7C3AED' : '#888' }}>{v.label}</span>
+                </button>
+              ))}
+            </div>
+            <div style={{ fontSize: 10, color: '#BBB', marginTop: 5 }}>
+              Будет применено после того, как VK добавит поддержку этой настройки
+            </div>
           </div>
 
           <div>

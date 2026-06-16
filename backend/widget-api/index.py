@@ -159,6 +159,9 @@ def handler(event: dict, context) -> dict:
             btn1_text = body.get('btn1_text', 'Подробнее')
             btn2_text = body.get('btn2_text', 'Показать все мероприятия')
             show_rows = int(body.get('show_rows', 3))
+            visibility = body.get('visibility', 'all')
+            if visibility not in ('all', 'members', 'admin'):
+                visibility = 'all'
 
             if not event_ids:
                 return err('Выберите хотя бы одно мероприятие')
@@ -193,6 +196,15 @@ def handler(event: dict, context) -> dict:
 
             if 'error' in resp:
                 return err(f"VK API: {resp['error'].get('error_msg', 'Неизвестная ошибка')}")
+
+            # Сохраняем настройки виджета (включая visibility) в БД
+            cur.execute(
+                f"""INSERT INTO {SCHEMA}.widget_settings (vk_group_id, visibility)
+                    VALUES (%s, %s)
+                    ON CONFLICT (vk_group_id) DO UPDATE SET visibility = EXCLUDED.visibility, updated_at = NOW()""",
+                (abs(vk_group_id), visibility)
+            )
+            conn.commit()
 
             return ok({'success': True, 'widget_type': vk_type, 'events_count': len(events_data)})
 
