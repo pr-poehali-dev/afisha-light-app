@@ -1,0 +1,1 @@
+ALTER TABLE t_p8923173_afisha_light_app.events ADD COLUMN IF NOT EXISTS vk_photo_id text NOT NULL DEFAULT '';

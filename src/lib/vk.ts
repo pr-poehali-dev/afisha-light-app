@@ -39,6 +39,20 @@ export async function getGroupToken(groupId: number): Promise<string | null> {
   }
 }
 
+// Токен сообщества для загрузки фото
+export async function getGroupTokenForPhotos(groupId: number): Promise<string | null> {
+  try {
+    const res = await bridge.send('VKWebAppGetCommunityToken', {
+      app_id: getAppId(),
+      group_id: groupId,
+      scope: 'photos,wall',
+    });
+    return res.access_token ?? null;
+  } catch {
+    return null;
+  }
+}
+
 // Токен сообщества для виджетов (+ фото и файлы)
 export async function getGroupTokenForWidget(groupId: number): Promise<string | null> {
   try {

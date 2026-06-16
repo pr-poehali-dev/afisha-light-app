@@ -158,10 +158,10 @@ const Index = () => {
         );
 
       case 'add_event':
-        return <PageAddEvent places={places} onSave={handleSaveEvent} onCancel={goBack} />;
+        return <PageAddEvent places={places} groupId={vk_group_id} onSave={handleSaveEvent} onCancel={goBack} />;
 
       case 'edit_event':
-        return <PageAddEvent initial={editEvent ?? undefined} places={places} onSave={handleSaveEvent} onCancel={goBack} />;
+        return <PageAddEvent initial={editEvent ?? undefined} places={places} groupId={vk_group_id} onSave={handleSaveEvent} onCancel={goBack} />;
 
       case 'manager':
         return <PageManager orders={orders} onChangeState={handleChangeOrderState} />;

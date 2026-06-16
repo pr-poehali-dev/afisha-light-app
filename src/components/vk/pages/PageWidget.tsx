@@ -191,11 +191,14 @@ const PageWidget = ({ groupId }: Props) => {
           ]),
         };
       } else {
+        // list / compact_list: icon_id из vk_photo_id (только если есть у всех)
+        const allHavePhoto = evs.every(e => e.vk_photo_id);
         widgetData = {
           title, title_url: appUrl, more: btn2, more_url: appUrl,
           rows: evs.map(e => ({
             title: e.title.slice(0, 100), title_url: appUrl,
             button: btn1, button_url: appUrl, descr: fmtLabel(e),
+            ...(allHavePhoto ? { icon_id: e.vk_photo_id } : {}),
           })),
         };
       }
