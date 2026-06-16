@@ -1,4 +1,4 @@
-import { useState, useRef } from 'react';
+import { useState, useEffect } from 'react';
 import type { EventItem, EventCategory, EventScheduleType, Place } from '@/types';
 import { CATEGORIES, section, block, Label } from './event-form/EventFormShared';
 import EventFormCover from './event-form/EventFormCover';
@@ -83,11 +83,10 @@ const PageAddEvent = ({ initial = {}, places = [], groupId = 0, onSave, onCancel
   const [vkCoverId, setVkCoverId] = useState<string>(initial.vk_cover_id ?? '');
   const [uploading, setUploading] = useState(false);
   const [uploadError, setUploadError] = useState('');
-  const vkTokenRef = useRef<string | null>(null);
-  const getToken = async () => {
-    if (!vkTokenRef.current && groupId) vkTokenRef.current = await getGroupTokenForWidget(groupId);
-    return vkTokenRef.current;
-  };
+  const [vkToken, setVkToken] = useState<string | null>(null);
+  useEffect(() => {
+    if (groupId) getGroupTokenForWidget(groupId).then(t => { if (t) setVkToken(t); });
+  }, [groupId]);
 
   const handlePlaceSelect = (id: number | '') => {
     setPlaceId(id);
@@ -160,10 +159,9 @@ const PageAddEvent = ({ initial = {}, places = [], groupId = 0, onSave, onCancel
 
       <EventFormCover
         image={image} uploading={uploading} uploadError={uploadError}
-        groupId={groupId} vkToken={vkTokenRef.current}
+        groupId={groupId} vkToken={vkToken}
         onImageChange={setImage} onUploadingChange={setUploading} onUploadErrorChange={setUploadError}
         onVkCoverIdChange={setVkCoverId}
-        onBeforeUpload={getToken}
       />
 
       {/* Название + Тип + Теги */}

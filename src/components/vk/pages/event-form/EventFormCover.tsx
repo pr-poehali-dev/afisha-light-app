@@ -12,10 +12,9 @@ interface Props {
   onUploadingChange: (v: boolean) => void;
   onUploadErrorChange: (msg: string) => void;
   onVkCoverIdChange?: (id: string) => void;
-  onBeforeUpload?: () => Promise<string | null>;
 }
 
-const EventFormCover = ({ image, uploading, uploadError, groupId, vkToken, onImageChange, onUploadingChange, onUploadErrorChange, onVkCoverIdChange, onBeforeUpload }: Props) => {
+const EventFormCover = ({ image, uploading, uploadError, groupId, vkToken, onImageChange, onUploadingChange, onUploadErrorChange, onVkCoverIdChange }: Props) => {
   const fileRef = useRef<HTMLInputElement>(null);
 
   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -23,9 +22,7 @@ const EventFormCover = ({ image, uploading, uploadError, groupId, vkToken, onIma
     if (!file) return;
     if (file.size > 5 * 1024 * 1024) { onUploadErrorChange('Файл слишком большой. Максимум 5 МБ'); return; }
     onUploadingChange(true); onUploadErrorChange('');
-
-    // Получаем токен заранее если нужно
-    const token = onBeforeUpload ? await onBeforeUpload() : vkToken;
+    const token = vkToken;
 
     const reader = new FileReader();
     reader.onload = async (ev) => {
