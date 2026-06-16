@@ -7,6 +7,7 @@ export type Page =
   | 'manager'
   | 'places'
   | 'mailings'
+  | 'widget'
   | 'site'
   | 'settings'
   | 'add_order';

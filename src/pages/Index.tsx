@@ -9,6 +9,7 @@ import PagePlaces from '@/components/vk/pages/PagePlaces';
 import PageSettings from '@/components/vk/pages/PageSettings';
 import PageAddOrder from '@/components/vk/pages/PageAddOrder';
 import PageMailings from '@/components/vk/pages/PageMailings';
+import PageWidget from '@/components/vk/pages/PageWidget';
 import PageSite from '@/components/vk/pages/PageSite';
 
 import { MOCK_ORDERS, MOCK_CONFIG } from '@/data/mock';
@@ -22,7 +23,7 @@ initVKBridge();
 
 const VK_PARAMS = parseVKParams();
 
-const ROOT_PAGES: Page[] = ['main', 'past', 'manager', 'places', 'mailings', 'site', 'settings'];
+const ROOT_PAGES: Page[] = ['main', 'past', 'manager', 'places', 'mailings', 'widget', 'site', 'settings'];
 
 const Index = () => {
   const { is_admin, vk_group_id } = VK_PARAMS;
@@ -170,6 +171,9 @@ const Index = () => {
 
       case 'mailings':
         return <PageMailings groupId={vk_group_id} />;
+
+      case 'widget':
+        return <PageWidget groupId={vk_group_id} />;
 
       case 'site':
         return <PageSite groupId={vk_group_id} />;
