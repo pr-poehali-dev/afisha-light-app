@@ -145,6 +145,9 @@ def build_widget(events: list, widget_type: str, title: str,
                 'url': app_url,
             }
             cover_id = e.get('vk_cover_id', '')
+            if not cover_id and e.get('image') and token:
+                # Fallback: загружаем фото если cover_id ещё не сохранён
+                cover_id = upload_photo_to_vk(e['image'], token, abs(group_id)) or ''
             if cover_id:
                 row['cover_id'] = cover_id
         else:
