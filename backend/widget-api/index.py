@@ -1,4 +1,5 @@
 import os
+import io
 import json
 import psycopg2
 import urllib.request
@@ -46,8 +47,50 @@ def format_date(date_str: str) -> str:
     return f"{int(parts[2])} {months_ru(int(parts[1]))}"
 
 
+def upload_photo_to_vk(img_url: str, token: str) -> str | None:
+    """Скачивает картинку с CDN и загружает в VK, возвращает cover_id."""
+    try:
+        # 1. Получаем сервер для загрузки
+        resp = vk_call('photos.getWidgetPhotoUploadServer', {}, token)
+        if 'error' in resp:
+            print(f"[cover] getWidgetPhotoUploadServer error: {resp['error']}")
+            return None
+        upload_url = resp['response']['upload_url']
+
+        # 2. Скачиваем картинку с CDN
+        with urllib.request.urlopen(img_url, timeout=10) as r:
+            img_data = r.read()
+            content_type = r.headers.get('Content-Type', 'image/jpeg')
+
+        # 3. Загружаем на сервер VK (multipart/form-data вручную)
+        boundary = '----VKBoundary7MA4YWxkTrZu0gW'
+        filename = img_url.split('/')[-1] or 'photo.jpg'
+        body = (
+            f'--{boundary}\r\n'
+            f'Content-Disposition: form-data; name="photo"; filename="{filename}"\r\n'
+            f'Content-Type: {content_type}\r\n\r\n'
+        ).encode() + img_data + f'\r\n--{boundary}--\r\n'.encode()
+
+        req = urllib.request.Request(upload_url, data=body, method='POST')
+        req.add_header('Content-Type', f'multipart/form-data; boundary={boundary}')
+        with urllib.request.urlopen(req, timeout=20) as r:
+            upload_resp = json.loads(r.read())
+
+        print(f"[cover] upload resp: {upload_resp}")
+
+        # 4. Сохраняем фото и получаем cover_id
+        save_resp = vk_call('photos.saveWidgetPhoto', {'hash': upload_resp.get('hash', ''), 'image': upload_resp.get('image', '')}, token)
+        print(f"[cover] saveWidgetPhoto resp: {save_resp}")
+        if 'error' in save_resp:
+            return None
+        return save_resp['response'].get('id')
+    except Exception as ex:
+        print(f"[cover] upload_photo_to_vk error: {ex}")
+        return None
+
+
 def build_widget(events: list, widget_type: str, title: str,
-                 btn1_text: str, btn2_text: str, group_id: int, show_rows: int = 3) -> dict:
+                 btn1_text: str, btn2_text: str, group_id: int, show_rows: int = 3, token: str = '') -> dict:
     """Формирует объект виджета VK по типу: cover_list, tiles, compact_list, table, table_two_cols, calendar."""
 
     app_url = f"https://vk.com/app{os.environ.get('VK_APP_ID', '0')}_-{abs(group_id)}"
@@ -90,7 +133,13 @@ def build_widget(events: list, widget_type: str, title: str,
                 'button_url': app_url,
                 'text': date_label,
             }
-            if img:
+            if img and token:
+                cover_id = upload_photo_to_vk(img, token)
+                if cover_id:
+                    row['cover_id'] = cover_id
+                else:
+                    row['images'] = [{'url': img, 'width': 510, 'height': 128}]
+            elif img:
                 row['images'] = [{'url': img, 'width': 510, 'height': 128}]
         else:
             row = {
@@ -194,7 +243,7 @@ def handler(event: dict, context) -> dict:
             events_data.sort(key=lambda e: id_order.get(e['id'], 99))
 
             widget_data, vk_type = build_widget(
-                events_data, widget_type, title, btn1_text, btn2_text, vk_group_id, show_rows
+                events_data, widget_type, title, btn1_text, btn2_text, vk_group_id, show_rows, token
             )
 
             code = f"return {json.dumps(widget_data, ensure_ascii=False)};"
