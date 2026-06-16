@@ -101,6 +101,18 @@ def build_widget(events: list, widget_type: str, title: str,
         rows_key: rows,
     }
 
+    # Для table VK ожидает поле body вместо rows
+    if widget_type == 'table':
+        body_rows = []
+        for r in rows:
+            body_rows.append([
+                {'text': r['title'], 'url': r.get('title_url', app_url)},
+                {'text': r.get('text', '')},
+                {'text': r.get('button', ''), 'url': r.get('button_url', app_url)},
+            ])
+        widget.pop('rows', None)
+        widget['body'] = body_rows
+
     return widget, widget_type if widget_type in ('compact_list', 'list', 'table') else 'compact_list'
 
 
