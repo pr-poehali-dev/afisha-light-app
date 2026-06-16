@@ -65,6 +65,8 @@ def build_widget(events: list, widget_type: str, title: str,
     rows = []
     for e in events:
         dates = e.get('dates', [])
+        if isinstance(dates, str):
+            dates = json.loads(dates)
         date_str = format_date(dates[0]['date']) if dates else ''
         time_str = dates[0].get('start_time', '') if dates else ''
         date_label = f"{date_str} · {time_str}".strip(' ·')
@@ -165,12 +167,17 @@ def handler(event: dict, context) -> dict:
                 events_data, widget_type, title, btn1_text, btn2_text, vk_group_id, show_rows
             )
 
+            code = f"return {json.dumps(widget_data, ensure_ascii=False)};"
+            print(f"[widget] publishing type={vk_type}, code={code[:200]}")
+
             # Публикуем через VK API
             resp = vk_call('appWidgets.update', {
                 'type': vk_type,
-                'code': f"return {json.dumps(widget_data, ensure_ascii=False)};",
+                'code': code,
                 'group_id': abs(vk_group_id),
             }, token)
+
+            print(f"[widget] appWidgets.update resp: {resp}")
 
             if 'error' in resp:
                 return err(f"VK API: {resp['error'].get('error_msg', 'Неизвестная ошибка')}")
@@ -188,6 +195,8 @@ def handler(event: dict, context) -> dict:
                 'code': 'return {"title":"","rows":[]};',
                 'group_id': abs(vk_group_id),
             }, token)
+
+            print(f"[widget] remove resp: {resp}")
 
             if 'error' in resp:
                 return err(f"VK API: {resp['error'].get('error_msg', 'Неизвестная ошибка')}")
