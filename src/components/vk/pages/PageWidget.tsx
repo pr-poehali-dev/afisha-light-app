@@ -11,14 +11,13 @@ function fmtDate(d: string) {
   return `${parseInt(day)} ${MONTHS[parseInt(m) - 1]}`;
 }
 
-type WidgetType = 'compact_list' | 'table' | 'list' | 'cover_list' | 'tiles';
+type WidgetType = 'compact_list' | 'list' | 'tiles' | 'table';
 
 const WIDGET_TYPES: { key: WidgetType; label: string; icon: string; desc: string; min: number; max: number }[] = [
-  { key: 'compact_list', label: 'Список компактный', icon: 'List',        desc: '1–6 событий',  min: 1, max: 6  },
-  { key: 'list',         label: 'Список',            icon: 'AlignLeft',   desc: '1–6 событий',  min: 1, max: 6  },
-  { key: 'cover_list',   label: 'Обложка',           icon: 'Image',       desc: 'до 3 событий', min: 1, max: 3  },
-  { key: 'tiles',        label: 'Плитка',            icon: 'LayoutGrid',  desc: '3–10 событий', min: 3, max: 10 },
-  { key: 'table',        label: 'Таблица',           icon: 'Table',       desc: '1–10 событий', min: 1, max: 10 },
+  { key: 'compact_list', label: 'Компактный список', icon: 'List',       desc: '1–6 событий',  min: 1, max: 6  },
+  { key: 'list',         label: 'Список',            icon: 'AlignLeft',  desc: '1–6 событий',  min: 1, max: 6  },
+  { key: 'tiles',        label: 'Плитка',            icon: 'LayoutGrid', desc: '3–10 событий', min: 3, max: 10 },
+  { key: 'table',        label: 'Таблица',           icon: 'Table',      desc: '1–10 событий', min: 1, max: 10 },
 ];
 
 const section: React.CSSProperties = {
@@ -210,71 +209,70 @@ const PageWidget = ({ groupId }: WidgetProps) => {
       const appUrl = `https://vk.com/app${getAppId()}_-${groupId}`;
       const evs = selectedEvents.slice(0, showRows);
       let widgetData: object;
-      let vkType = widgetType;
 
-      if (widgetType === 'cover_list') {
+      if (widgetType === 'tiles') {
+        // Tiles: title, descr, url, link, link_url. icon_id — необязателен (нет загрузки фото)
         widgetData = {
-          title: widgetTitle, title_url: appUrl, more: btn2Text, more_url: appUrl,
-          rows: evs.map((e) => {
-            const d = e.dates[0];
-            const dateLabel = d ? `${fmtDate(d.date)} · ${d.start_time || ''}`.replace(/·\s*$/, '').trim() : '';
-            return {
-              title: e.title, title_url: appUrl,
-              button: btn1Text, button_url: appUrl,
-              text: dateLabel,
-              ...(e.image ? { images: [{ url: e.image, width: 510, height: 128 }] } : {}),
-            };
-          }),
-        };
-      } else if (widgetType === 'tiles') {
-        widgetData = {
-          title: widgetTitle, title_url: appUrl, more: btn2Text, more_url: appUrl,
+          title: widgetTitle,
+          title_url: appUrl,
+          more: btn2Text,
+          more_url: appUrl,
           tiles: evs.map((e) => {
             const d = e.dates[0];
-            const dateLabel = d ? `${fmtDate(d.date)} · ${d.start_time || ''}`.replace(/·\s*$/, '').trim() : '';
+            const descr = d ? `${fmtDate(d.date)} · ${d.start_time || ''}`.replace(/·\s*$/, '').trim() : '';
             return {
-              title: e.title, descr: dateLabel,
-              link: btn1Text, link_url: appUrl, url: appUrl,
+              title: e.title,
+              descr,
+              url: appUrl,
+              link: btn1Text,
+              link_url: appUrl,
             };
           }),
         };
       } else if (widgetType === 'table') {
+        // Table: head[] + body[][]
         widgetData = {
-          title: widgetTitle, title_url: appUrl, more: btn2Text, more_url: appUrl,
-          head: [{ text: 'Событие' }, { text: 'Дата' }, { text: '' }],
+          title: widgetTitle,
+          title_url: appUrl,
+          more: btn2Text,
+          more_url: appUrl,
+          head: [{ text: 'Событие' }, { text: 'Дата' }, { text: 'Действие' }],
           body: evs.map((e) => {
             const d = e.dates[0];
             const dateLabel = d ? `${fmtDate(d.date)} · ${d.start_time || ''}`.replace(/·\s*$/, '').trim() : '';
             return [
-              { text: e.title, url: appUrl },
+              { text: e.title.slice(0, 100), url: appUrl },
               { text: dateLabel },
               { text: btn1Text, url: appUrl },
             ];
           }),
         };
       } else {
-        // compact_list / list
-        vkType = widgetType === 'list' ? 'list' : 'compact_list';
+        // list / compact_list: rows[] с title, title_url, button, button_url, text
         widgetData = {
-          title: widgetTitle, title_url: appUrl, more: btn2Text, more_url: appUrl,
+          title: widgetTitle,
+          title_url: appUrl,
+          more: btn2Text,
+          more_url: appUrl,
           rows: evs.map((e) => {
             const d = e.dates[0];
-            const dateLabel = d ? `${fmtDate(d.date)} · ${d.start_time || ''}`.replace(/·\s*$/, '').trim() : '';
+            const text = d ? `${fmtDate(d.date)} · ${d.start_time || ''}`.replace(/·\s*$/, '').trim() : '';
             return {
-              title: e.title, title_url: appUrl,
-              button: btn1Text, button_url: appUrl,
-              text: dateLabel,
-              ...(e.image ? { images: [{ url: e.image, width: 160, height: 160 }] } : {}),
+              title: e.title.slice(0, 100),
+              title_url: appUrl,
+              button: btn1Text,
+              button_url: appUrl,
+              text,
             };
           }),
         };
       }
 
       const code = `return ${JSON.stringify(widgetData)};`;
-      console.log('[widget] type:', vkType, 'code:', code);
+      console.log('[widget] type:', widgetType, 'code:', code);
       await bridge.send('VKWebAppShowCommunityWidgetPreviewBox', {
         group_id: groupId,
-        type: vkType,
+        type: widgetType,
         code,
       });
       setPublishResult({ success: true });
@@ -312,7 +310,6 @@ const PageWidget = ({ groupId }: WidgetProps) => {
   const PreviewMap: Record<WidgetType, React.ComponentType<PreviewProps>> = {
     compact_list: PreviewCompactList,
     list:         PreviewList,
-    cover_list:   PreviewCoverList,
     tiles:        PreviewTiles,
     table:        PreviewTable,
   };
