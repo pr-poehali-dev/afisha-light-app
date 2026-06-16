@@ -1,8 +1,7 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import type { EventItem, EventCategory, EventScheduleType, Place } from '@/types';
 import { CATEGORIES, section, block, Label } from './event-form/EventFormShared';
 import EventFormCover from './event-form/EventFormCover';
-import { getGroupTokenForPhotos } from '@/lib/vk';
 import EventFormSchedule from './event-form/EventFormSchedule';
 import EventFormDetails from './event-form/EventFormDetails';
 
@@ -10,11 +9,12 @@ interface Props {
   initial?: Partial<EventItem>;
   places?: Place[];
   groupId?: number;
+  vkToken?: string | null;
   onSave: (data: Partial<EventItem>) => void;
   onCancel: () => void;
 }
 
-const PageAddEvent = ({ initial = {}, places = [], groupId = 0, onSave, onCancel }: Props) => {
+const PageAddEvent = ({ initial = {}, places = [], groupId = 0, vkToken = null, onSave, onCancel }: Props) => {
   const firstDate = initial.dates?.[0];
 
   const [title, setTitle] = useState(initial.title ?? '');
@@ -84,11 +84,6 @@ const PageAddEvent = ({ initial = {}, places = [], groupId = 0, onSave, onCancel
   const [vkPhotoId, setVkPhotoId] = useState<string>(initial.vk_photo_id ?? '');
   const [uploading, setUploading] = useState(false);
   const [uploadError, setUploadError] = useState('');
-  const [photosToken, setPhotosToken] = useState<string | null>(null);
-
-  useEffect(() => {
-    if (groupId) getGroupTokenForPhotos(groupId).then(t => { if (t) setPhotosToken(t); });
-  }, [groupId]);
 
   const handlePlaceSelect = (id: number | '') => {
     setPlaceId(id);
@@ -162,7 +157,7 @@ const PageAddEvent = ({ initial = {}, places = [], groupId = 0, onSave, onCancel
 
       <EventFormCover
         image={image} uploading={uploading} uploadError={uploadError}
-        groupId={groupId} vkToken={photosToken}
+        groupId={groupId} vkToken={vkToken}
         onImageChange={setImage} onUploadingChange={setUploading} onUploadErrorChange={setUploadError}
         onVkCoverIdChange={setVkCoverId} onVkPhotoIdChange={setVkPhotoId}
       />
