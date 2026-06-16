@@ -207,78 +207,81 @@ const PageWidget = ({ groupId }: WidgetProps) => {
 
     setPublishing(true); setPublishResult(null);
 
-    if (widgetType === 'cover_list' || widgetType === 'tiles') {
-      // Для cover_list и tiles используем VKWebAppShowCommunityWidgetPreviewBox
-      try {
-        const appUrl = `https://vk.com/app${getAppId()}_-${groupId}`;
-        let widgetData: object;
+    try {
+      const appUrl = `https://vk.com/app${getAppId()}_-${groupId}`;
+      const evs = selectedEvents.slice(0, showRows);
+      let widgetData: object;
+      let vkType = widgetType;
 
-        if (widgetType === 'cover_list') {
-          widgetData = {
-            title: widgetTitle,
-            title_url: appUrl,
-            more: btn2Text,
-            more_url: appUrl,
-            rows: selectedEvents.slice(0, 3).map((e) => {
-              const d = e.dates[0];
-              const dateLabel = d ? `${fmtDate(d.date)} · ${d.start_time || ''}`.trim().replace(/·\s*$/, '') : '';
-              return {
-                title: e.title,
-                title_url: appUrl,
-                button: btn1Text,
-                button_url: appUrl,
-                text: dateLabel,
-                ...(e.image ? { images: [{ url: e.image, width: 510, height: 128 }] } : {}),
-              };
-            }),
-          };
-        } else {
-          widgetData = {
-            title: widgetTitle,
-            title_url: appUrl,
-            more: btn2Text,
-            more_url: appUrl,
-            tiles: selectedEvents.slice(0, 10).map((e) => {
-              const d = e.dates[0];
-              const dateLabel = d ? `${fmtDate(d.date)} · ${d.start_time || ''}`.trim().replace(/·\s*$/, '') : '';
-              return {
-                title: e.title,
-                descr: dateLabel,
-                link: btn1Text,
-                link_url: appUrl,
-                url: appUrl,
-              };
-            }),
-          };
-        }
-
-        const code = `return ${JSON.stringify(widgetData)};`;
-        await bridge.send('VKWebAppShowCommunityWidgetPreviewBox', {
-          group_id: groupId,
-          type: widgetType,
-          code,
-        });
-        setPublishResult({ success: true });
-      } catch (e: unknown) {
-        const msg = e instanceof Error ? e.message : String(e);
-        setPublishResult({ error: msg });
+      if (widgetType === 'cover_list') {
+        widgetData = {
+          title: widgetTitle, title_url: appUrl, more: btn2Text, more_url: appUrl,
+          rows: evs.map((e) => {
+            const d = e.dates[0];
+            const dateLabel = d ? `${fmtDate(d.date)} · ${d.start_time || ''}`.replace(/·\s*$/, '').trim() : '';
+            return {
+              title: e.title, title_url: appUrl,
+              button: btn1Text, button_url: appUrl,
+              text: dateLabel,
+              ...(e.image ? { images: [{ url: e.image, width: 510, height: 128 }] } : {}),
+            };
+          }),
+        };
+      } else if (widgetType === 'tiles') {
+        widgetData = {
+          title: widgetTitle, title_url: appUrl, more: btn2Text, more_url: appUrl,
+          tiles: evs.map((e) => {
+            const d = e.dates[0];
+            const dateLabel = d ? `${fmtDate(d.date)} · ${d.start_time || ''}`.replace(/·\s*$/, '').trim() : '';
+            return {
+              title: e.title, descr: dateLabel,
+              link: btn1Text, link_url: appUrl, url: appUrl,
+            };
+          }),
+        };
+      } else if (widgetType === 'table') {
+        widgetData = {
+          title: widgetTitle, title_url: appUrl, more: btn2Text, more_url: appUrl,
+          head: [{ text: 'Событие' }, { text: 'Дата' }, { text: '' }],
+          body: evs.map((e) => {
+            const d = e.dates[0];
+            const dateLabel = d ? `${fmtDate(d.date)} · ${d.start_time || ''}`.replace(/·\s*$/, '').trim() : '';
+            return [
+              { text: e.title, url: appUrl },
+              { text: dateLabel },
+              { text: btn1Text, url: appUrl },
+            ];
+          }),
+        };
+      } else {
+        // compact_list / list
+        vkType = widgetType === 'list' ? 'list' : 'compact_list';
+        widgetData = {
+          title: widgetTitle, title_url: appUrl, more: btn2Text, more_url: appUrl,
+          rows: evs.map((e) => {
+            const d = e.dates[0];
+            const dateLabel = d ? `${fmtDate(d.date)} · ${d.start_time || ''}`.replace(/·\s*$/, '').trim() : '';
+            return {
+              title: e.title, title_url: appUrl,
+              button: btn1Text, button_url: appUrl,
+              text: dateLabel,
+              ...(e.image ? { icon_id: '', images: [{ url: e.image, width: 160, height: 160 }] } : {}),
+            };
+          }),
+        };
       }
-      setPublishing(false);
-      return;
-    }
 
-    const res = await publishWidget({
-      groupId,
-      token,
-      eventIds: selectedIds,
-      widgetType,
-      title: widgetTitle,
-      btn1Text,
-      btn2Text,
-      showRows,
-      visibility,
-    });
-    setPublishResult(res);
+      const code = `return ${JSON.stringify(widgetData)};`;
+      await bridge.send('VKWebAppShowCommunityWidgetPreviewBox', {
+        group_id: groupId,
+        type: vkType,
+        code,
+      });
+      setPublishResult({ success: true });
+    } catch (e: unknown) {
+      const msg = e instanceof Error ? e.message : String(e);
+      setPublishResult({ error: msg });
+    }
     setPublishing(false);
   };
 
