@@ -63,24 +63,30 @@ def upload_photo_to_vk(img_url: str, token: str) -> str | None:
             img_data = r.read()
             content_type = r.headers.get('Content-Type', 'image/jpeg')
 
-        # 3. Загружаем на сервер VK (multipart/form-data вручную)
-        boundary = '----VKBoundary7MA4YWxkTrZu0gW'
-        filename = img_url.split('/')[-1] or 'photo.jpg'
+        # 3. Загружаем на сервер VK (multipart/form-data)
+        boundary = b'----VKWidgetBoundary'
+        filename = (img_url.split('/')[-1] or 'photo.jpg').encode()
+        ext = filename.rsplit(b'.', 1)[-1].lower()
+        mime = b'image/png' if ext == b'png' else b'image/jpeg'
         body = (
-            f'--{boundary}\r\n'
-            f'Content-Disposition: form-data; name="image"; filename="{filename}"\r\n'
-            f'Content-Type: {content_type}\r\n\r\n'
-        ).encode() + img_data + f'\r\n--{boundary}--\r\n'.encode()
-
+            b'--' + boundary + b'\r\n' +
+            b'Content-Disposition: form-data; name="image"; filename="' + filename + b'"\r\n' +
+            b'Content-Type: ' + mime + b'\r\n\r\n' +
+            img_data +
+            b'\r\n--' + boundary + b'--\r\n'
+        )
         req = urllib.request.Request(upload_url, data=body, method='POST')
-        req.add_header('Content-Type', f'multipart/form-data; boundary={boundary}')
+        req.add_header('Content-Type', f'multipart/form-data; boundary={boundary.decode()}')
         with urllib.request.urlopen(req, timeout=20) as r:
             upload_resp = json.loads(r.read())
 
         print(f"[cover] upload resp: {upload_resp}")
 
         # 4. Сохраняем изображение и получаем id — тоже сервисный токен
-        save_resp = vk_call('appWidgets.saveAppImage', {'hash': upload_resp.get('hash', '')}, service_token)
+        save_params = {'hash': upload_resp.get('hash', '')}
+        if 'image' in upload_resp:
+            save_params['image'] = upload_resp['image']
+        save_resp = vk_call('appWidgets.saveAppImage', save_params, service_token)
         print(f"[cover] saveAppImage resp: {save_resp}")
         if 'error' in save_resp:
             return None
