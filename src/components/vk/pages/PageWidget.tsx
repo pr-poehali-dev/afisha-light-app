@@ -206,24 +206,25 @@ const PageWidget = ({ groupId }: WidgetProps) => {
 
     setPublishing(true); setPublishResult(null);
 
-    // cover_list требует загрузки фото на сервер — идёт через бэкенд
-    if (widgetType === 'cover_list') {
-      const res = await publishWidget({
-        groupId, token, eventIds: selectedIds,
-        widgetType, title: widgetTitle, btn1Text, btn2Text, showRows, visibility: 'all',
-      });
-      setPublishResult(res);
-      setPublishing(false);
-      return;
-    }
-
     try {
       const appUrl = `https://vk.com/app${getAppId()}_-${groupId}`;
       const evs = selectedEvents.slice(0, showRows);
       let widgetData: object;
 
-      if (widgetType === 'tiles') {
-        // Tiles: title, descr, url, link, link_url. icon_id — необязателен (нет загрузки фото)
+      if (widgetType === 'cover_list') {
+        widgetData = {
+          title: widgetTitle, title_url: appUrl, more: btn2Text, more_url: appUrl,
+          rows: evs.map((e) => {
+            const d = e.dates[0];
+            const descr = d ? `${fmtDate(d.date)} · ${d.start_time || ''}`.replace(/·\s*$/, '').trim() : '';
+            return {
+              title: e.title, button: btn1Text, button_url: appUrl,
+              descr, url: appUrl,
+              ...(e.vk_cover_id ? { cover_id: e.vk_cover_id } : {}),
+            };
+          }),
+        };
+      } else if (widgetType === 'tiles') {
         widgetData = {
           title: widgetTitle,
           title_url: appUrl,
