@@ -52,7 +52,7 @@ def upload_photo_to_vk(img_url: str, token: str) -> str | None:
     try:
         # 1. Получаем сервер для загрузки — требует сервисный токен приложения
         service_token = os.environ.get('VK_SERVICE_TOKEN', '')
-        resp = vk_call('appWidgets.getAppImageUploadServer', {'image_type': 'rectangle'}, service_token)
+        resp = vk_call('appWidgets.getAppImageUploadServer', {'image_type': '510x128'}, service_token)
         if 'error' in resp:
             print(f"[cover] getAppImageUploadServer error: {resp['error']}")
             return None
