@@ -25,6 +25,7 @@ def handler(event: dict, context) -> dict:
     image_b64 = body.get('image')
     group_id = body.get('group_id', 0)
     vk_token = body.get('vk_token', '')
+    print(f"[upload] group_id={group_id}, has_token={bool(vk_token)}, has_image={bool(image_b64)}")
 
     if not image_b64:
         return {'statusCode': 400, 'headers': cors, 'body': json.dumps({'error': 'image required'})}
