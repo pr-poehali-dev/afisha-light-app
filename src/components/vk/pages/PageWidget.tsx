@@ -264,13 +264,14 @@ const PageWidget = ({ groupId }: WidgetProps) => {
               title: e.title, title_url: appUrl,
               button: btn1Text, button_url: appUrl,
               text: dateLabel,
-              ...(e.image ? { icon_id: '', images: [{ url: e.image, width: 160, height: 160 }] } : {}),
+              ...(e.image ? { images: [{ url: e.image, width: 160, height: 160 }] } : {}),
             };
           }),
         };
       }
 
       const code = `return ${JSON.stringify(widgetData)};`;
+      console.log('[widget] type:', vkType, 'code:', code);
       await bridge.send('VKWebAppShowCommunityWidgetPreviewBox', {
         group_id: groupId,
         type: vkType,
@@ -278,6 +279,7 @@ const PageWidget = ({ groupId }: WidgetProps) => {
       });
       setPublishResult({ success: true });
     } catch (e: unknown) {
+      console.error('[widget] error:', e);
       const msg = e instanceof Error ? e.message
         : (e as {error_data?: {error_reason?: string}})?.error_data?.error_reason
         ?? JSON.stringify(e);
