@@ -5,6 +5,7 @@ import psycopg2
 import urllib.request
 import urllib.parse
 from psycopg2.extras import RealDictCursor
+from PIL import Image
 
 SCHEMA = os.environ.get('MAIN_DB_SCHEMA', 't_p8923173_afisha_light_app')
 VK_API = 'https://api.vk.com/method'
@@ -64,14 +65,20 @@ def upload_photo_to_vk(img_url: str, token: str) -> str | None:
             content_type = r.headers.get('Content-Type', 'image/jpeg')
         print(f"[cover] img downloaded: {len(img_data)} bytes, content_type={content_type}, url={img_url}")
 
-        # 3. Загружаем на сервер VK (multipart/form-data через http.client)
+        # 3. Масштабируем до 1530x384 (требование VK upload API)
+        img_obj = Image.open(io.BytesIO(img_data)).convert('RGB')
+        img_obj = img_obj.resize((1530, 384), Image.LANCZOS)
+        buf = io.BytesIO()
+        img_obj.save(buf, format='JPEG', quality=90)
+        img_data = buf.getvalue()
+
+        # 4. Загружаем на сервер VK (multipart/form-data через http.client)
         import http.client
         import uuid
         from urllib.parse import urlparse
 
-        filename = img_url.split('/')[-1] or 'photo.jpg'
-        ext = filename.rsplit('.', 1)[-1].lower()
-        mime = 'image/png' if ext == 'png' else 'image/jpeg'
+        filename = 'cover.jpg'
+        mime = 'image/jpeg'
         boundary = uuid.uuid4().hex
 
         body_parts = (
@@ -94,7 +101,7 @@ def upload_photo_to_vk(img_url: str, token: str) -> str | None:
         print(f"[cover] upload_url={upload_url}, host={host}, path={path}")
         print(f"[cover] upload resp: {upload_resp}")
 
-        # 4. Сохраняем изображение и получаем id — тоже сервисный токен
+        # 5. Сохраняем изображение и получаем id — тоже сервисный токен
         save_params = {'hash': upload_resp.get('hash', '')}
         if 'image' in upload_resp:
             save_params['image'] = upload_resp['image']
