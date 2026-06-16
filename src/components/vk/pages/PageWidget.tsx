@@ -157,6 +157,7 @@ const PageWidget = ({ groupId }: WidgetProps) => {
   const [groupToken, setGroupToken] = useState<string | null>(null);
   const [tokenLoading, setTokenLoading] = useState(false);
   const [publishing, setPublishing] = useState(false);
+  const [removing, setRemoving] = useState(false);
   const [publishResult, setPublishResult] = useState<{ success?: boolean; error?: string } | null>(null);
 
   const currentType = WIDGET_TYPES.find((t) => t.key === widgetType)!;
@@ -283,6 +284,23 @@ const PageWidget = ({ groupId }: WidgetProps) => {
     setPublishing(false);
   };
 
+  const handleRemove = async () => {
+    const token = groupToken || await requestToken();
+    if (!token) { alert('Не удалось получить токен'); return; }
+    setRemoving(true); setPublishResult(null);
+    try {
+      await bridge.send('VKWebAppShowCommunityWidgetPreviewBox', {
+        group_id: groupId,
+        type: 'text',
+        code: 'return {};',
+      });
+      setPublishResult({ success: true });
+    } catch (e: unknown) {
+      setPublishResult({ error: e instanceof Error ? e.message : String(e) });
+    }
+    setRemoving(false);
+  };
+
   type PreviewProps = { events: WidgetEvent[]; title: string; btn1: string; btn2: string };
   const PreviewMap: Record<WidgetType, React.ComponentType<PreviewProps>> = {
     compact_list: PreviewCompactList,
@@ -384,6 +402,11 @@ const PageWidget = ({ groupId }: WidgetProps) => {
             <div style={{ fontSize: 10, color: '#BBB', marginTop: 3 }}>до 100 символов</div>
           </div>
 
+          <div style={{ marginBottom: 10 }}>
+            <div style={{ fontSize: 11, fontWeight: 700, color: '#888', textTransform: 'uppercase', marginBottom: 4 }}>Видимость виджета</div>
+            <div style={{ fontSize: 10, color: '#BBB', marginBottom: 8 }}>VK покажет диалог подтверждения, где можно выбрать кому показывать виджет</div>
+          </div>
+
           <div>
             <div style={{ fontSize: 11, fontWeight: 700, color: '#888', textTransform: 'uppercase', marginBottom: 5 }}>
               Количество строк / плиток
@@ -444,6 +467,19 @@ const PageWidget = ({ groupId }: WidgetProps) => {
             {publishing ? <><Icon name="Loader" size={16} /> Публикация…</> : <><Icon name="Layers" size={16} /> Опубликовать виджет</>}
           </button>
 
+          <button
+            onClick={handleRemove}
+            disabled={removing}
+            style={{
+              width: '100%', padding: '10px', fontSize: 13, fontWeight: 700, marginTop: 8,
+              color: removing ? '#AAA' : '#DC2626', border: `1.5px solid ${removing ? '#EEE' : '#FECACA'}`,
+              borderRadius: 12, cursor: removing ? 'default' : 'pointer',
+              background: '#FFF5F5',
+              display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
+            }}
+          >
+            {removing ? <><Icon name="Loader" size={14} /> Удаление…</> : <><Icon name="Trash2" size={14} /> Убрать виджет из группы</>}
+          </button>
 
         </div>
       </div>
