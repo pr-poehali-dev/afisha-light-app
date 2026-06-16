@@ -6,6 +6,8 @@ import hmac
 import hashlib
 import datetime
 import urllib.request
+import urllib.parse
+import io
 
 def handler(event: dict, context) -> dict:
     """Загрузка изображения обложки мероприятия в S3. Принимает base64, возвращает URL."""
@@ -21,6 +23,8 @@ def handler(event: dict, context) -> dict:
 
     body = json.loads(event.get('body') or '{}')
     image_b64 = body.get('image')
+    group_id = body.get('group_id', 0)
+    vk_token = body.get('vk_token', '')
 
     if not image_b64:
         return {'statusCode': 400, 'headers': cors, 'body': json.dumps({'error': 'image required'})}
@@ -102,8 +106,52 @@ def handler(event: dict, context) -> dict:
 
     cdn_url = f"https://cdn.poehali.dev/projects/{access_key}/bucket/{file_key}"
 
+    # Загружаем фото в VK если переданы токен и group_id — получаем cover_id
+    vk_cover_id = ''
+    if vk_token and group_id:
+        try:
+            import requests as req_lib
+            from PIL import Image as PILImage
+
+            # Масштабируем до 510x128 для cover_list
+            img_obj = PILImage.open(io.BytesIO(image_data)).convert('RGB')
+            img_obj = img_obj.resize((510, 128), PILImage.LANCZOS)
+            buf = io.BytesIO()
+            img_obj.save(buf, format='JPEG', quality=90)
+            cover_data = buf.getvalue()
+
+            # Получаем upload URL
+            vk_api = 'https://api.vk.com/method'
+            params = urllib.parse.urlencode({'group_id': abs(int(group_id)), 'access_token': vk_token, 'v': '5.199'})
+            req_us = urllib.request.Request(f"{vk_api}/photos.getWallUploadServer?{params}")
+            with urllib.request.urlopen(req_us, timeout=10) as r:
+                us_resp = json.loads(r.read())
+
+            if 'response' in us_resp:
+                upload_url = us_resp['response']['upload_url']
+                up_r = req_lib.post(upload_url, files={'photo': ('cover.jpg', cover_data, 'image/jpeg')}, timeout=20)
+                up_data = up_r.json()
+
+                if up_data.get('photo') and up_data.get('photo') != '[]':
+                    save_params = urllib.parse.urlencode({
+                        'group_id': abs(int(group_id)),
+                        'photo': up_data.get('photo', ''),
+                        'server': up_data.get('server', ''),
+                        'hash': up_data.get('hash', ''),
+                        'access_token': vk_token,
+                        'v': '5.199',
+                    })
+                    req_save = urllib.request.Request(f"{vk_api}/photos.saveWallPhoto", data=save_params.encode())
+                    with urllib.request.urlopen(req_save, timeout=10) as r:
+                        save_resp = json.loads(r.read())
+                    if save_resp.get('response'):
+                        photo = save_resp['response'][0]
+                        vk_cover_id = f"{photo['owner_id']}_{photo['id']}"
+        except Exception as ex:
+            print(f"[upload] vk cover upload error: {ex}")
+
     return {
         'statusCode': 200,
         'headers': cors,
-        'body': json.dumps({'url': cdn_url}),
+        'body': json.dumps({'url': cdn_url, 'vk_cover_id': vk_cover_id}),
     }

@@ -1,18 +1,20 @@
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import type { EventItem, EventCategory, EventScheduleType, Place } from '@/types';
 import { CATEGORIES, section, block, Label } from './event-form/EventFormShared';
 import EventFormCover from './event-form/EventFormCover';
+import { getGroupTokenForWidget } from '@/lib/vk';
 import EventFormSchedule from './event-form/EventFormSchedule';
 import EventFormDetails from './event-form/EventFormDetails';
 
 interface Props {
   initial?: Partial<EventItem>;
   places?: Place[];
+  groupId?: number;
   onSave: (data: Partial<EventItem>) => void;
   onCancel: () => void;
 }
 
-const PageAddEvent = ({ initial = {}, places = [], onSave, onCancel }: Props) => {
+const PageAddEvent = ({ initial = {}, places = [], groupId = 0, onSave, onCancel }: Props) => {
   const firstDate = initial.dates?.[0];
 
   const [title, setTitle] = useState(initial.title ?? '');
@@ -78,8 +80,14 @@ const PageAddEvent = ({ initial = {}, places = [], onSave, onCancel }: Props) =>
   );
 
   const [image, setImage] = useState<string>(initial.image ?? '');
+  const [vkCoverId, setVkCoverId] = useState<string>(initial.vk_cover_id ?? '');
   const [uploading, setUploading] = useState(false);
   const [uploadError, setUploadError] = useState('');
+  const vkTokenRef = useRef<string | null>(null);
+  const getToken = async () => {
+    if (!vkTokenRef.current && groupId) vkTokenRef.current = await getGroupTokenForWidget(groupId);
+    return vkTokenRef.current;
+  };
 
   const handlePlaceSelect = (id: number | '') => {
     setPlaceId(id);
@@ -134,6 +142,7 @@ const PageAddEvent = ({ initial = {}, places = [], onSave, onCancel }: Props) =>
       price_to: isFree ? 0 : priceTo,
       online,
       image: image || undefined,
+      vk_cover_id: vkCoverId || undefined,
       dates: buildDates(),
       schedule_type: scheduleType,
       show_dates: showDates,
@@ -151,7 +160,10 @@ const PageAddEvent = ({ initial = {}, places = [], onSave, onCancel }: Props) =>
 
       <EventFormCover
         image={image} uploading={uploading} uploadError={uploadError}
+        groupId={groupId} vkToken={vkTokenRef.current}
         onImageChange={setImage} onUploadingChange={setUploading} onUploadErrorChange={setUploadError}
+        onVkCoverIdChange={setVkCoverId}
+        onBeforeUpload={getToken}
       />
 
       {/* Название + Тип + Теги */}

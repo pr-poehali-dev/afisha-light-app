@@ -72,10 +72,10 @@ def handler(event: dict, context) -> dict:
             cur.execute(
                 f"""INSERT INTO {SCHEMA}.events
                     (vk_group_id, title, type, tags, description, city, address, place, place_id,
-                     image, age, is_free, price, price_from, price_to, online, is_past, private, dates,
+                     image, vk_cover_id, age, is_free, price, price_from, price_to, online, is_past, private, dates,
                      schedule_type, show_dates, priority,
                      link1_url, link1_label, link2_url, link2_label, admin_notes, publish_at)
-                    VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)
+                    VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)
                     RETURNING *""",
                 (
                     body.get('vk_group_id', 0),
@@ -88,6 +88,7 @@ def handler(event: dict, context) -> dict:
                     body.get('place', ''),
                     body.get('place_id') or None,
                     body.get('image', ''),
+                    body.get('vk_cover_id', ''),
                     body.get('age', '0+'),
                     body.get('is_free', False),
                     body.get('price', 0),
@@ -117,7 +118,7 @@ def handler(event: dict, context) -> dict:
             cur.execute(
                 f"""UPDATE {SCHEMA}.events SET
                     title=%s, type=%s, tags=%s, description=%s, city=%s, address=%s,
-                    place=%s, place_id=%s, image=%s, age=%s, is_free=%s, price=%s, price_from=%s, price_to=%s,
+                    place=%s, place_id=%s, image=%s, vk_cover_id=%s, age=%s, is_free=%s, price=%s, price_from=%s, price_to=%s,
                     online=%s, is_past=%s, private=%s, dates=%s,
                     schedule_type=%s, show_dates=%s, priority=%s,
                     link1_url=%s, link1_label=%s, link2_url=%s, link2_label=%s,
@@ -133,6 +134,7 @@ def handler(event: dict, context) -> dict:
                     body.get('place', ''),
                     body.get('place_id') or None,
                     body.get('image', ''),
+                    body.get('vk_cover_id', ''),
                     body.get('age', '0+'),
                     body.get('is_free', False),
                     body.get('price', 0),

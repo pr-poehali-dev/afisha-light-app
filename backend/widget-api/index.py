@@ -144,10 +144,9 @@ def build_widget(events: list, widget_type: str, title: str,
                 'descr': date_label,
                 'url': app_url,
             }
-            if img and token:
-                cover_id = upload_photo_to_vk(img, token, abs(group_id))
-                if cover_id:
-                    row['cover_id'] = cover_id
+            cover_id = e.get('vk_cover_id', '')
+            if cover_id:
+                row['cover_id'] = cover_id
         else:
             row = {
                 'title': e.get('title', ''),
@@ -209,7 +208,7 @@ def handler(event: dict, context) -> dict:
         # GET ?action=events — получить список событий для выбора
         if method == 'GET' and action == 'events':
             cur.execute(
-                f"""SELECT id, title, dates, image, vk_group_id, type FROM {SCHEMA}.events
+                f"""SELECT id, title, dates, image, vk_cover_id, vk_group_id, type FROM {SCHEMA}.events
                     WHERE vk_group_id = %s AND is_past = FALSE
                       AND (publish_at IS NULL OR publish_at <= NOW())
                     ORDER BY priority DESC, (dates->0->>'date') ASC NULLS LAST

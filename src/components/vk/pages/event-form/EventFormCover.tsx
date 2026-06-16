@@ -6,12 +6,16 @@ interface Props {
   image: string;
   uploading: boolean;
   uploadError: string;
+  groupId?: number;
+  vkToken?: string | null;
   onImageChange: (url: string) => void;
   onUploadingChange: (v: boolean) => void;
   onUploadErrorChange: (msg: string) => void;
+  onVkCoverIdChange?: (id: string) => void;
+  onBeforeUpload?: () => Promise<string | null>;
 }
 
-const EventFormCover = ({ image, uploading, uploadError, onImageChange, onUploadingChange, onUploadErrorChange }: Props) => {
+const EventFormCover = ({ image, uploading, uploadError, groupId, vkToken, onImageChange, onUploadingChange, onUploadErrorChange, onVkCoverIdChange, onBeforeUpload }: Props) => {
   const fileRef = useRef<HTMLInputElement>(null);
 
   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -19,14 +23,21 @@ const EventFormCover = ({ image, uploading, uploadError, onImageChange, onUpload
     if (!file) return;
     if (file.size > 5 * 1024 * 1024) { onUploadErrorChange('Файл слишком большой. Максимум 5 МБ'); return; }
     onUploadingChange(true); onUploadErrorChange('');
+
+    // Получаем токен заранее если нужно
+    const token = onBeforeUpload ? await onBeforeUpload() : vkToken;
+
     const reader = new FileReader();
     reader.onload = async (ev) => {
       const base64 = ev.target?.result as string;
       onImageChange(base64);
       try {
-        const res = await fetch(UPLOAD_URL, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ image: base64 }) });
+        const payload: Record<string, unknown> = { image: base64 };
+        if (groupId && token) { payload.group_id = groupId; payload.vk_token = token; }
+        const res = await fetch(UPLOAD_URL, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
         const data = await res.json();
-        if (data.url) onImageChange(data.url); else onUploadErrorChange('Ошибка загрузки');
+        if (data.url) { onImageChange(data.url); if (data.vk_cover_id) onVkCoverIdChange?.(data.vk_cover_id); }
+        else onUploadErrorChange('Ошибка загрузки');
       } catch { onUploadErrorChange('Ошибка сети'); }
       finally { onUploadingChange(false); }
     };

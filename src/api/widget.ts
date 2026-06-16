@@ -5,6 +5,7 @@ export interface WidgetEvent {
   title: string;
   dates: { date: string; start_time: string; finish_time?: string }[];
   image: string;
+  vk_cover_id?: string;
   type: string;
   vk_group_id: number;
 }
