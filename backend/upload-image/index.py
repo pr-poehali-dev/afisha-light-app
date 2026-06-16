@@ -128,10 +128,12 @@ def handler(event: dict, context) -> dict:
             with urllib.request.urlopen(req_us, timeout=10) as r:
                 us_resp = json.loads(r.read())
 
+            print(f"[upload] us_resp={us_resp}")
             if 'response' in us_resp:
                 upload_url = us_resp['response']['upload_url']
                 up_r = req_lib.post(upload_url, files={'photo': ('cover.jpg', cover_data, 'image/jpeg')}, timeout=20)
                 up_data = up_r.json()
+                print(f"[upload] up_data={up_data}")
 
                 if up_data.get('photo') and up_data.get('photo') != '[]':
                     save_params = urllib.parse.urlencode({
