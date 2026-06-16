@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import Icon from '@/components/ui/icon';
-import { fetchWidgetEvents, publishWidget, removeWidget, type WidgetEvent } from '@/api/widget';
+import { fetchWidgetEvents, type WidgetEvent } from '@/api/widget';
 import bridge, { getGroupTokenForWidget, getAppId } from '@/lib/vk';
 
 interface WidgetProps { groupId: number; }
@@ -154,11 +154,9 @@ const PageWidget = ({ groupId }: WidgetProps) => {
   const [btn1Text, setBtn1Text] = useState('Подробнее');
   const [btn2Text, setBtn2Text] = useState('Посмотреть все события');
   const [showRows, setShowRows] = useState(3);
-  const [visibility, setVisibility] = useState<'all' | 'members' | 'admin'>('all');
   const [groupToken, setGroupToken] = useState<string | null>(null);
   const [tokenLoading, setTokenLoading] = useState(false);
   const [publishing, setPublishing] = useState(false);
-  const [removing, setRemoving] = useState(false);
   const [publishResult, setPublishResult] = useState<{ success?: boolean; error?: string } | null>(null);
 
   const currentType = WIDGET_TYPES.find((t) => t.key === widgetType)!;
@@ -285,16 +283,6 @@ const PageWidget = ({ groupId }: WidgetProps) => {
     setPublishing(false);
   };
 
-  const handleRemove = async () => {
-    if (!confirm('Убрать виджет из группы?')) return;
-    const token = groupToken || await requestToken();
-    if (!token) { alert('Не удалось получить токен'); return; }
-    setRemoving(true); setPublishResult(null);
-    const res = await removeWidget(groupId, token);
-    setPublishResult(res.success ? { error: 'Виджет убран из группы' } : { error: res.error });
-    setRemoving(false);
-  };
-
   type PreviewProps = { events: WidgetEvent[]; title: string; btn1: string; btn2: string };
   const PreviewMap: Record<WidgetType, React.ComponentType<PreviewProps>> = {
     compact_list: PreviewCompactList,
@@ -396,29 +384,6 @@ const PageWidget = ({ groupId }: WidgetProps) => {
             <div style={{ fontSize: 10, color: '#BBB', marginTop: 3 }}>до 100 символов</div>
           </div>
 
-          <div style={{ marginBottom: 10 }}>
-            <div style={{ fontSize: 11, fontWeight: 700, color: '#888', textTransform: 'uppercase', marginBottom: 8 }}>Видимость виджета</div>
-            <div style={{ display: 'flex', gap: 6 }}>
-              {([
-                { key: 'all',     label: 'Все',          icon: 'Globe' },
-                { key: 'members', label: 'Подписчики',   icon: 'Users' },
-                { key: 'admin',   label: 'Только я',     icon: 'ShieldCheck' },
-              ] as const).map((v) => (
-                <button key={v.key} onClick={() => setVisibility(v.key)} style={{
-                  flex: 1, padding: '8px 4px', border: `2px solid ${visibility === v.key ? '#7C3AED' : '#F0F0F0'}`,
-                  borderRadius: 10, background: visibility === v.key ? '#F5F3FF' : '#fff',
-                  cursor: 'pointer', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4,
-                }}>
-                  <Icon name={v.icon} size={16} style={{ color: visibility === v.key ? '#7C3AED' : '#BBB' }} />
-                  <span style={{ fontSize: 11, fontWeight: 700, color: visibility === v.key ? '#7C3AED' : '#888' }}>{v.label}</span>
-                </button>
-              ))}
-            </div>
-            <div style={{ fontSize: 10, color: '#BBB', marginTop: 5 }}>
-              Будет применено после того, как VK добавит поддержку этой настройки
-            </div>
-          </div>
-
           <div>
             <div style={{ fontSize: 11, fontWeight: 700, color: '#888', textTransform: 'uppercase', marginBottom: 5 }}>
               Количество строк / плиток
@@ -455,25 +420,10 @@ const PageWidget = ({ groupId }: WidgetProps) => {
 
         {/* Публикация */}
         <div style={section}>
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 14 }}>
-            <div style={{ fontSize: 13, color: '#555' }}>Токен сообщества</div>
-            {tokenLoading ? (
-              <div style={{ fontSize: 11, color: '#999', display: 'flex', alignItems: 'center', gap: 4 }}><Icon name="Loader" size={12} /> Получение…</div>
-            ) : groupToken ? (
-              <div style={{ fontSize: 11, fontWeight: 700, color: '#059669', background: '#D1FAE5', padding: '3px 8px', borderRadius: 6, display: 'flex', alignItems: 'center', gap: 4 }}>
-                <Icon name="ShieldCheck" size={12} /> Получен
-              </div>
-            ) : (
-              <button onClick={requestToken} style={{ fontSize: 11, fontWeight: 700, color: '#D97706', background: '#FEF9C3', border: 'none', borderRadius: 6, padding: '3px 8px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 4 }}>
-                <Icon name="RefreshCw" size={12} /> Получить токен
-              </button>
-            )}
-          </div>
-
           {publishResult && (
-            <div style={{ marginBottom: 12, padding: '10px 14px', borderRadius: 10, background: publishResult.success ? '#D1FAE5' : publishResult.error === 'Виджет убран из группы' ? '#F0F9FF' : '#FEE2E2', display: 'flex', alignItems: 'center', gap: 8 }}>
-              <Icon name={publishResult.success ? 'CheckCircle' : publishResult.error === 'Виджет убран из группы' ? 'EyeOff' : 'AlertCircle'} size={16} style={{ color: publishResult.success ? '#059669' : publishResult.error === 'Виджет убран из группы' ? '#0369A1' : '#DC2626', flexShrink: 0 }} />
-              <span style={{ fontSize: 13, fontWeight: 600, color: publishResult.success ? '#065F46' : publishResult.error === 'Виджет убран из группы' ? '#0369A1' : '#B91C1C' }}>
+            <div style={{ marginBottom: 12, padding: '10px 14px', borderRadius: 10, background: publishResult.success ? '#D1FAE5' : '#FEE2E2', display: 'flex', alignItems: 'center', gap: 8 }}>
+              <Icon name={publishResult.success ? 'CheckCircle' : 'AlertCircle'} size={16} style={{ color: publishResult.success ? '#059669' : '#DC2626', flexShrink: 0 }} />
+              <span style={{ fontSize: 13, fontWeight: 600, color: publishResult.success ? '#065F46' : '#B91C1C' }}>
                 {publishResult.success ? 'Виджет успешно опубликован!' : publishResult.error}
               </span>
             </div>
@@ -494,23 +444,7 @@ const PageWidget = ({ groupId }: WidgetProps) => {
             {publishing ? <><Icon name="Loader" size={16} /> Публикация…</> : <><Icon name="Layers" size={16} /> Опубликовать виджет</>}
           </button>
 
-          <button
-            onClick={handleRemove}
-            disabled={removing}
-            style={{
-              width: '100%', padding: '10px', fontSize: 13, fontWeight: 700, marginTop: 8,
-              color: removing ? '#AAA' : '#DC2626', border: `1.5px solid ${removing ? '#EEE' : '#FECACA'}`,
-              borderRadius: 12, cursor: removing ? 'default' : 'pointer',
-              background: '#FFF5F5',
-              display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
-            }}
-          >
-            {removing ? <><Icon name="Loader" size={14} /> Удаление…</> : <><Icon name="Trash2" size={14} /> Убрать виджет из группы</>}
-          </button>
 
-          <div style={{ fontSize: 11, color: '#AAA', textAlign: 'center', marginTop: 10 }}>
-            Обновление произойдёт в течение 3–5 минут после публикации
-          </div>
         </div>
       </div>
     </div>
