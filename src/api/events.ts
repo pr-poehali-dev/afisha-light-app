@@ -15,8 +15,7 @@ function toEvent(row: Record<string, unknown>): EventItem {
     place: row.place as string,
     place_id: row.place_id as number | undefined,
     image: row.image as string,
-    vk_cover_id: (row.vk_cover_id as string) ?? '',
-    vk_photo_id: (row.vk_photo_id as string) ?? '',
+
     age: row.age as string,
     is_free: row.is_free as boolean,
     price: row.price as number,

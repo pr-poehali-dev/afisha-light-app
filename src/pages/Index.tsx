@@ -9,13 +9,12 @@ import PagePlaces from '@/components/vk/pages/PagePlaces';
 import PageSettings from '@/components/vk/pages/PageSettings';
 import PageAddOrder from '@/components/vk/pages/PageAddOrder';
 import PageMailings from '@/components/vk/pages/PageMailings';
-import PageWidget from '@/components/vk/pages/PageWidget';
 import PageSite from '@/components/vk/pages/PageSite';
 
 import { MOCK_ORDERS, MOCK_CONFIG } from '@/data/mock';
 import { fetchEvents, createEvent, updateEvent, deleteEvent } from '@/api/events';
 import { fetchPlaces, createPlace, updatePlace } from '@/api/places';
-import { initVKBridge, parseVKParams, getGroupToken } from '@/lib/vk';
+import { initVKBridge, parseVKParams } from '@/lib/vk';
 import type { EventItem, Order, Place, Page, AppConfig } from '@/types';
 
 // Инициализируем VK Bridge
@@ -23,7 +22,7 @@ initVKBridge();
 
 const VK_PARAMS = parseVKParams();
 
-const ROOT_PAGES: Page[] = ['main', 'past', 'manager', 'places', 'mailings', 'widget', 'site', 'settings'];
+const ROOT_PAGES: Page[] = ['main', 'past', 'manager', 'places', 'mailings', 'site', 'settings'];
 
 const Index = () => {
   const { is_admin, vk_group_id } = VK_PARAMS;
@@ -40,15 +39,11 @@ const Index = () => {
   const [config, setConfig] = useState<AppConfig>(MOCK_CONFIG);
   const [selectedEvent, setSelectedEvent] = useState<EventItem | null>(null);
   const [editEvent, setEditEvent] = useState<EventItem | null>(null);
-  const [groupToken, setGroupToken] = useState<string | null>(null);
-
   useEffect(() => {
     if (!vk_group_id) {
       setLoading(false);
       return;
     }
-    // Запрашиваем единый токен со всеми правами при старте
-    getGroupToken(vk_group_id).then(t => { if (t) setGroupToken(t); });
 
     Promise.all([
       fetchEvents(vk_group_id, false, is_admin),
@@ -175,9 +170,6 @@ const Index = () => {
 
       case 'mailings':
         return <PageMailings groupId={vk_group_id} />;
-
-      case 'widget':
-        return <PageWidget groupId={vk_group_id} />;
 
       case 'site':
         return <PageSite groupId={vk_group_id} />;
