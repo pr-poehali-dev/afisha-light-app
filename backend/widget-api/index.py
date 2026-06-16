@@ -177,6 +177,23 @@ def handler(event: dict, context) -> dict:
 
             return ok({'success': True, 'widget_type': vk_type, 'events_count': len(events_data)})
 
+        # POST ?action=remove — убрать виджет из группы
+        if method == 'POST' and action == 'remove':
+            token = body.get('group_token', '')
+            if not token:
+                return err('Токен сообщества не передан')
+
+            resp = vk_call('appWidgets.update', {
+                'type': 'compact_list',
+                'code': 'return {"title":"","rows":[]};',
+                'group_id': abs(vk_group_id),
+            }, token)
+
+            if 'error' in resp:
+                return err(f"VK API: {resp['error'].get('error_msg', 'Неизвестная ошибка')}")
+
+            return ok({'success': True})
+
         return err('Unknown action', 405)
 
     finally:

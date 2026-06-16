@@ -14,6 +14,15 @@ export async function fetchWidgetEvents(groupId: number): Promise<WidgetEvent[]>
   return res.json();
 }
 
+export async function removeWidget(groupId: number, token: string): Promise<{ success?: boolean; error?: string }> {
+  const res = await fetch(`${API}?action=remove&vk_group_id=${groupId}`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ group_token: token }),
+  });
+  return res.json();
+}
+
 export async function publishWidget(params: {
   groupId: number;
   token: string;
