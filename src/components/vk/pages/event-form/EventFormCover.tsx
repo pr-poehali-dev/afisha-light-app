@@ -31,8 +31,10 @@ const EventFormCover = ({ image, uploading, uploadError, groupId, vkToken, onIma
       try {
         const payload: Record<string, unknown> = { image: base64 };
         if (groupId && token) { payload.group_id = groupId; payload.vk_token = token; }
+        console.log('[upload] groupId:', groupId, 'hasToken:', !!token, 'payload keys:', Object.keys(payload));
         const res = await fetch(UPLOAD_URL, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
         const data = await res.json();
+        console.log('[upload] response:', data);
         if (data.url) { onImageChange(data.url); if (data.vk_cover_id) onVkCoverIdChange?.(data.vk_cover_id); }
         else onUploadErrorChange('Ошибка загрузки');
       } catch { onUploadErrorChange('Ошибка сети'); }
