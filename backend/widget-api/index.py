@@ -76,7 +76,7 @@ def upload_photo_to_vk(img_url: str, token: str) -> str | None:
 
         body_parts = (
             f'--{boundary}\r\n'
-            f'Content-Disposition: form-data; name="image"; filename="{filename}"\r\n'
+            f'Content-Disposition: form-data; name="file"; filename="{filename}"\r\n'
             f'Content-Type: {mime}\r\n\r\n'
         ).encode() + img_data + f'\r\n--{boundary}--\r\n'.encode()
 
