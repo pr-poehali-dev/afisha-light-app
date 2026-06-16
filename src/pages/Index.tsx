@@ -15,7 +15,7 @@ import PageSite from '@/components/vk/pages/PageSite';
 import { MOCK_ORDERS, MOCK_CONFIG } from '@/data/mock';
 import { fetchEvents, createEvent, updateEvent, deleteEvent } from '@/api/events';
 import { fetchPlaces, createPlace, updatePlace } from '@/api/places';
-import { initVKBridge, parseVKParams } from '@/lib/vk';
+import { initVKBridge, parseVKParams, getGroupTokenForWidget } from '@/lib/vk';
 import type { EventItem, Order, Place, Page, AppConfig } from '@/types';
 
 // Инициализируем VK Bridge
@@ -42,6 +42,7 @@ const Index = () => {
   const [config, setConfig] = useState<AppConfig>(MOCK_CONFIG);
   const [selectedEvent, setSelectedEvent] = useState<EventItem | null>(null);
   const [editEvent, setEditEvent] = useState<EventItem | null>(null);
+  const [groupToken, setGroupToken] = useState<string | null>(null);
 
   useEffect(() => {
     if (!vk_group_id) {
@@ -57,6 +58,9 @@ const Index = () => {
       setPastEvents(past);
       setPlaces(pl);
     }).finally(() => setLoading(false));
+
+    // Получаем токен группы сразу при старте
+    getGroupTokenForWidget(vk_group_id).then(t => { if (t) setGroupToken(t); });
   }, []);
 
   const navigate = useCallback((p: Page) => {
@@ -161,10 +165,10 @@ const Index = () => {
         );
 
       case 'add_event':
-        return <PageAddEvent places={places} groupId={vk_group_id} onSave={handleSaveEvent} onCancel={goBack} />;
+        return <PageAddEvent places={places} groupId={vk_group_id} vkToken={groupToken} onSave={handleSaveEvent} onCancel={goBack} />;
 
       case 'edit_event':
-        return <PageAddEvent initial={editEvent ?? undefined} places={places} groupId={vk_group_id} onSave={handleSaveEvent} onCancel={goBack} />;
+        return <PageAddEvent initial={editEvent ?? undefined} places={places} groupId={vk_group_id} vkToken={groupToken} onSave={handleSaveEvent} onCancel={goBack} />;
 
       case 'manager':
         return <PageManager orders={orders} onChangeState={handleChangeOrderState} />;

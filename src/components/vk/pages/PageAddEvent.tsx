@@ -1,8 +1,7 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import type { EventItem, EventCategory, EventScheduleType, Place } from '@/types';
 import { CATEGORIES, section, block, Label } from './event-form/EventFormShared';
 import EventFormCover from './event-form/EventFormCover';
-import { getGroupTokenForWidget } from '@/lib/vk';
 import EventFormSchedule from './event-form/EventFormSchedule';
 import EventFormDetails from './event-form/EventFormDetails';
 
@@ -10,11 +9,12 @@ interface Props {
   initial?: Partial<EventItem>;
   places?: Place[];
   groupId?: number;
+  vkToken?: string | null;
   onSave: (data: Partial<EventItem>) => void;
   onCancel: () => void;
 }
 
-const PageAddEvent = ({ initial = {}, places = [], groupId = 0, onSave, onCancel }: Props) => {
+const PageAddEvent = ({ initial = {}, places = [], groupId = 0, vkToken = null, onSave, onCancel }: Props) => {
   const firstDate = initial.dates?.[0];
 
   const [title, setTitle] = useState(initial.title ?? '');
@@ -83,10 +83,6 @@ const PageAddEvent = ({ initial = {}, places = [], groupId = 0, onSave, onCancel
   const [vkCoverId, setVkCoverId] = useState<string>(initial.vk_cover_id ?? '');
   const [uploading, setUploading] = useState(false);
   const [uploadError, setUploadError] = useState('');
-  const [vkToken, setVkToken] = useState<string | null>(null);
-  useEffect(() => {
-    if (groupId) getGroupTokenForWidget(groupId).then(t => { if (t) setVkToken(t); });
-  }, [groupId]);
 
   const handlePlaceSelect = (id: number | '') => {
     setPlaceId(id);
